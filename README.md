@@ -11,10 +11,12 @@ sticking with Pandas, we could just store the data in numpy arrays or something
 simple like that.
 
 ## Requirements
-Right now, you need to install the following python extensions 
+Right now, you need to install the following python extensions
+
 - gitpython
 - pandas
 - requests
+  
 If you installed Jupyter using the Anaconda (or miniconda) python distribution
 then you can install all these using the following command on the command line:
 `conda install gitpython pandas requests`
