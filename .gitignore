@@ -1,3 +1,5 @@
 .ipynb_checkpoints
+.vscode
 .DS_Store
 JH_Data
+NYT_Data

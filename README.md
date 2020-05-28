@@ -24,13 +24,19 @@ then you can install all these using the following command on the command line:
 ## Initialization
 
 The Apple and Google mobility data are single files and are retrieved on the
-fly. The John Hopkins data on the spread of the disease is a entire directory
-structure full of files.  As such, I decided it made sense to pull the entire
-directory off GitHub and use 'git pull' to keep it updated (since that would be
-quick).
+fly. 
 
-So to initialize the directory, in the same directory storing this notebook I
-issued a `git clone https://github.com/CSSEGISandData/COVID-19.git` command to
-pull the complete dataset from GitHub.  That created a `COVID-19` directory,
-which I renamed `JH_Data`. With that done, maintaining that data shouldn't take
-too long.
+The John Hopkins and NY Times data on the spread of the disease consist of
+entire directory structures full of files.  As such, I decided it made sense to
+pull their entire directories off GitHub and use 'git pull' to keep it updated
+(since that would be quick).
+
+1. **Download the John Hopkins data**: In the same directory storing this README file and the Jupyter notebooks:
+
+   - `git clone https://github.com/CSSEGISandData/COVID-19.git` 
+   - This creates a `COVID-19` directory, which I renamed `JH_Data`. 
+
+1. **Download the New York Times data**: In the same directory storing this README file and the Jupyter notebooks:
+
+   - `git clone https://github.com/nytimes/covid-19-data`
+   - This creates a `covid-19-data` directory, which I renamed `NYT_Data`. 
