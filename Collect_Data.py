@@ -25,8 +25,7 @@
 # - **A Note about FIPS:** Some of the data includes FIPS codes (a standard geographic identifier) which should ease the process of cross-matching of data.  Clay County is 27027 and Cass County is 38017.  Minnesota is 27, North Dakota is 38.
 #
 # - **Still To Do:** 
-#     1. Collect the State-level Daily data files from John Hopkins into a single combiend data frame
-#     2. Figure out (if possible) a way to assign FIPS values to the Google and Apple mobility data to allow much easier cross-referencing of the data.  
+#     1. Figure out (if possible) a way to assign FIPS values to the Google and Apple mobility data to allow much easier cross-referencing of the data.  
 #     3. Possibly 'condense' mobility data the same way I condensed all the daily data from John Hopkins into a single tighter dataframe.
 #     4. Try to read in the IMHE data.
 #     
@@ -35,6 +34,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import pandas as pd
 import git
 import requests
@@ -668,7 +668,170 @@ print("COMBINED DAILY DATA IN combined_state_df() DATAFRAME")
 print(combined_state_df[(combined_state_df['FIPS'] == MNFIPS) | (combined_state_df['FIPS'] == NDFIPS)])
 
 # %%
-# Show demonstrations of plotting this data here (NEED TO ADD THIS)
+# Show demonstrations of plotting this data here by producing plots of data for Cass and Clay counties and North Dakota and Minnesota
+
+#
+# I will pull the data to plot into numpy arrays (notice I have to use [0] because it comes out at list of lists even for single row)
+#
+
+# County-level data for plotting
+dates_cty = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+clay_deaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['Deaths'].to_list()[0],dtype='int')
+clay_death_rate = (clay_deaths/combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['PopEst2019'].values)*100000
+cass_deaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['Deaths'].to_list()[0],dtype='int')
+cass_death_rate = (cass_deaths/combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['PopEst2019'].values)*100000
+clay_confirmed = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['Confirmed'].to_list()[0],dtype='int')
+clay_confirmed_rate = (clay_confirmed/combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['PopEst2019'].values)*100000
+cass_confirmed = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['Confirmed'].to_list()[0],dtype='int')
+cass_confirmed_rate = (cass_confirmed/combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['PopEst2019'].values)*100000
+
+# Set up a figure of 2 x 2 plots
+fig, axs = plt.subplots(2, 2, figsize=(15,10))
+
+# Plot up deaths and death rates as plots 0 and 1
+this_axs = axs[0, 0]  # Row 0, column 0
+this_axs.plot(dates_cty, clay_deaths, label='Clay County')
+this_axs.plot(dates_cty, cass_deaths, label='Cass County')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Number")
+title = this_axs.set_title("COVID Deaths")
+
+this_axs = axs[1, 0]  # Row 1, column 0
+this_axs.plot(dates_cty, clay_death_rate, label='Clay County')
+this_axs.plot(dates_cty, cass_death_rate, label='Cass County')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Rate / 100000 people")
+title = this_axs.set_title("COVID Deaths per 100,000 people")
+
+# Plot up confirmed infections and infection rates as plots 2 and 3
+this_axs = axs[0, 1]  # Row 0, column 1
+this_axs.plot(dates_cty, clay_confirmed, label='Clay County')
+this_axs.plot(dates_cty, cass_confirmed, label='Cass County')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Number")
+title = this_axs.set_title("COVID Confirmed Infections")
+
+this_axs = axs[1, 1]  # Row 1, column 1
+this_axs.plot(dates_cty, clay_confirmed_rate, label='Clay County')
+this_axs.plot(dates_cty, cass_confirmed_rate, label='Cass County')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Rate / 100000 people")
+title = this_axs.set_title("COVID Confirmed Infections per 100,000 people")
+
+# %%
+#
+# I will pull the data to plot into numpy arrays (notice I have to use [0] because it comes out at list of lists even for single row)
+#
+
+# State-level data for plotting
+dates_state = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+MN_deaths = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['Deaths'].to_list()[0],dtype='int')
+MN_death_rate = (MN_deaths/combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['PopEst2019'].values)*100000
+ND_deaths = np.array(combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['Deaths'].to_list()[0],dtype='int')
+ND_death_rate = (ND_deaths/combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['PopEst2019'].values)*100000
+MN_confirmed = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['Confirmed'].to_list()[0],dtype='int')
+MN_confirmed_rate = (MN_confirmed/combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['PopEst2019'].values)*100000
+ND_confirmed = np.array(combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['Confirmed'].to_list()[0],dtype='int')
+ND_confirmed_rate = (ND_confirmed/combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['PopEst2019'].values)*100000
+
+# Set up a figure of 2 x 2 plots
+fig, axs = plt.subplots(2, 2, figsize=(15,10))
+
+# Plot up deaths and death rates as plots 0 and 1
+this_axs = axs[0, 0]  # Row 0, column 0
+this_axs.plot(dates_state, MN_deaths, label='Minnesota')
+this_axs.plot(dates_state, ND_deaths, label='North Dakota')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Number")
+title = this_axs.set_title("COVID Deaths")
+
+this_axs = axs[1, 0]  # Row 1, column 0
+this_axs.plot(dates_state, MN_death_rate, label='Minnesota')
+this_axs.plot(dates_state, ND_death_rate, label='North Dakota')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Rate / 100000 people")
+title = this_axs.set_title("COVID Deaths per 100,000 people")
+
+# Plot up confirmed infections and infection rates as plots 2 and 3
+this_axs = axs[0, 1]  # Row 0, column 1
+this_axs.plot(dates_state, MN_confirmed, label='Minnesota')
+this_axs.plot(dates_state, ND_confirmed, label='North Dakota')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Number")
+title = this_axs.set_title("COVID Confirmed Infections")
+
+this_axs = axs[1, 1]  # Row 1, column 1
+this_axs.plot(dates_state, MN_confirmed_rate, label='Minnesota')
+this_axs.plot(dates_state, ND_confirmed_rate, label='North Dakota')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("Rate / 100000 people")
+title = this_axs.set_title("COVID Confirmed Infections per 100,000 people")
+
+# %%
+# Show demonstrations of plotting this data here by producing plots of data for Cass and Clay counties and North Dakota and Minnesota
+
+#
+# I will pull the data to plot into numpy arrays (notice I have to use [0] because it comes out at list of lists even for single row)
+#
+
+# County-level data for plotting
+dates_cty = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+clay_ddeaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['dDeaths'].to_list()[0])
+cass_ddeaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['dDeaths'].to_list()[0])
+clay_dconfirmed = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['dConfirmed'].to_list()[0])
+cass_dconfirmed = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['dConfirmed'].to_list()[0])
+
+# State-level data for plotting
+dates_state = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+MN_ddeaths = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['dDeaths'].to_list()[0])
+ND_ddeaths = np.array(combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['dDeaths'].to_list()[0])
+MN_dconfirmed = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['dConfirmed'].to_list()[0])
+ND_dconfirmed = np.array(combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['dConfirmed'].to_list()[0])
+
+# Set up a figure of 2 x 2 plots
+fig, axs = plt.subplots(2, 2, figsize=(15, 15))
+
+# Plot up the deriviates in the infection and death rates for counties
+this_axs = axs[0, 0]  # row 0, column 0
+this_axs.plot(dates_cty, clay_dconfirmed, label='Clay County')
+this_axs.plot(dates_cty, cass_dconfirmed, label='Cass County')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("New Infections/Day")
+title = this_axs.set_title("COVID Infection Change Rate")
+
+this_axs = axs[0, 1]  # row 0, column 1
+this_axs.plot(dates_cty, clay_ddeaths, label='Clay County')
+this_axs.plot(dates_cty, cass_ddeaths, label='Cass County')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("New Deaths/Day")
+title = this_axs.set_title("COVID Death Change Rate")
+
+# Plot up the deriviates in the infection and death rates for states
+this_axs = axs[1, 0]  # row 1, column 0
+this_axs.plot(dates_state, MN_dconfirmed, label='Minnesota')
+this_axs.plot(dates_state, ND_dconfirmed, label='North Dakota')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("New Infections/Day")
+title = this_axs.set_title("COVID Infection Change Rate")
+
+this_axs = axs[1, 1]  # row 1, column 1
+this_axs.plot(dates_state, MN_ddeaths, label='Minnesota')
+this_axs.plot(dates_state, ND_ddeaths, label='North Dakota')
+legend = this_axs.legend()
+xlabel = this_axs.set_xlabel("Date")
+ylabel = this_axs.set_ylabel("New Deaths/Day")
+title = this_axs.set_title("COVID Death Change Rate")
 
 # %% [markdown]
 # ## Google Mobility Data (NO FIPS Present)
