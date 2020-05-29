@@ -151,6 +151,7 @@ print(county_data_df[(county_data_df['FIPS'] == ClayFIPS) | (county_data_df['FIP
 # - State level daily data files contain some additional data that county level
 #   files do not contain, notably Incident_Rate, People_Tested,
 #   People_Hospitalized, Mortality_Rate, Testing_Rate, and Hospitalization_Rate. 
+#   However, it only exists starting April 12, 2020.
 # - Time-series data files contain more limited data (only confirmed cases and
 #   deaths) and are essentially redundant data compared to the daily files, so
 #   combining the daily files makes sense.
@@ -321,7 +322,7 @@ title = plt.title('Clay County Confirmed COVID Infections and Deaths')
 
 # %%
 ##
-## This is mostly just showing I can just grab a single datasets for the most recent daily data instead of 
+## This is mostly just showing I can just grab a single dataset for the most recent daily data instead of 
 ## trying to grab everything and put it all together.  However, this only allows printing some data
 ##
 
@@ -356,7 +357,7 @@ fips_df = county_data_df.copy()
 fips_df.drop(columns=['STNAME', 'CTYNAME', 'POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
 
 # Scan through the more complete daily files of county level data and construct a single datafile for our use (restricting 
-# to US only).  It turnss out the format of these local level files changes with the date.  The files before March 22, 2020 
+# to US only).  It turns out the format of these local level files changes with the date.  The files before March 22, 2020 
 # were in several different forms and the placenames were NOT consistent.  Thus, to make things managable, I am ignoring
 # that early local level data...
 sorted_csvs = []
@@ -389,6 +390,8 @@ for file in csvfiles(daily_cnty_dir):
             # Create combined dataframe sorted by FIPS
             combined_cols = ['FIPS', 'Admin2', 'Province_State', 'Lat', 'Long_']
             combined_cnty_df = reduced_df[combined_cols].copy()
+        
+            # Create blank dataframes to store time series data
             confirmed_df = fips_df.copy()
             deaths_df = fips_df.copy()
             recovered_df = fips_df.copy()
@@ -412,10 +415,9 @@ for file in csvfiles(daily_cnty_dir):
         recovered_col = "R"+f"{idx:03d}"
         recovered_df.rename(columns={'Recovered': recovered_col}, errors="raise", inplace=True)
             
-# Final cleanup (convert to integers and remove NaN)
+# Final cleanup (convert to integers and remove NaN for the confirmed and deaths [don't touch recovered yet])
 confirmed_df = confirmed_df.replace(np.nan,0).astype('int')
 deaths_df= deaths_df.replace(np.nan,0).astype('int')
-recovered_df= recovered_df.replace(np.nan,0).astype('int')
 
 # Add lists of dates to the combined dataframe as a single 'Dates' column
 combined_cnty_df['Dates'] = [dates_list]*len(combined_cnty_df)
@@ -439,8 +441,6 @@ dates_arr = np.array([dates_list]*len(combined_cnty_df))
 # Convert confirmed/deaths/recovered into arrays
 confirmed_arr = np.array(confirmed_listOlists)
 deaths_arr = np.array(deaths_listOlists)
-recovered_arr = np.array(recovered_listOlists)
-# print(dates_arr.shape, confirmed_arr.shape,deaths_arr.shape, recovered_arr.shape)
 
 # At this point I have arrays where the rows are individiual FIPS (counties) and the columns are 
 # (depending on the array) the days since 1/1/2020, number of confirmed cases, number of deaths, 
@@ -449,20 +449,16 @@ recovered_arr = np.array(recovered_listOlists)
 # Compute the derivatives (using forward derivative approach)
 dconfirmed_arr = derivative(dates_arr, confirmed_arr)
 ddeaths_arr = derivative(dates_arr, deaths_arr)
-drecovered_arr= derivative(dates_arr, recovered_arr)
 
 # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
 d2confirmed_arr = derivative(dates_arr, dconfirmed_arr)
 d2deaths_arr = derivative(dates_arr, ddeaths_arr)
-d2recovered_arr= derivative(dates_arr, drecovered_arr)
 
 # Convert numpy arrays to lists of lists for storage in combined dataframe
 combined_cnty_df['dConfirmed'] = dconfirmed_arr.tolist()
 combined_cnty_df['d2Confirmed'] = d2confirmed_arr.tolist()
 combined_cnty_df['dDeaths'] = ddeaths_arr.tolist()
 combined_cnty_df['d2Deaths'] = d2deaths_arr.tolist()
-combined_cnty_df['dRecovered'] = drecovered_arr.tolist()
-combined_cnty_df['d2CRecovered'] = d2recovered_arr.tolist()
 
 # Add population data to same array
 combined_cnty_df = pd.merge(combined_cnty_df,county_data_df[['FIPS','POPESTIMATE2019', 'NPOPCHG_2019']], on='FIPS', how='left', copy=True)
@@ -480,8 +476,9 @@ combined_cnty_df.to_csv(combined_datafile)
 # Clear variables
 del sorted_csvs, dates_list
 del fips_df, raw_df, confirmed_df, deaths_df, recovered_df
-del dates_arr, confirmed_arr, deaths_arr, recovered_arr
-del dconfirmed_arr, ddeaths_arr, drecovered_arr, d2confirmed_arr, d2deaths_arr, d2recovered_arr
+del confirmed_listOlists, deaths_listOlists, recovered_listOlists
+del dates_arr, confirmed_arr, deaths_arr
+del dconfirmed_arr, ddeaths_arr, d2confirmed_arr, d2deaths_arr
 
 # %%
 print("COMBINED DAILY DATA IN combined_cnty_df() DATAFRAME")
@@ -492,6 +489,183 @@ print(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS) | (combined_cnty_d
 ## Build combined state-level datafiles
 ##
 
+# Build a dataframe containing legitimate FIPS values using county level data
+fips_df = state_data_df.copy()
+fips_df.drop(columns=['STNAME', 'POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
+
+# Scan through the more complete daily files of state level data and construct a single datafile for our use (restricting 
+# to US only).  These files are all the same format, but only start after April 12, 2020.  For April 18/19 they accidentally
+# included data from other nations.  So this will need to be purged
+sorted_csvs = []
+dates_list = []
+for file in csvfiles(daily_state_dir):
+    # Set up date information in memory
+    this_isodate = isodate2num(file)
+    
+    # Append to list of accessed csv files
+    sorted_csvs.append(daily_state_dir+file)
+
+    # Grab the data from the CSV file
+    raw_df = pd.read_csv(sorted_csvs[-1])
+    
+    # Match to the list of known FIPS values from Census data, also removing duplicate rows
+    reduced_df = reduce_local_dataframe(raw_df, fips_df)
+        
+    # Provide progress report
+    idx = len(sorted_csvs)
+    # print(f'Processing Date #{idx}: {this_isodate}')
+        
+    if (idx == 1):
+        # Create combined dataframe sorted by FIPS
+        combined_cols = ['FIPS', 'Province_State', 'Lat', 'Long_']
+        combined_state_df = reduced_df[combined_cols].copy()
+        
+        # Create blank dataframes to store time series data
+        confirmed_df = fips_df.copy()
+        deaths_df = fips_df.copy()
+        recovered_df = fips_df.copy()
+        incident_rate_df = fips_df.copy()
+        tested_df = fips_df.copy()
+        hospitalized_df = fips_df.copy()
+        mortality_df = fips_df.copy()
+        testing_rate_df = fips_df.copy()
+        hospitalization_rate_df = fips_df.copy()
+            
+    ## Create dataframes for temporarily storing time series date
+    # Append date to list of dates
+    dates_list.append(this_isodate)
+    
+    # Store Confirmed by merging reduced list and renaming column
+    confirmed_df = pd.merge(confirmed_df,reduced_df[['FIPS','Confirmed']],on='FIPS', how='left', copy=True)
+    confirmed_col = "C"+f"{idx:03d}"
+    confirmed_df.rename(columns={'Confirmed': confirmed_col}, errors="raise", inplace=True)
+        
+    # Store Deaths by merging reduced list and renaming column
+    deaths_df = pd.merge(deaths_df,reduced_df[['FIPS','Deaths']],on='FIPS', how='left', copy=True)
+    deaths_col = "D"+f"{idx:03d}"
+    deaths_df.rename(columns={'Deaths': deaths_col}, errors="raise", inplace=True)
+        
+    # Store Recovered by merging reduced list and renaming column
+    recovered_df = pd.merge(recovered_df,reduced_df[['FIPS','Recovered']],on='FIPS', how='left', copy=True)
+    recovered_col = "R"+f"{idx:03d}"
+    recovered_df.rename(columns={'Recovered': recovered_col}, errors="raise", inplace=True)
+        
+    # Store Incident Rate by merging reduced list and renaming column
+    incident_rate_df = pd.merge(incident_rate_df,reduced_df[['FIPS','Incident_Rate']],on='FIPS', how='left', copy=True)
+    incident_rate_col = "I"+f"{idx:03d}"
+    incident_rate_df.rename(columns={'Incident_Rate': incident_rate_col}, errors="raise", inplace=True)
+        
+    # Store People Testing by merging reduced list and renaming column
+    tested_df = pd.merge(tested_df,reduced_df[['FIPS','People_Tested']],on='FIPS', how='left', copy=True)
+    tested_col = "T"+f"{idx:03d}"
+    tested_df.rename(columns={'People_Tested': tested_col}, errors="raise", inplace=True)
+    
+    # Store People Hospitalized by merging reduced list and renaming column
+    hospitalized_df = pd.merge(hospitalized_df,reduced_df[['FIPS','People_Hospitalized']],on='FIPS', how='left', copy=True)
+    hospitalized_col = "H"+f"{idx:03d}"
+    hospitalized_df.rename(columns={'People_Hospitalized': hospitalized_col}, errors="raise", inplace=True)
+
+    # Store Mortality Rate by merging reduced list and renaming column
+    mortality_df = pd.merge(mortality_df,reduced_df[['FIPS','Mortality_Rate']],on='FIPS', how='left', copy=True)
+    mortality_col = "M"+f"{idx:03d}"
+    mortality_df.rename(columns={'Mortality_Rate': mortality_col}, errors="raise", inplace=True)
+    
+    # Store Testing Rate by merging reduced list and renaming column
+    testing_rate_df = pd.merge(testing_rate_df,reduced_df[['FIPS','Testing_Rate']],on='FIPS', how='left', copy=True)
+    testing_rate_col = "T"+f"{idx:03d}"
+    testing_rate_df.rename(columns={'Testing_Rate': testing_rate_col}, errors="raise", inplace=True)
+    
+    # Store Hospitalization Rate by merging reduced list and renaming column
+    hospitalization_rate_df = pd.merge(hospitalization_rate_df,reduced_df[['FIPS','Hospitalization_Rate']],on='FIPS', how='left', copy=True)
+    hospitalization_rate_col = "H"+f"{idx:03d}"
+    hospitalization_rate_df.rename(columns={'Hospitalization_Rate': hospitalization_rate_col}, errors="raise", inplace=True)
+    
+# Final cleanup (convert values that are integers to to integers)
+confirmed_df = confirmed_df.replace(np.nan,0).astype('int')
+deaths_df = deaths_df.replace(np.nan,0).astype('int')
+
+# Add lists of dates to the combined dataframe as a single 'Dates' column
+combined_state_df['Dates'] = [dates_list]*len(combined_state_df)
+# Add time-series list of confirmed to the combined dataframe as a single 'Confirmed' column
+confirmed_listOlists = confirmed_df[ confirmed_df.columns[confirmed_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['Confirmed'] = confirmed_listOlists
+# Add time-series list of deaths to the combined dataframe as a single 'Deaths' column
+deaths_listOlists = deaths_df[ deaths_df.columns[deaths_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['Deaths'] = deaths_listOlists
+# Add time-series list of recovered to the combined dataframe as a single 'Recovered' column
+recovered_listOlists = recovered_df[ recovered_df.columns[recovered_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['Recovered'] = recovered_listOlists
+# Add time-series list of incident rate to the combined dataframe as a single 'Incident_Rate' column
+incident_rate_listOlists = incident_rate_df[ incident_rate_df.columns[incident_rate_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['Incident_Rate'] = incident_rate_listOlists
+# Add time-series list of people tested to the combined dataframe as a single 'People_Tested' column
+tested_listOlists = tested_df[ tested_df.columns[tested_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['People_Tested'] = tested_listOlists
+# Add time-series list of people hospitalized to the combined dataframe as a single 'People_Hospitalized' column
+hospitalized_listOlists = hospitalized_df[ hospitalized_df.columns[hospitalized_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['People_Hospitalized'] = hospitalized_listOlists
+# Add time-series list of mortality rates to the combined dataframe as a single 'Mortality_Rate' column
+mortality_listOlists = mortality_df[ mortality_df.columns[mortality_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['Mortality_Rate'] = mortality_listOlists
+# Add time-series list of testing rates to the combined dataframe as a single 'Testing_Rate' column
+testing_rate_listOlists = testing_rate_df[ testing_rate_df.columns[testing_rate_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['Testing_Rate'] = testing_rate_listOlists
+# Add time-series list of hospitalization rates to the combined dataframe as a single 'Hospitalization_Rate' column
+hospitalization_rate_listOlists = hospitalization_rate_df[ hospitalization_rate_df.columns[hospitalization_rate_df.columns!='FIPS'] ].values.tolist()
+combined_state_df['Hospitalization_Rate'] = hospitalization_rate_listOlists
+
+# Convert the list of dates into numpy array of days since Jan. 1, 2020 for each observation
+dates = combined_state_df[combined_state_df['FIPS'] == MNFIPS]['Dates'].tolist()[0]
+dates_list = []
+for dat in dates:
+    dates_list.append( iso2days(dat) )
+dates_arr = np.array([dates_list]*len(combined_state_df))
+
+# Convert confirmed/deaths/recovered into arrays
+confirmed_arr = np.array(confirmed_listOlists)
+deaths_arr = np.array(deaths_listOlists)
+
+# At this point I have arrays where the rows are individiual FIPS (counties) and the columns are 
+# (depending on the array) the days since 1/1/2020, number of confirmed cases, number of deaths, 
+# and number of recovered.
+
+# Compute the derivatives (using forward derivative approach)
+dconfirmed_arr = derivative(dates_arr, confirmed_arr)
+ddeaths_arr = derivative(dates_arr, deaths_arr)
+
+# Compute the second derivatives (a bit hinky to use forward derivative again, but...)
+d2confirmed_arr = derivative(dates_arr, dconfirmed_arr)
+d2deaths_arr = derivative(dates_arr, ddeaths_arr)
+
+# Convert numpy arrays to lists of lists for storage in combined dataframe
+combined_state_df['dConfirmed'] = dconfirmed_arr.tolist()
+combined_state_df['d2Confirmed'] = d2confirmed_arr.tolist()
+combined_state_df['dDeaths'] = ddeaths_arr.tolist()
+combined_state_df['d2Deaths'] = d2deaths_arr.tolist()
+
+# Add population data to same array
+combined_state_df = pd.merge(combined_state_df,state_data_df[['FIPS','POPESTIMATE2019', 'NPOPCHG_2019']], on='FIPS', how='left', copy=True)
+
+# Rename some columns before export
+combined_state_df.rename(columns={ 'Province_State': 'State', 
+                                  'POPESTIMATE2019' : 'PopEst2019',
+                                  'NPOPCHG_2019' : 'PopChg2019'}, inplace = True)
+
+# Save the processed time-series data into single file
+combined_datafile = data_dir + "statelevel_combinedCDR.csv"
+combined_state_df.to_csv(combined_datafile)
+
+# Clear variables
+del sorted_csvs, dates_list
+del fips_df, raw_df, confirmed_df, deaths_df, recovered_df
+del confirmed_listOlists, deaths_listOlists, recovered_listOlists, incident_rate_listOlists
+del tested_listOlists, hospitalized_listOlists, mortality_listOlists, testing_rate_listOlists, hospitalization_rate_listOlists
+del dates_arr, confirmed_arr, deaths_arr
+del dconfirmed_arr, ddeaths_arr, d2confirmed_arr, d2deaths_arr
+
+# %%
+print("COMBINED DAILY DATA IN combined_state_df() DATAFRAME")
+print(combined_state_df[(combined_state_df['FIPS'] == MNFIPS) | (combined_state_df['FIPS'] == NDFIPS)])
 
 # %%
 # Show demonstrations of plotting this data here (NEED TO ADD THIS)
