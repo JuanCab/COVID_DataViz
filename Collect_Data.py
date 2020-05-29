@@ -20,9 +20,16 @@
 # This Jupyter notebook reads in the data from a variety of online sources that we need for the COVID Data Vizualization Project.  Some attempts are made to produce simpler to work with output files.  Depending on how long this notebook takes
 # to execute, it may not make sense to 'condense' the data first.
 #
-# - **A Note on the use of Pandas:** I am currently using `Pandas` (aka Python Data Analysis Library, see https://pandas.pydata.org) to read in the CSV files and manipualte them.  This has advantages and annoyances, there may be much better ways to do this, but I was giving this a try for now.
+# - **A Note on the use of Pandas:** I am currently using `Pandas` (aka Python Data Analysis Library, see https://pandas.pydata.org) to read in the CSV files and manipualte them.  This has advantages and annoyances, there may be much better ways to do this, but I was giving this a try for now.  One big annoyance is Pandas insists on labelling each row of data with a index number.  Luckily its pretty easy in many cases to convert Pandas dataframes into lists of lists or numpy arrays for easier data handling.  I do exactly this to very quickly compute the derivatives of the confirmed/deaths/recovered numbers in over 3000 counties in the US.
 #
 # - **A Note about FIPS:** Some of the data includes FIPS codes (a standard geographic identifier) which should ease the process of cross-matching of data.  Clay County is 27027 and Cass County is 38017.  Minnesota is 27, North Dakota is 38.
+#
+# - **Still To Do:** 
+#     1. Collect the State-level Daily data files from John Hopkins into a single combiend data frame
+#     2. Figure out (if possible) a way to assign FIPS values to the Google and Apple mobility data to allow much easier cross-referencing of the data.  
+#     3. Possibly 'condense' mobility data the same way I condensed all the daily data from John Hopkins into a single tighter dataframe.
+#     4. Try to read in the IMHE data.
+#     
 
 # %%
 import os
@@ -37,6 +44,12 @@ from datetime import date, timedelta, datetime
 ## Define variables of interest below
 data_dir = 'our_data/'    # Data directory for files we created
 
+## Define FIPS corresponding to various local areas
+ClayFIPS = 27027
+CassFIPS = 38017
+MNFIPS = 27
+NDFIPS = 38
+
 # %% [markdown]
 # ## US Census Data on Populations of States/Counties (FIPS Present)
 #
@@ -48,7 +61,10 @@ data_dir = 'our_data/'    # Data directory for files we created
 #
 
 # %%
-## Retrieve state level data (restricted to certain columns)
+##
+## Manipulate the US Census Bureau's population estimate data and save a reduced datafile
+##
+
 ## When I retrieved the files, I got an error that `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf1 in position 2: invalid continuation byte`, turns out it is encoded `latin-1`.
 #census_state_csv = "https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/national/totals/nst-est2019-alldata.csv"
 #state_columns_of_interest = {'STATE', 'NAME', 'CENSUS2010POP', 'N_POPCHG2019', 'POPESTIMATE2019'}
@@ -63,8 +79,9 @@ census_county_df = pd.read_csv(census_county_csv,usecols=county_columns_of_inter
 county_data_df = census_county_df[census_county_df['COUNTY'] != 0].copy()
 state_data_df = census_county_df[census_county_df['COUNTY'] == 0].copy()
 
-# %%
-# Manipulate the state-leve data
+##
+## Manipulate the state-level population data (actually grabbed from county file, since its there anyway)
+##
 
 # Add FIPS column for state data then DROP county data and move FIPS to first column before exporting
 state_data_df['FIPS'] = state_data_df['STATE']
@@ -83,10 +100,10 @@ out_states = data_dir + "population_data_states.csv"
 state_data_df.to_csv(out_states)
 
 # %%
-# Showing the local state level population data
-state_data_df[(state_data_df['STNAME'] == 'Minnesota') | (state_data_df['STNAME'] == 'North Dakota')]
+##
+## Manipulate the county-level population data and save a reduced datafile
+##
 
-# %%
 # In county data create FIPS column, remove redundant columns, and then move FIPS columns to first column
 county_data_df['FIPS'] = county_data_df['STATE']*1000 + county_data_df['COUNTY']
 county_data_df.drop(columns=['STATE','COUNTY'], inplace=True)
@@ -104,8 +121,13 @@ out_counties = data_dir + "population_data_counties.csv"
 county_data_df.to_csv(out_counties)
 
 # %%
+# Showing the local state level population data
+print("STATE LEVEL DATA IN state_data_df() DATAFRAME")
+print(state_data_df[(state_data_df['FIPS'] == MNFIPS) | (state_data_df['FIPS'] == NDFIPS)])
+
 # Showing the local county level population data
-county_data_df[(county_data_df['FIPS'] == 27027) | (county_data_df['FIPS'] == 38017)]
+print("\nCOUNTY LEVEL DATA IN county_data_df() DATAFRAME")
+print(county_data_df[(county_data_df['FIPS'] == ClayFIPS) | (county_data_df['FIPS'] == CassFIPS)])
 
 # %% [markdown]
 # ##  Novel Coronavirus (COVID-19) Cases Data (FIPS Present)
@@ -146,7 +168,7 @@ county_data_df[(county_data_df['FIPS'] == 27027) | (county_data_df['FIPS'] == 38
 #   data.
 
 # %%
-# The name of the John Hopkins data directory that I need to update
+# The name of the John Hopkins data directory
 JHdata_dir = "JH_Data/"
 
 # Git pull to sync up the data set to the current version on GitHub
@@ -269,6 +291,36 @@ def reduce_local_dataframe(raw_df, fips_df):
 
 # %%
 ##
+## Load the time series datafiles to experiment with them.  These only contain Deaths and Confirmed cases,
+## so I suspect we won't keep them, since I build the same data from the daily files above.
+##
+
+# Create pandas dataframes containing time-series data (We could reconstruct this by looping through all the daily data, since this is missing number of recovered)
+ts_us_dead_df = pd.read_csv(ts_us_dead_csv)            # Deaths in time series
+ts_us_confirmed_df = pd.read_csv(ts_us_confirmed_csv)  # Confirmed in time series
+
+# We could transpose the dataframe to allow easier extraction of time series data on a per county level
+tmp_df = ts_us_confirmed_df[ (ts_us_confirmed_df['Province_State'] == 'Minnesota') & (ts_us_confirmed_df['Admin2'] == 'Clay') ].T
+tmp_df.rename(columns={ tmp_df.columns[0]: "confirmed" }, inplace = True)
+confirmed_clay = tmp_df[tmp_df.index.str.match('[0-9]*/[0-9]*/[0-9]*')]  # Use pattern matching to find real dates and include
+
+tmp_df = ts_us_dead_df[ (ts_us_confirmed_df['Province_State'] == 'Minnesota') & (ts_us_confirmed_df['Admin2'] == 'Clay') ].T
+tmp_df.rename(columns={ tmp_df.columns[0]: "dead" }, inplace = True)
+dead_clay = tmp_df[tmp_df.index.str.match('[0-9]*/[0-9]*/[0-9]*')] # Use pattern matching to find real dates and include
+
+# Merge the confirmed ill and dead into one dataframe (would like recovered too, but that's not in
+# these times series files).  
+merged_clay = confirmed_clay.merge(dead_clay, left_index=True, right_index=True)
+plot = merged_clay.plot(figsize=(10,8))
+xlabel = plt.xlabel('Date')
+ylabel = plt.title('Confirmed COVID Infections and Deaths')
+title = plt.title('Clay County Confirmed COVID Infections and Deaths')
+
+# NOTE: This is using PANDAS to do the plotting, it will be a lot more flexible to extra data from Pandas and then
+# use matplotlib to make the plots.  For one thing, we could add labels to the plot more easily.
+
+# %%
+##
 ## This is mostly just showing I can just grab a single datasets for the most recent daily data instead of 
 ## trying to grab everything and put it all together.  However, this only allows printing some data
 ##
@@ -287,12 +339,12 @@ daily_world_df = pd.read_csv(daily_world_csv)   # County/Admin totals
 daily_us_df = pd.read_csv(daily_us_csv)         # State totals
 
 # Print county data to screen
-print("LOCAL COUNTY DATA")
-print(daily_world_df[ (daily_world_df['FIPS'] == 27027) | (daily_world_df['FIPS'] == 38017) ])
+print("LOCAL COUNTY DATA IN daily_world_df() DATAFRAME")
+print(daily_world_df[ (daily_world_df['FIPS'] == ClayFIPS) | (daily_world_df['FIPS'] == CassFIPS) ])
 
 # Print state level data to screen (which has data on testing and hospitalization rates)
-print("\nLOCAL STATE DATA")
-print(daily_us_df[ (daily_us_df['FIPS'] == 27) | (daily_us_df['FIPS'] == 38) ])
+print("\nLOCAL STATE DATA IN daily_us_df() DATAFRAME")
+print(daily_us_df[ (daily_us_df['FIPS'] == MNFIPS) | (daily_us_df['FIPS'] == NDFIPS) ])
 
 # %%
 ##
@@ -378,7 +430,7 @@ recovered_listOlists = recovered_df[ recovered_df.columns[recovered_df.columns!=
 combined_cnty_df['Recovered'] = recovered_listOlists
 
 # Convert the list of dates into numpy array of days since Jan. 1, 2020 for each observation
-dates = combined_cnty_df[combined_cnty_df['FIPS'] == 27027]['Dates'].tolist()[0]
+dates = combined_cnty_df[combined_cnty_df['FIPS'] == ClayFIPS]['Dates'].tolist()[0]
 dates_list = []
 for dat in dates:
     dates_list.append( iso2days(dat) )
@@ -432,39 +484,17 @@ del dates_arr, confirmed_arr, deaths_arr, recovered_arr
 del dconfirmed_arr, ddeaths_arr, drecovered_arr, d2confirmed_arr, d2deaths_arr, d2recovered_arr
 
 # %%
-combined_cnty_df
+print("COMBINED DAILY DATA IN combined_cnty_df() DATAFRAME")
+print(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS) | (combined_cnty_df['FIPS'] == CassFIPS)])
+
+# %%
+##
+## Build combined state-level datafiles
+##
+
 
 # %%
 # Show demonstrations of plotting this data here (NEED TO ADD THIS)
-
-# %%
-
-# %%
-##
-## Load the time series datafiles to experiment with them.  These only contain Deaths and Confirmed cases,
-## so I suspect we won't keep them, since I build the same data from the daily files above.
-##
-
-# Create pandas dataframes containing time-series data (We could reconstruct this by looping through all the daily data, since this is missing number of recovered)
-ts_us_dead_df = pd.read_csv(ts_us_dead_csv)            # Deaths in time series
-ts_us_confirmed_df = pd.read_csv(ts_us_confirmed_csv)  # Confirmed in time series
-
-# We could transpose the dataframe to allow easier extraction of time series data on a per county level
-tmp_df = ts_us_confirmed_df[ (ts_us_confirmed_df['Province_State'] == 'Minnesota') & (ts_us_confirmed_df['Admin2'] == 'Clay') ].T
-tmp_df.rename(columns={ tmp_df.columns[0]: "confirmed" }, inplace = True)
-confirmed_clay = tmp_df[tmp_df.index.str.match('[0-9]*/[0-9]*/[0-9]*')]  # Use pattern matching to find real dates and include
-
-tmp_df = ts_us_dead_df[ (ts_us_confirmed_df['Province_State'] == 'Minnesota') & (ts_us_confirmed_df['Admin2'] == 'Clay') ].T
-tmp_df.rename(columns={ tmp_df.columns[0]: "dead" }, inplace = True)
-dead_clay = tmp_df[tmp_df.index.str.match('[0-9]*/[0-9]*/[0-9]*')] # Use pattern matching to find real dates and include
-
-# Merge the confirmed ill and dead into one dataframe (would like recovered too, but that's not in
-# these times series files)
-merged_clay = confirmed_clay.merge(dead_clay, left_index=True, right_index=True)
-merged_clay.plot(figsize=(10,8))
-
-# %%
-confirmed_clay
 
 # %% [markdown]
 # ## Google Mobility Data (NO FIPS Present)
@@ -484,11 +514,10 @@ confirmed_clay
 goog_mobility_csv_url = "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv"
 goog_mobility_df=pd.read_csv(goog_mobility_csv_url, low_memory=False)
 
-# %%
-goog_mobility_clay = goog_mobility_df[ (goog_mobility_df['sub_region_1'] == 'Minnesota') & (goog_mobility_df['sub_region_2'] == 'Clay County')]
-
 # Notice for Clay county we have NaN reported for Parks (see note above) and Transit Stations
-goog_mobility_clay
+goog_mobility_clay = goog_mobility_df[ (goog_mobility_df['sub_region_1'] == 'Minnesota') & (goog_mobility_df['sub_region_2'] == 'Clay County')]
+print("GOOGLE MOBILITY DATA IN goog_mobility_df() FOR CLAY COUNTY")
+print(goog_mobility_clay)
 
 # %% [markdown]
 # ## Apple Mobility Data (NO FIPS Present)
@@ -512,20 +541,19 @@ if (result.status_code == 200):
     jsondata = result.json()
     aapl_mobility_csv_url = aapl_server+jsondata['basePath']+jsondata['regions']['en-us']['csvPath']
     aapl_mobility_df=pd.read_csv(aapl_mobility_csv_url, low_memory=False)
-
-# %%
-# Just showing how I can get clay county data specifically
+    
+# Creating subsets of the full Apple Mobility Data for experimentation
+aapl_mobility_cities = aapl_mobility_df[(aapl_mobility_df['geo_type'] == 'city') & (aapl_mobility_df['country'] == 'United States')]
 aapl_mobility_minneapolis = aapl_mobility_df[(aapl_mobility_df['region'] == 'Minneapolis') & (aapl_mobility_df['sub-region'] == 'Minnesota')]
 aapl_mobility_clay = aapl_mobility_df[(aapl_mobility_df['region'] == 'Clay County') & (aapl_mobility_df['sub-region'] == 'Minnesota')]
 
-# %%
-# Notice only driving information is available here
-aapl_mobility_clay
+# Notice only driving information is available at the county level here
+print("APPLE MOBILITY DATA IN aapl_mobility_df() FOR CLAY COUNTY")
+print(aapl_mobility_clay)
 
-# %%
-# Notice additional information is available for larger cities
-aapl_mobility_cities = aapl_mobility_df[(aapl_mobility_df['geo_type'] == 'city') & (aapl_mobility_df['country'] == 'United States')]
-aapl_mobility_cities
+# Notice additional information is available for larger cities (Sadly not for Fargo)
+print("\nAPPLE MOBILITY DATA IN aapl_mobility_df() FOR MINNEAPOLIS (CITY)")
+print(aapl_mobility_minneapolis)
 
 # %% [markdown]
 # ## IMHE Data on Local Resources
@@ -554,12 +582,17 @@ aapl_mobility_cities
 #
 
 # %%
+##
+## Retrieve the NYT datafiles to see what is there that might be of interest
+##
+
 # Update the NYT Datafiles
 NYTdata_dir = "NYT_Data/"
 g = git.cmd.Git(NYTdata_dir)
-status = g.pull()  # We should check status to see everything is good eventually, for now, I am using this to hide the status message from GitPython module
+# We should check status to see everything is good eventually, 
+# for now, I am using this to hide the status message from GitPython module
+status = g.pull()  
 
-# %%
 # Grab the live data files
 live_county_csv = NYTdata_dir+"live/us-counties.csv"
 live_state_csv = NYTdata_dir+"live/us-states.csv"
@@ -570,14 +603,16 @@ live_county_df = pd.read_csv(live_county_csv)   # County totals
 live_state_df = pd.read_csv(live_state_csv)    # State totals
 live_us_df = pd.read_csv(live_us_csv)       # National totals
 
+# Print county data to screen
+print("LOCAL COUNTY DATA IN live_county_df() DATAFRAME")
+print(live_county_df[ (live_county_df['fips'] == ClayFIPS) | (live_county_df['fips'] == CassFIPS) ])
 
-# %%
-live_county_df[ ((live_county_df['state'] == 'Minnesota') & (live_county_df['county'] == 'Clay')) | ((live_county_df['state'] == 'North Dakota') & (live_county_df['county'] == 'Cass')) ]
+# Print state level data to screen
+print("\nLOCAL STATE DATA IN live_state_df() DATAFRAME")
+print(live_state_df[ (live_state_df['fips'] == MNFIPS) | (live_state_df['fips'] == NDFIPS) ])
 
-# %%
-live_state_df[ (live_state_df['state'] == 'Minnesota')]
-
-# %%
-live_us_df
+# Print national data
+print("\nNATIONAL DATA IN live_us_df() DATAFRAME")
+print(live_us_df)
 
 # %%
