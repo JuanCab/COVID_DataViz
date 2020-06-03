@@ -25,9 +25,7 @@
 # - **A Note about FIPS:** Some of the data includes FIPS codes (a standard geographic identifier) which should ease the process of cross-matching of data.  Clay County is 27027 and Cass County is 38017.  Minnesota is 27, North Dakota is 38.
 #
 # - **Still To Do:** 
-#     1. Figure out (if possible) a way to assign FIPS values to the Google and Apple mobility data to allow much easier cross-referencing of the data.  
-#     3. Possibly 'condense' mobility data the same way I condensed all the daily data from John Hopkins into a single tighter dataframe.
-#     4. Try to read in the IMHE data.
+#     1. Try to read in the IMHE data.
 #     
 
 # %%
@@ -38,6 +36,8 @@ import matplotlib.dates as mdates
 import pandas as pd
 import git
 import requests
+from io import BytesIO
+from zipfile import ZipFile
 from datetime import date, timedelta, datetime
 
 # %%
@@ -58,7 +58,7 @@ NDFIPS = 38
 # - **County Level Data**: https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/totals/co-est2019-alldata.csv
 # - **State Level Data**: https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/national/totals/nst-est2019-alldata.csv
 #
-#
+# **Suggested Citation**:  U.S. Census Bureau, Population Division (Release Date: March 2020)
 
 # %%
 ##
@@ -167,6 +167,8 @@ print(county_data_df[(county_data_df['FIPS'] == ClayFIPS) | (county_data_df['FIP
 #   time-series data and wrote it to a CSV file. Accessing this one file will be a
 #   lot faster than looping through all the datafiles each time we load up the
 #   data.
+#   
+# **Suggested Citation**: the COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University.
 
 # %%
 # The name of the John Hopkins data directory
@@ -837,7 +839,7 @@ title = this_axs.set_title("COVID Death Change Rate")
 # # Next few blocks of code is grabbing the Google and Apple mobility data and cross-matching with US Census Bureau FIPS data
 
 # %% [markdown]
-# ## Google Mobility Data (NO FIPS Present)
+# ## Google Mobility Data (NO FIPS Information Provided)
 #
 # This data is described at https://www.google.com/covid19/mobility/ and can be downloaded in a single monolithic CSV file at https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv
 #
@@ -850,6 +852,8 @@ title = this_axs.set_title("COVID Death Change Rate")
 # > Note, *Parks* typically means official national parks and not the general outdoors found in rural areas.
 #
 # Also, I'll note that aggregated national data appears to be available by setting `sub_region_1` **and** `sub_region_2` to `NaN` and state-level data by setting only `sub_region_2` to `NaN`.
+#
+# **Suggested Citation**: Google LLC "Google COVID-19 Community Mobility Reports". https://www.google.com/covid19/mobility/ Accessed: `<Date>.`
 
 # %%
 # Google Mobility Data URL
@@ -1094,7 +1098,7 @@ goog_mobility_cnty_reduced['workplaces_percent_change_from_baseline'] = workplac
 goog_mobility_cnty_reduced['residential_percent_change_from_baseline'] = residential_listOlists
 
 # %% [markdown]
-# ### FIPS coded Google Mobility data exported here!
+# ### FIPS-matched Google Mobility data exported here!
 #
 # **Note to Developers:** Check the `date` column in the reduced data to see if it is a real match or just a marker for a non-match.  Furthermore be away Google has a lot of blank (`NaN`) entries in a lot of columns and variable numbers of entries for each county/state.
 
@@ -1114,9 +1118,11 @@ if (fatal_error == 0):
     goog_mobility_cnty_reduced.to_csv(goog_mobility_cnty_fname, index=False)
 
 # %% [markdown]
-# ## Apple Mobility Data (NO FIPS Present)
+# ## Apple Mobility Data (NO FIPS Information Provided)
 #
 # This data is described at https://www.apple.com/covid19/mobility and can be downloaded in a single monolithic CSV file at https://covid19-static.cdn-apple.com/covid19-mobility-data/2008HotfixDev42/v3/en-us/applemobilitytrends-2020-05-24.csv (That URL is hidden in the mobility page link and appears to be updated regularly.  We may need to scrape the page to identify the link).
+#
+# **About this Data (copied from Apple's site)**: The CSV file on this site show a relative volume of directions requests per country/region, sub-region or city compared to a baseline volume on January 13th, 2020. We define our day as midnight-to-midnight, Pacific time. Cities are defined as the greater metropolitan area and their geographic boundaries remain constant across the data set. In many countries/regions, sub-regions, and cities, relative volume has increased since January 13th, consistent with normal, seasonal usage of Apple Maps. Day of week effects are important to normalize as you use this data. Data that is sent from users’ devices to the Maps service is associated with random, rotating identifiers so Apple doesn’t have a profile of individual movements and searches. Apple Maps has no demographic information about our users, so we can’t make any statements about the representativeness of usage against the overall population.
 #
 # Apple tracks three kinds of Apple Maps routing requests: Driving, Walking, Transit.  But the only data available at the state and county level is the Driving data.
 #
@@ -1139,10 +1145,6 @@ if (result.status_code == 200):
     
 # There are four 'geo_types' (aapl_mobility_df['geo_type' == ].unique() returns ['country/region', 'city', 'sub-region', 'county'])
 # Checking those types here
-
-# Creating subsets of the full Apple Mobility Data for experimentation
-#aapl_mobility_cities = aapl_mobility_df[(aapl_mobility_df['geo_type'] == 'city') & (aapl_mobility_df['country'] == 'United States')]
-#aapl_mobility_minneapolis = aapl_mobility_df[(aapl_mobility_df['region'] == 'Minneapolis') & (aapl_mobility_df['sub-region'] == 'Minnesota')]
 
 # Get Washington DC Data
 dc_entry = aapl_mobility_df[(aapl_mobility_df['country'] == 'United States') 
@@ -1325,16 +1327,279 @@ if (fatal_error == 0):
     aapl_mobility_cnty_reduced.to_csv(aapl_mobility_cnty_fname, index=False)
 
 # %% [markdown]
-# ### FIPS coded Apple Mobility data exported here!
+# ### FIPS-matched Apple Mobility data exported here!
 #
-# **Note to Developers:** Apple has fewer blank (`NaN`) entries except for the 1000+ counties with no published data which are recorded here.
+# **Note to Developers:** Apple has fewer blank (`NaN`) entries when a county was included, but there are 1032 counties with no published data which are in this expoerted file as `NaN` for both dates and driving mobility information.
 
 # %% [markdown]
-# ## IMHE Data on Local Resources
+# ## Institute for Health Metrics and Evaluation (IMHE) Data on Local Resources (NO FIPS Information Provided)
 #
-# There is IMHE data on local resources at http://www.healthdata.org/covid/data-downloads although I am not sure that data is available with county level resolution as I haven't fully investigated it yet.
+# There is Institute for Health Metrics and Evaluation data on local resources at http://www.healthdata.org/covid/data-downloads although data only has state level resolution. 
+#
+# **Suggested Citation**: Institute for Health Metrics and Evaluation (IHME). COVID-19 Hospital Needs and Death Projections. Seattle, United States of America: Institute for Health Metrics and Evaluation (IHME), University of Washington, 2020.
 
 # %%
+##
+## Retrieve the IMHE data which is in the form of a ZIP file
+##
+
+# I modeled the extraction of the ZIP data downloaded from a URL without writing to disk on examples found at
+# https://stackoverflow.com/questions/5710867/downloading-and-unzipping-a-zip-file-without-writing-to-disk
+
+# Retrieve the ZIP file into memory and get the filelist
+imhe_url = "https://ihmecovid19storage.blob.core.windows.net/latest/ihme-covid19.zip"
+imhe_result = requests.get(imhe_url).content
+zipfile = ZipFile(BytesIO(imhe_result))
+filelist = zipfile.namelist()
+
+# The challenge is that the files in the ZIP file are placed in a date based directory, so perform a search for the proper strings in the filenames
+summary_csv = [name for name in filelist if "Summary_stats_all_locs" in name][0]
+hospitalization_csv = [name for name in filelist if "Hospital" in name][0]
+
+# Get the CSV data into pandas dataframes
+imhe_summary_df=pd.read_csv(zipfile.open(summary_csv), low_memory=False)
+imhe_hospitalizations_df=pd.read_csv(zipfile.open(hospitalization_csv), low_memory=False)
+
+
+# %%
+##
+## Summary data processing
+##
+
+## Summary data includes numbers or dates for the following for each state
+#             'peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper': Mean/Lower/Upper Uncertainty peak bed use date
+# 'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper': Mean/Lower/Upper Uncertainty ICU bed use date
+#          'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper': Mean/Lower/Upper Uncertainty Ventilator use date
+#    'all_bed_capacity', 'icu_bed_capacity', 'all_bed_usage', 'icu_bed_usage': Number of beds/ICU beds/avg beds used/avg ICU beds used
+#                          'travel_limit_start_date', 'travel_limit_end_date': Severe travel restrictions start/end dates
+#                                'stay_home_start_date', 'stay_home_end_date': Stay at home order start/end dates
+#                    'educational_fac_start_date', 'educational_fac_end_date': Educational facilities closure start/end dates
+#      'any_gathering_restrict_start_date', 'any_gathering_restrict_end_date': Any gathering restrictions start/end dates
+#                          'any_business_start_date', 'any_business_end_date': Any business closures start/end dates
+#          'all_non-ess_business_start_date', 'all_non-ess_business_end_date': Non-essential businesses ordered to close start/end dates
+#
+# 'NaN' present for dates means it isn't known.
+
+# Match to FIPS data
+state_fips_df = state_data_df.copy()
+state_fips_df.drop(columns=['POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
+imhe_summary_cleaned = pd.merge(state_fips_df,imhe_summary_df,left_on='STNAME', right_on='location_name', how='left', copy=True)
+
+# Dropped redundant state name and excess capacity of beds, since computable from available columns
+imhe_summary_cleaned.drop(columns=['STNAME', 'available_all_nbr', 'available_icu_nbr'], inplace=True)
+imhe_summary_cleaned.rename(columns={ 'location_name': 'state' }, inplace = True)
+
+# Write out file to disk
+imhe_summary_fname = data_dir + "imhe_summary.csv"
+print(" - IMHE state level summary data exported to ", imhe_summary_fname)
+imhe_summary_cleaned.to_csv(imhe_summary_fname, index=False)
+
+# Present summary data for local area
+print("\nIMHE SUMMARY DATA IN imhe_summary_cleaned() FOR MN and ND")
+imhe_summary_local = imhe_summary_cleaned[(imhe_summary_cleaned.FIPS == MNFIPS) | (imhe_summary_cleaned.FIPS == NDFIPS) ]
+print(imhe_summary_local)
+
+# %%
+##
+## Hospitalization data processing
+##
+
+## Hospitalization data is time series date for the following projections by the IMHE:
+#                             'allbed_mean', 'allbed_lower','allbed_upper': Predicted COVID beds needed with upper/lower bounds
+#                            'ICUbed_mean', 'ICUbed_lower', 'ICUbed_upper': Predicted COVID ICU beds needed with upper/lower bounds
+#                            'InvVen_mean', 'InvVen_lower', 'InvVen_upper': Predicted COVID ventilators needed with upper/lower bounds
+#                            'deaths_mean', 'deaths_lower', 'deaths_upper': Predicted COVID daily deaths with upper/lower bounds
+#                               'admis_mean', 'admis_lower', 'admis_upper': Predicted hospital admissions with upper/lower bounds
+#                            'newICU_mean', 'newICU_lower', 'newICU_upper': Predicted new ICU admissions per day with upper/lower bounds
+#                            'totdea_mean', 'totdea_lower', 'totdea_upper': Predicted COVID cumilative deaths with upper/lower bounds
+# 'deaths_mean_smoothed', 'deaths_lower_smoothed', 'deaths_upper_smoothed': Smoothed version of predicted COVID daily deaths
+# 'totdea_mean_smoothed', 'totdea_lower_smoothed', 'totdea_upper_smoothed': Smoothed version of cumilative COVID deaths
+#                                   'total_tests_data_type', 'total_tests': observed/predicted tests and total number of tests
+#                                                   'confirmed_infections': Observed confirmed infections only
+#    'est_infections_mean', 'est_infections_lower', 'est_infections_upper': Predicted estimated infections with upper/lower bounds
+#
+# 'NaN' present for dates means it isn't known.
+
+# Match to FIPS data
+imhe_hospitalizations_cleaned = pd.merge(state_fips_df,imhe_hospitalizations_df,left_on='STNAME', right_on='location_name', how='left', copy=True)
+
+# Dropped redundant state name columns (and data on mobility, and bed overuse since its computable from other data )
+imhe_hospitalizations_cleaned.drop(columns=['STNAME', 'V1', 'bedover_mean', 'bedover_lower', 'bedover_upper', 
+                                            'icuover_mean', 'icuover_lower', 'icuover_upper', 
+                                            'mobility_data_type', 'mobility_composite' ], inplace=True)
+imhe_hospitalizations_cleaned.rename(columns={ 'location_name': 'state' }, inplace = True)
+
+##
+## Add conversion of separate dataframe rows as dates into a single row per location with time series stored as lists
+## For the county data
+##
+imhe_hospitalizations_reduced = state_fips_df.copy()
+
+# Create blank lists of lists
+dates_listOlists = []
+allbed_mean_listOlists = []
+allbed_lower_listOlists = []
+allbed_upper_listOlists = []
+ICUbed_mean_listOlists = []
+ICUbed_lower_listOlists = []
+ICUbed_upper_listOlists = []
+InvVen_mean_listOlists = []
+InvVen_lower_listOlists = []
+InvVen_upper_listOlists = []
+deaths_mean_listOlists = []
+deaths_lower_listOlists = []
+deaths_upper_listOlists = []
+admis_mean_listOlists = []
+admis_lower_listOlists = []
+admis_upper_listOlists = []
+newICU_mean_listOlists = []
+newICU_lower_listOlists = []
+newICU_upper_listOlists = []
+totdea_mean_listOlists = []
+totdea_lower_listOlists = []
+totdea_upper_listOlists = []
+deaths_mean_smoothed_listOlists = []
+deaths_lower_smoothed_listOlists = []
+deaths_upper_smoothed_listOlists = []
+totdea_mean_smoothed_listOlists = []
+totdea_lower_smoothed_listOlists = []
+totdea_upper_smoothed_listOlists = []
+total_tests_data_type_listOlists = []
+total_tests_listOlists = []
+confirmed_infections_listOlists = []
+est_infections_mean_listOlists = []
+est_infections_lower_listOlists = []
+est_infections_upper_listOlists = []
+    
+for fips in state_fips_df['FIPS']:
+    # Pull only the data for this FIPS number and extract the time series
+    subset = imhe_hospitalizations_cleaned[imhe_hospitalizations_cleaned['FIPS'] == fips].copy()
+    timeseries = subset[subset.columns[(subset.columns!='FIPS') & (subset.columns!='state')   ]].copy()
+    timeseries = timeseries.set_index('date')
+    trans = timeseries.T
+
+    # Convert the time series into lists in memory
+    dates_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+    allbed_mean_list = trans.loc['allbed_mean'].values.tolist()
+    allbed_lower_list = trans.loc['allbed_lower'].values.tolist()
+    allbed_upper_list = trans.loc['allbed_upper'].values.tolist()
+    ICUbed_mean_list = trans.loc['ICUbed_mean'].values.tolist()
+    ICUbed_lower_list = trans.loc['ICUbed_lower'].values.tolist()
+    ICUbed_upper_list = trans.loc['ICUbed_upper'].values.tolist()
+    InvVen_mean_list = trans.loc['InvVen_mean'].values.tolist()
+    InvVen_lower_list = trans.loc['InvVen_lower'].values.tolist()
+    InvVen_upper_list = trans.loc['InvVen_upper'].values.tolist()
+    deaths_mean_list = trans.loc['deaths_mean'].values.tolist()
+    deaths_lower_list = trans.loc['deaths_lower'].values.tolist()
+    deaths_upper_list = trans.loc['deaths_upper'].values.tolist()
+    admis_mean_list = trans.loc['admis_mean'].values.tolist()
+    admis_lower_list = trans.loc['admis_lower'].values.tolist()
+    admis_upper_list = trans.loc['admis_upper'].values.tolist()
+    newICU_mean_list = trans.loc['newICU_mean'].values.tolist()
+    newICU_lower_list = trans.loc['newICU_lower'].values.tolist()
+    newICU_upper_list = trans.loc['newICU_upper'].values.tolist()
+    totdea_mean_list = trans.loc['totdea_mean'].values.tolist()
+    totdea_lower_list = trans.loc['totdea_lower'].values.tolist()
+    totdea_upper_list = trans.loc['totdea_upper'].values.tolist()
+    deaths_mean_smoothed_list = trans.loc['deaths_mean_smoothed'].values.tolist()
+    deaths_lower_smoothed_list = trans.loc['deaths_lower_smoothed'].values.tolist()
+    deaths_upper_smoothed_list = trans.loc['deaths_upper_smoothed'].values.tolist()
+    totdea_mean_smoothed_list = trans.loc['totdea_mean_smoothed'].values.tolist()
+    totdea_lower_smoothed_list = trans.loc['totdea_lower_smoothed'].values.tolist()
+    totdea_upper_smoothed_list = trans.loc['totdea_upper_smoothed'].values.tolist()
+    total_tests_data_type_list = trans.loc['total_tests_data_type'].values.tolist()
+    total_tests_list = trans.loc['total_tests'].values.tolist()
+    confirmed_infections_list = trans.loc['confirmed_infections'].values.tolist()
+    est_infections_mean_list = trans.loc['est_infections_mean'].values.tolist()
+    est_infections_lower_list = trans.loc['est_infections_lower'].values.tolist()
+    est_infections_upper_list = trans.loc['est_infections_upper'].values.tolist()
+    
+    # Add lists to lists
+    dates_listOlists.append(dates_list)
+    allbed_mean_listOlists.append(allbed_mean_list)
+    allbed_lower_listOlists.append(allbed_lower_list)
+    allbed_upper_listOlists.append(allbed_upper_list)
+    ICUbed_mean_listOlists.append(ICUbed_mean_list)
+    ICUbed_lower_listOlists.append(ICUbed_lower_list)
+    ICUbed_upper_listOlists.append(ICUbed_upper_list)
+    InvVen_mean_listOlists.append(InvVen_mean_list)
+    InvVen_lower_listOlists.append(InvVen_lower_list)
+    InvVen_upper_listOlists.append(InvVen_upper_list)
+    deaths_mean_listOlists.append(deaths_mean_list)
+    deaths_lower_listOlists.append(deaths_lower_list)
+    deaths_upper_listOlists.append(deaths_upper_list)
+    admis_mean_listOlists.append(admis_mean_list)
+    admis_lower_listOlists.append(admis_lower_list)
+    admis_upper_listOlists.append(admis_upper_list)
+    newICU_mean_listOlists.append(newICU_mean_list)
+    newICU_lower_listOlists.append(newICU_lower_list)
+    newICU_upper_listOlists.append(newICU_upper_list)
+    totdea_mean_listOlists.append(totdea_mean_list)
+    totdea_lower_listOlists.append(totdea_lower_list)
+    totdea_upper_listOlists.append(totdea_upper_list)
+    deaths_mean_smoothed_listOlists.append(deaths_mean_smoothed_list)
+    deaths_lower_smoothed_listOlists.append(deaths_lower_smoothed_list)
+    deaths_upper_smoothed_listOlists.append(deaths_upper_smoothed_list)
+    totdea_mean_smoothed_listOlists.append(totdea_mean_smoothed_list)
+    totdea_lower_smoothed_listOlists.append(totdea_lower_smoothed_list)
+    totdea_upper_smoothed_listOlists.append(totdea_upper_smoothed_list)
+    total_tests_data_type_listOlists.append(total_tests_data_type_list)
+    total_tests_listOlists.append(total_tests_list)
+    confirmed_infections_listOlists.append(confirmed_infections_list)
+    est_infections_mean_listOlists.append(est_infections_mean_list)
+    est_infections_lower_listOlists.append(est_infections_lower_list)
+    est_infections_upper_listOlists.append(est_infections_upper_list)    
+
+# Results in error ValueError: Length of values does not match length of index
+imhe_hospitalizations_reduced['dates'] = dates_listOlists
+imhe_hospitalizations_reduced['allbed_mean'] = allbed_mean_listOlists
+imhe_hospitalizations_reduced['allbed_lower'] = allbed_lower_listOlists
+imhe_hospitalizations_reduced['allbed_upper'] = allbed_upper_listOlists
+imhe_hospitalizations_reduced['ICUbed_mean'] = ICUbed_mean_listOlists
+imhe_hospitalizations_reduced['ICUbed_lower'] = ICUbed_lower_listOlists
+imhe_hospitalizations_reduced['ICUbed_upper'] = ICUbed_upper_listOlists
+imhe_hospitalizations_reduced['InvVen_mean'] = InvVen_mean_listOlists
+imhe_hospitalizations_reduced['InvVen_lower'] = InvVen_lower_listOlists
+imhe_hospitalizations_reduced['InvVen_upper'] = InvVen_upper_listOlists
+imhe_hospitalizations_reduced['deaths_mean'] = deaths_mean_listOlists
+imhe_hospitalizations_reduced['deaths_lower'] = deaths_lower_listOlists
+imhe_hospitalizations_reduced['deaths_upper'] = deaths_upper_listOlists
+imhe_hospitalizations_reduced['admis_mean'] = admis_mean_listOlists
+imhe_hospitalizations_reduced['admis_lower'] = admis_lower_listOlists
+imhe_hospitalizations_reduced['admis_upper'] = admis_upper_listOlists
+imhe_hospitalizations_reduced['newICU_mean'] = newICU_mean_listOlists
+imhe_hospitalizations_reduced['newICU_lower'] = newICU_lower_listOlists
+imhe_hospitalizations_reduced['newICU_upper'] = newICU_upper_listOlists
+imhe_hospitalizations_reduced['totdea_mean'] = totdea_mean_listOlists
+imhe_hospitalizations_reduced['totdea_lower'] = totdea_lower_listOlists
+imhe_hospitalizations_reduced['totdea_upper'] = totdea_upper_listOlists
+imhe_hospitalizations_reduced['deaths_mean_smoothed'] = deaths_mean_smoothed_listOlists
+imhe_hospitalizations_reduced['deaths_lower_smoothed'] = deaths_lower_smoothed_listOlists
+imhe_hospitalizations_reduced['deaths_upper_smoothed'] = deaths_upper_smoothed_listOlists
+imhe_hospitalizations_reduced['totdea_mean_smoothed'] = totdea_mean_smoothed_listOlists
+imhe_hospitalizations_reduced['totdea_lower_smoothed'] = totdea_lower_smoothed_listOlists
+imhe_hospitalizations_reduced['totdea_upper_smoothed'] = totdea_upper_smoothed_listOlists
+imhe_hospitalizations_reduced['total_tests_data_type'] = total_tests_data_type_listOlists
+imhe_hospitalizations_reduced['total_tests'] = total_tests_listOlists
+imhe_hospitalizations_reduced['confirmed_infections'] = confirmed_infections_listOlists
+imhe_hospitalizations_reduced['est_infections_mean'] = est_infections_mean_listOlists
+imhe_hospitalizations_reduced['est_infections_lower'] = est_infections_lower_listOlists
+imhe_hospitalizations_reduced['est_infections_upper'] = est_infections_upper_listOlists
+
+# Write out file to disk
+imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.csv"
+print(" - IMHE hospitalization level summary data exported to ", imhe_summary_fname)
+imhe_hospitalizations_reduced.to_csv(imhe_hospitalizations_fname, index=False)
+
+# Present summary data for local area
+print("\nIMHE SUMMARY DATA IN imhe_hospitalizations_reduced() FOR MN and ND")
+imhe_hospitalizations_local = imhe_hospitalizations_reduced[(imhe_hospitalizations_reduced.FIPS == MNFIPS) | (imhe_hospitalizations_reduced.FIPS == NDFIPS) ]
+print(imhe_hospitalizations_local)
+
+# %% [markdown]
+# ### FIPS-matched IMHE data exported here!
+#
+# **Note to Developers:** IMHE data has a few blank (`NaN`) entries for dates, presumably reflecting unknown values.  Also, some of the dates are from 2019, which suggests no known values.
 
 # %% [markdown]
 # ## NY Times Data on Probable Deaths/Cases (FIPS Present)
