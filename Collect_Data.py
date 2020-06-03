@@ -1042,6 +1042,9 @@ goog_mobility_states_reduced['transit_stations_percent_change_from_baseline'] = 
 goog_mobility_states_reduced['workplaces_percent_change_from_baseline'] = workplaces_listOlists
 goog_mobility_states_reduced['residential_percent_change_from_baseline'] = residential_listOlists
 
+# Rename STNAME column to state
+goog_mobility_states_reduced.rename(columns={'STNAME': 'state'}, errors="raise", inplace=True)
+
 # %%
 ##
 ## Add conversion of separate dataframe rows as dates into a single row per location with time series stored as lists
@@ -1093,6 +1096,11 @@ goog_mobility_cnty_reduced['transit_stations_percent_change_from_baseline'] = tr
 goog_mobility_cnty_reduced['workplaces_percent_change_from_baseline'] = workplaces_listOlists
 goog_mobility_cnty_reduced['residential_percent_change_from_baseline'] = residential_listOlists
 
+# Rename STNAME and CTYNAME columns to state and county, drop redundant columns
+goog_mobility_cnty_reduced.rename(columns={'STNAME': 'state', 'CTYNAME': 'county'}, errors="raise", inplace=True)
+goog_mobility_cnty_reduced.drop(columns=['CTYNAME_MATCH'], inplace=True)
+    
+
 # %% [markdown]
 # ### FIPS-matched Google Mobility data exported here!
 #
@@ -1107,8 +1115,6 @@ if (fatal_error == 0):
     print(" - Google state level mobility data exported to ", goog_mobility_states_fname)
     goog_mobility_states_reduced.to_csv(goog_mobility_states_fname, index=False)
     
-    goog_mobility_cnty_cleaned.drop(columns=['CTYNAME_MATCH', 'sub_region_2_MATCH', 'country_region_code', 'country_region', 'sub_region_1', 'sub_region_2'], inplace=True)
-    goog_mobility_states_cleaned.rename(columns={ 'STNAME': 'state'}, inplace = True)
     goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.csv"
     print(" - Google county level mobility data exported to ", goog_mobility_cnty_fname)
     goog_mobility_cnty_reduced.to_csv(goog_mobility_cnty_fname, index=False)
