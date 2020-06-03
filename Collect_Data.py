@@ -887,9 +887,9 @@ cnty_fips_df = county_data_df.copy()
 cnty_fips_df.drop(columns=['POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
 
 ## Match state-level mobility data to FIPS and then drop redundant columns and rename state name to be consistent.  
-goog_mobility_states_reduced = pd.merge(state_fips_df,goog_mobility_states,left_on='STNAME', right_on='sub_region_1', how='left', copy=True)
-goog_mobility_states_reduced.drop(columns=['country_region_code', 'country_region', 'sub_region_1', 'sub_region_2'], inplace=True)
-goog_mobility_states_reduced.rename(columns={ 'STNAME': 'tate'}, inplace = True)
+goog_mobility_states_cleaned = pd.merge(state_fips_df,goog_mobility_states,left_on='STNAME', right_on='sub_region_1', how='left', copy=True)
+goog_mobility_states_cleaned.drop(columns=['country_region_code', 'country_region', 'sub_region_1', 'sub_region_2'], inplace=True)
+goog_mobility_states_cleaned.rename(columns={ 'STNAME': 'state'}, inplace = True)
 
 ##
 ## Match county-level mobility data to FIPS (trickier as it requires a state and county name match
@@ -916,7 +916,7 @@ goog_mobility_cnty['sub_region_2_MATCH'] = goog_mobility_cnty['sub_region_2_MATC
 # were ones in which there was 'nan' for the date column, indicating no matches in the Google Mobility dataset.
 
 ## This leftward match means EVERY county FIPS should still be represented, although need to confirm mismatches
-goog_mobility_cnty_reduced = pd.merge(cnty_fips_df,goog_mobility_cnty,left_on=['STNAME', 'CTYNAME_MATCH'], right_on=['sub_region_1', 'sub_region_2_MATCH'], how='left', copy=True)
+goog_mobility_cnty_cleaned = pd.merge(cnty_fips_df,goog_mobility_cnty,left_on=['STNAME', 'CTYNAME_MATCH'], right_on=['sub_region_1', 'sub_region_2_MATCH'], how='left', copy=True)
 
 ##
 ## Check the date column in the reduced data to see if it is a real match or just a marker for a non-match
@@ -935,7 +935,7 @@ cnt = 0
 bad_entries = ""
 for FIPS in cnty_fips_df['FIPS']:
     # Check this FIPS number
-    rows = goog_mobility_cnty_reduced[goog_mobility_cnty_reduced['FIPS'] == FIPS]
+    rows = goog_mobility_cnty_cleaned[goog_mobility_cnty_cleaned['FIPS'] == FIPS]
     matches = rows.shape[0]
     city = rows['CTYNAME_MATCH'].iloc[0]
     state = rows['STNAME'].iloc[0]
@@ -947,7 +947,7 @@ for FIPS in cnty_fips_df['FIPS']:
             
         if ((state != last_state) & (last_state not in cleared_states)):
             # Print counties lists
-            reduced_ctys = goog_mobility_cnty_reduced[goog_mobility_cnty_reduced['STNAME'] == last_state]['CTYNAME_MATCH'].unique()
+            reduced_ctys = goog_mobility_cnty_cleaned[goog_mobility_cnty_cleaned['STNAME'] == last_state]['CTYNAME_MATCH'].unique()
             mobility_ctys = goog_mobility_cnty[goog_mobility_cnty['sub_region_1'] == last_state]['sub_region_2'].unique()
             
             mismatch = len(reduced_ctys) - len(mobility_ctys)  # Number of missing counties
@@ -975,7 +975,7 @@ for FIPS in cnty_fips_df['FIPS']:
         unmatched_cnt += 1
 
 # Print counties for last state considered=
-reduced_ctys = goog_mobility_cnty_reduced[goog_mobility_cnty_reduced['STNAME'] == last_state]['CTYNAME_MATCH'].unique()
+reduced_ctys = goog_mobility_cnty_cleaned[goog_mobility_cnty_cleaned['STNAME'] == last_state]['CTYNAME_MATCH'].unique()
 mobility_ctys = goog_mobility_cnty[goog_mobility_cnty['sub_region_1'] == last_state]['sub_region_2'].unique()
 mismatch = len(reduced_ctys) - len(mobility_ctys)  # Number of missing counties
 if (cnt != mismatch):
@@ -991,10 +991,112 @@ if (cnt != mismatch):
         
 print(f"A total of {unmatched_cnt} FIPS not matched to Google mobility data (if nothing printed above this, all US Census Bureau counties accounted for)")
 
+# %%
+##
+## Add conversion of separate dataframe rows as dates into a single row per location with time series stored as lists
+## For the state data
+##
+goog_mobility_states_reduced = state_fips_df.copy()
+
+# Create blank lists of lists
+dates_listOlists = []
+retail_listOlists = []
+grocery_listOlists = []
+parks_listOlists = []
+transit_listOlists = []
+workplaces_listOlists = []
+residential_listOlists = []
+    
+for fips in state_fips_df['FIPS']:
+    #print(f"Processing FIPS {fips}")
+    # Pull only the data for this FIPS number and extract the time series
+    subset = goog_mobility_states_cleaned[goog_mobility_states_cleaned['FIPS'] == fips].copy()
+    timeseries = subset[subset.columns[(subset.columns!='FIPS') & (subset.columns!='state')]].copy()
+    timeseries = timeseries.set_index('date')
+    trans = timeseries.T
+
+    # Convert the time series into lists in memory
+    dates_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+    retail_list = trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()
+    grocery_list = trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()
+    parks_list = trans.loc['parks_percent_change_from_baseline'].values.tolist()
+    transit_list = trans.loc['transit_stations_percent_change_from_baseline'].values.tolist()
+    workplaces_list = trans.loc['workplaces_percent_change_from_baseline'].values.tolist()
+    residential_list = trans.loc['residential_percent_change_from_baseline'].values.tolist()
+    
+    # Add lists to lists
+    dates_listOlists.append(dates_list)
+    retail_listOlists.append(retail_list)
+    grocery_listOlists.append(grocery_list)
+    parks_listOlists.append(transit_list)
+    transit_listOlists.append(dates_list)
+    workplaces_listOlists.append(workplaces_list)
+    residential_listOlists.append(residential_list)
+    
+# Results in error ValueError: Length of values does not match length of index
+goog_mobility_states_reduced['dates'] = dates_listOlists
+goog_mobility_states_reduced['retail_and_recreation_percent_change_from_baseline'] = retail_listOlists
+goog_mobility_states_reduced['grocery_and_pharmacy_percent_change_from_baseline'] = grocery_listOlists
+goog_mobility_states_reduced['parks_percent_change_from_baseline'] = parks_listOlists
+goog_mobility_states_reduced['transit_stations_percent_change_from_baseline'] = transit_listOlists
+goog_mobility_states_reduced['workplaces_percent_change_from_baseline'] = workplaces_listOlists
+goog_mobility_states_reduced['residential_percent_change_from_baseline'] = residential_listOlists
+
+# %%
+##
+## Add conversion of separate dataframe rows as dates into a single row per location with time series stored as lists
+## For the county data
+##
+goog_mobility_cnty_reduced = cnty_fips_df.copy()
+
+# Create blank lists of lists
+dates_listOlists = []
+retail_listOlists = []
+grocery_listOlists = []
+parks_listOlists = []
+transit_listOlists = []
+workplaces_listOlists = []
+residential_listOlists = []
+    
+for fips in cnty_fips_df['FIPS']:
+    # print(f"Processing FIPS {fips}")
+    # Pull only the data for this FIPS number and extract the time series
+    subset = goog_mobility_cnty_cleaned[goog_mobility_cnty_cleaned['FIPS'] == fips].copy()
+    timeseries = subset[subset.columns[(subset.columns!='FIPS') & (subset.columns!='state')]].copy()
+    timeseries = timeseries.set_index('date')
+    trans = timeseries.T
+
+    # Convert the time series into lists in memory
+    dates_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+    retail_list = trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()
+    grocery_list = trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()
+    parks_list = trans.loc['parks_percent_change_from_baseline'].values.tolist()
+    transit_list = trans.loc['transit_stations_percent_change_from_baseline'].values.tolist()
+    workplaces_list = trans.loc['workplaces_percent_change_from_baseline'].values.tolist()
+    residential_list = trans.loc['residential_percent_change_from_baseline'].values.tolist()
+    
+    # Add lists to lists
+    dates_listOlists.append(dates_list)
+    retail_listOlists.append(retail_list)
+    grocery_listOlists.append(grocery_list)
+    parks_listOlists.append(transit_list)
+    transit_listOlists.append(dates_list)
+    workplaces_listOlists.append(workplaces_list)
+    residential_listOlists.append(residential_list)
+    
+# Results in error ValueError: Length of values does not match length of index
+goog_mobility_cnty_reduced['dates'] = dates_listOlists
+goog_mobility_cnty_reduced['retail_and_recreation_percent_change_from_baseline'] = retail_listOlists
+goog_mobility_cnty_reduced['grocery_and_pharmacy_percent_change_from_baseline'] = grocery_listOlists
+goog_mobility_cnty_reduced['parks_percent_change_from_baseline'] = parks_listOlists
+goog_mobility_cnty_reduced['transit_stations_percent_change_from_baseline'] = transit_listOlists
+goog_mobility_cnty_reduced['workplaces_percent_change_from_baseline'] = workplaces_listOlists
+goog_mobility_cnty_reduced['residential_percent_change_from_baseline'] = residential_listOlists
+
 # %% [markdown]
 # ### FIPS coded Google Mobility data exported here!
 #
-# **Note to Developers:** Check the `date` column in the reduced data to see if it is a real match or just a marker for a non-match.  Furthermore be aware Google has a lot of blank (`NaN`) entries in a lot of columns and variable numbers of entries for each county/state.  Also note that I did **NOT** collapse the different dates of Google mobility data into a single list entry, in essence because it doesn't save time reading the data later, BUT it means this will be a different format of data than the other datasets.  Whatever reading routine we generate is going to have to be aware of it.
+# **Note to Developers:** Check the `date` column in the reduced data to see if it is a real match or just a marker for a non-match.  Furthermore be away Google has a lot of blank (`NaN`) entries in a lot of columns and variable numbers of entries for each county/state.
 
 # %%
 # Once data has been checked, remove redundant columns and export to CSV for quick importing
@@ -1005,8 +1107,8 @@ if (fatal_error == 0):
     print(" - Google state level mobility data exported to ", goog_mobility_states_fname)
     goog_mobility_states_reduced.to_csv(goog_mobility_states_fname, index=False)
     
-    goog_mobility_cnty_reduced.drop(columns=['CTYNAME_MATCH', 'sub_region_2_MATCH', 'country_region_code', 'country_region', 'sub_region_1', 'sub_region_2'], inplace=True)
-    goog_mobility_states_reduced.rename(columns={ 'STNAME': 'state'}, inplace = True)
+    goog_mobility_cnty_cleaned.drop(columns=['CTYNAME_MATCH', 'sub_region_2_MATCH', 'country_region_code', 'country_region', 'sub_region_1', 'sub_region_2'], inplace=True)
+    goog_mobility_states_cleaned.rename(columns={ 'STNAME': 'state'}, inplace = True)
     goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.csv"
     print(" - Google county level mobility data exported to ", goog_mobility_cnty_fname)
     goog_mobility_cnty_reduced.to_csv(goog_mobility_cnty_fname, index=False)
