@@ -23,10 +23,6 @@
 # - **A Note on the use of Pandas:** I am currently using `Pandas` (aka Python Data Analysis Library, see https://pandas.pydata.org) to read in the CSV files and manipualte them.  This has advantages and annoyances, there may be much better ways to do this, but I was giving this a try for now.  One big annoyance is Pandas insists on labelling each row of data with a index number.  Luckily its pretty easy in many cases to convert Pandas dataframes into lists of lists or numpy arrays for easier data handling.  I do exactly this to very quickly compute the derivatives of the confirmed/deaths/recovered numbers in over 3000 counties in the US.
 #
 # - **A Note about FIPS:** Some of the data includes FIPS codes (a standard geographic identifier) which should ease the process of cross-matching of data.  Clay County is 27027 and Cass County is 38017.  Minnesota is 27, North Dakota is 38.
-#
-# - **Still To Do:** 
-#     1. Try to read in the IMHE data.
-#     
 
 # %%
 import os
