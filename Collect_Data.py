@@ -1099,7 +1099,7 @@ goog_mobility_cnty_reduced['residential_percent_change_from_baseline'] = residen
 # Rename STNAME and CTYNAME columns to state and county, drop redundant columns
 goog_mobility_cnty_reduced.rename(columns={'STNAME': 'state', 'CTYNAME': 'county'}, errors="raise", inplace=True)
 goog_mobility_cnty_reduced.drop(columns=['CTYNAME_MATCH'], inplace=True)
-    
+
 
 # %% [markdown]
 # ### FIPS-matched Google Mobility data exported here!
@@ -1436,6 +1436,7 @@ imhe_hospitalizations_cleaned.rename(columns={ 'location_name': 'state' }, inpla
 ## For the county data
 ##
 imhe_hospitalizations_reduced = state_fips_df.copy()
+imhe_hospitalizations_reduced.rename(columns={ 'STNAME': 'state' }, inplace = True)
 
 # Create blank lists of lists
 dates_listOlists = []
