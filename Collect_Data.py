@@ -97,7 +97,7 @@ state_data_df['PPOPCHG_2019'] = 100*(state_data_df['NPOPCHG_2019']/state_data_df
 
 # Save the processed data file
 out_states = data_dir + "population_data_states.csv"
-state_data_df.to_csv(out_states)
+state_data_df.to_csv(out_states, index=False)
 
 # %%
 ##
@@ -118,7 +118,7 @@ county_data_df['PPOPCHG_2019'] = 100*(county_data_df['NPOPCHG_2019']/county_data
 
 # Save the processed data file
 out_counties = data_dir + "population_data_counties.csv"
-county_data_df.to_csv(out_counties)
+county_data_df.to_csv(out_counties, index=False)
 
 # %%
 # Showing the local state level population data
@@ -471,7 +471,7 @@ combined_cnty_df.rename(columns={ 'Admin2': 'County',
 
 # Save the processed time-series data into single file
 combined_datafile = data_dir + "countylevel_combinedCDR.csv"
-combined_cnty_df.to_csv(combined_datafile)
+combined_cnty_df.to_csv(combined_datafile, index=False)
 
 # Clear variables
 del sorted_csvs, dates_list
@@ -653,7 +653,7 @@ combined_state_df.rename(columns={ 'Province_State': 'State',
 
 # Save the processed time-series data into single file
 combined_datafile = data_dir + "statelevel_combinedCDR.csv"
-combined_state_df.to_csv(combined_datafile)
+combined_state_df.to_csv(combined_datafile, index=False)
 
 # Clear variables
 del sorted_csvs, dates_list
@@ -834,6 +834,9 @@ ylabel = this_axs.set_ylabel("New Deaths/Day")
 title = this_axs.set_title("COVID Death Change Rate")
 
 # %% [markdown]
+# # Next few blocks of code is grabbing the Google and Apple mobility data and cross-matching with US Census Bureau FIPS data
+
+# %% [markdown]
 # ## Google Mobility Data (NO FIPS Present)
 #
 # This data is described at https://www.google.com/covid19/mobility/ and can be downloaded in a single monolithic CSV file at https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv
@@ -845,24 +848,177 @@ title = this_axs.set_title("COVID Death Change Rate")
 # 2. Avoid comparing day-to-day changes. Especially weekends with weekdays. (https://support.google.com/covid19-mobility/answer/9824897?hl=en&ref_topic=9822927)
 #
 # > Note, *Parks* typically means official national parks and not the general outdoors found in rural areas.
+#
+# Also, I'll note that aggregated national data appears to be available by setting `sub_region_1` **and** `sub_region_2` to `NaN` and state-level data by setting only `sub_region_2` to `NaN`.
 
 # %%
 # Google Mobility Data URL
 goog_mobility_csv_url = "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv"
 goog_mobility_df=pd.read_csv(goog_mobility_csv_url, low_memory=False)
 
+## Separate data into national-level, state-level, and county-level data deep copies
+goog_mobility_national = goog_mobility_df[(goog_mobility_df['country_region_code'] == 'US') & (goog_mobility_df['sub_region_1'].isna()) & (goog_mobility_df['sub_region_2'].isna())].copy()
+goog_mobility_states = goog_mobility_df[(goog_mobility_df['country_region_code'] == 'US') & (goog_mobility_df['sub_region_1'].notna()) & (goog_mobility_df['sub_region_2'].isna())].copy()
+goog_mobility_cnty = goog_mobility_df[(goog_mobility_df['country_region_code'] == 'US') & (goog_mobility_df['sub_region_1'].notna()) & (goog_mobility_df['sub_region_2'].notna())].copy()
+
+# District of Columbia is both FIPS 11 and FIPS 110, so add its data to county-level mobility data
+dc_rows = goog_mobility_states[goog_mobility_states['sub_region_1'] == 'District of Columbia'].copy()
+dc_rows['sub_region_2'] = dc_rows['sub_region_1']
+goog_mobility_cnty = goog_mobility_cnty.append(dc_rows, ignore_index=True)
+
 # Notice for Clay county we have NaN reported for Parks (see note above) and Transit Stations
 goog_mobility_clay = goog_mobility_df[ (goog_mobility_df['sub_region_1'] == 'Minnesota') & (goog_mobility_df['sub_region_2'] == 'Clay County')]
-print("GOOGLE MOBILITY DATA IN goog_mobility_df() FOR CLAY COUNTY")
-print(goog_mobility_clay)
+print("FIRST ROW OF GOOGLE MOBILITY DATA IN goog_mobility_df() FOR CLAY COUNTY")
+print(goog_mobility_clay.iloc[[0]])
+
+# Undefine the clay county subframe
+del goog_mobility_clay
+del goog_mobility_df
+
+# %%
+##
+## Cross match known US Bureau Census FIPS entries with Google Mobility Data here to allow easier cross-matching later.
+##
+
+# Build a dataframe containing legitimate FIPS values using state and county level data
+state_fips_df = state_data_df.copy()
+state_fips_df.drop(columns=['POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
+cnty_fips_df = county_data_df.copy()
+cnty_fips_df.drop(columns=['POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
+
+## Match state-level mobility data to FIPS and then drop redundant columns and rename state name to be consistent.  
+goog_mobility_states_reduced = pd.merge(state_fips_df,goog_mobility_states,left_on='STNAME', right_on='sub_region_1', how='left', copy=True)
+goog_mobility_states_reduced.drop(columns=['country_region_code', 'country_region', 'sub_region_1', 'sub_region_2'], inplace=True)
+goog_mobility_states_reduced.rename(columns={ 'STNAME': 'tate'}, inplace = True)
+
+##
+## Match county-level mobility data to FIPS (trickier as it requires a state and county name match
+##
+
+# Comparing the unique county names in cnty_fips_df['CTYNAME_MATCH'] versus goog_mobility_cnty['sub_region_2'] reveals a lot of mismatching is due to 
+# US Census bureau naming convention including 
+#  ' city' (for cities that are also counties [40 cases]) [This allows matching of Baltimore city versus Baltimore county also]
+#  ' Municipality' (for cities that are also counties)
+#  ' Census Area' (for rural areas, I think)
+cnty_fips_df['CTYNAME_MATCH'] = cnty_fips_df['CTYNAME']
+cnty_fips_df['CTYNAME_MATCH'] = cnty_fips_df['CTYNAME_MATCH'].str.replace(' city','')
+cnty_fips_df['CTYNAME_MATCH'] = cnty_fips_df['CTYNAME_MATCH'].str.replace(' Municipality','')
+cnty_fips_df['CTYNAME_MATCH'] = cnty_fips_df['CTYNAME_MATCH'].str.replace(' Census Area','')
+cnty_fips_df['CTYNAME_MATCH'] = cnty_fips_df['CTYNAME_MATCH'].str.replace(' City and Borough','')
+cnty_fips_df['CTYNAME_MATCH'] = cnty_fips_df['CTYNAME_MATCH'].str.replace(' Borough','')
+
+goog_mobility_cnty['sub_region_2_MATCH'] = goog_mobility_cnty['sub_region_2']
+goog_mobility_cnty['sub_region_2_MATCH'] = goog_mobility_cnty['sub_region_2_MATCH'].str.replace(' Borough','')
+# Fix alternate spelling of LaSalle Parish, Louisiana
+goog_mobility_cnty['sub_region_2_MATCH'] = goog_mobility_cnty['sub_region_2_MATCH'].str.replace('La Salle Parish','LaSalle Parish')
+
+# A lot of rural areas just appear to have no data in the Google Mobility dataset. The next cell (commented out) was used to confirm the only missing counies
+# were ones in which there was 'nan' for the date column, indicating no matches in the Google Mobility dataset.
+
+## This leftward match means EVERY county FIPS should still be represented, although need to confirm mismatches
+goog_mobility_cnty_reduced = pd.merge(cnty_fips_df,goog_mobility_cnty,left_on=['STNAME', 'CTYNAME_MATCH'], right_on=['sub_region_1', 'sub_region_2_MATCH'], how='left', copy=True)
+
+##
+## Check the date column in the reduced data to see if it is a real match or just a marker for a non-match
+##
+
+
+# %%
+# As a test, loop through all the county FIPS codes and see which are NOT represented in the mobility data
+unmatched_cnt = 0
+cleared_states = [] 
+states_list = []
+last_state = 'Alaska' # Set to avoid issue in loop below with undefined variable
+
+fatal_error = 0. # Count fatal_error and stop if we have any
+cnt = 0
+bad_entries = ""
+for FIPS in cnty_fips_df['FIPS']:
+    # Check this FIPS number
+    rows = goog_mobility_cnty_reduced[goog_mobility_cnty_reduced['FIPS'] == FIPS]
+    matches = rows.shape[0]
+    city = rows['CTYNAME_MATCH'].iloc[0]
+    state = rows['STNAME'].iloc[0]
+    date = rows['date'].iloc[0]
+    if (matches == 1 & pd.isna(date)):
+        
+        if state not in states_list:
+            states_list.append(state)
+            
+        if ((state != last_state) & (last_state not in cleared_states)):
+            # Print counties lists
+            reduced_ctys = goog_mobility_cnty_reduced[goog_mobility_cnty_reduced['STNAME'] == last_state]['CTYNAME_MATCH'].unique()
+            mobility_ctys = goog_mobility_cnty[goog_mobility_cnty['sub_region_1'] == last_state]['sub_region_2'].unique()
+            
+            mismatch = len(reduced_ctys) - len(mobility_ctys)  # Number of missing counties
+            if (cnt != mismatch):
+                print(f"\nFor State {last_state}:")
+                print(bad_entries)
+                print(f"\n  reduced counties: {reduced_ctys} {len(reduced_ctys)}\n")
+                print(f"  mobility counties: {mobility_ctys} {len(mobility_ctys)}\n")
+                for cty in reduced_ctys:
+                    if cty not in mobility_ctys:
+                        print(f"{cty} missing from Mobility counties")
+
+                print(f"WARNING: {cnt} no real matches vs. {mismatch} fewer counties in Google mobility data!\n")
+                fatal_error += 1
+                
+            cnt = 0 # Reset the count of mismatches in this state
+            bad_entries = ""
+        
+        if (state not in cleared_states):
+            cnt += 1
+            # Count this as a mismatch
+            bad_entries += f'{cnt}) {city}, {state} ({FIPS}) contains no real matches.\n'
+        
+        last_state = state
+        unmatched_cnt += 1
+
+# Print counties for last state considered=
+reduced_ctys = goog_mobility_cnty_reduced[goog_mobility_cnty_reduced['STNAME'] == last_state]['CTYNAME_MATCH'].unique()
+mobility_ctys = goog_mobility_cnty[goog_mobility_cnty['sub_region_1'] == last_state]['sub_region_2'].unique()
+mismatch = len(reduced_ctys) - len(mobility_ctys)  # Number of missing counties
+if (cnt != mismatch):
+    print(f"\nFor State {last_state}:")
+    print(bad_entries)
+    print(f"\n  reduced counties: {reduced_ctys} {len(reduced_ctys)}\n")
+    print(f"  mobility counties: {mobility_ctys} {len(mobility_ctys)}\n")
+    for cty in reduced_ctys:
+        if cty not in mobility_ctys:
+            print(f"{cty} missing from Mobility counties")
+    print(f"WARNING: {cnt} no real matches vs. {mismatch} fewer counties in Google mobility data!\n")
+    fatal_error += 1
+        
+print(f"A total of {unmatched_cnt} FIPS not matched to Google mobility data (if nothing printed above this, all US Census Bureau counties accounted for)")
+
+# %% [markdown]
+# ### FIPS coded Google Mobility data exported here!
+#
+# **Note to Developers:** Check the `date` column in the reduced data to see if it is a real match or just a marker for a non-match.  Furthermore be aware Google has a lot of blank (`NaN`) entries in a lot of columns and variable numbers of entries for each county/state.  Also note that I did **NOT** collapse the different dates of Google mobility data into a single list entry, in essence because it doesn't save time reading the data later, BUT it means this will be a different format of data than the other datasets.  Whatever reading routine we generate is going to have to be aware of it.
+
+# %%
+# Once data has been checked, remove redundant columns and export to CSV for quick importing
+if (fatal_error == 0):
+    print("Exporting data, no fatal errors in matching")
+    
+    goog_mobility_states_fname = data_dir + "goog_mobility_state.csv"
+    print(" - Google state level mobility data exported to ", goog_mobility_states_fname)
+    goog_mobility_states_reduced.to_csv(goog_mobility_states_fname, index=False)
+    
+    goog_mobility_cnty_reduced.drop(columns=['CTYNAME_MATCH', 'sub_region_2_MATCH', 'country_region_code', 'country_region', 'sub_region_1', 'sub_region_2'], inplace=True)
+    goog_mobility_states_reduced.rename(columns={ 'STNAME': 'state'}, inplace = True)
+    goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.csv"
+    print(" - Google county level mobility data exported to ", goog_mobility_cnty_fname)
+    goog_mobility_cnty_reduced.to_csv(goog_mobility_cnty_fname, index=False)
 
 # %% [markdown]
 # ## Apple Mobility Data (NO FIPS Present)
 #
 # This data is described at https://www.apple.com/covid19/mobility and can be downloaded in a single monolithic CSV file at https://covid19-static.cdn-apple.com/covid19-mobility-data/2008HotfixDev42/v3/en-us/applemobilitytrends-2020-05-24.csv (That URL is hidden in the mobility page link and appears to be updated regularly.  We may need to scrape the page to identify the link).
 #
-# Apple tracks three kinds of Apple Maps routing requests: Driving, Walking, Transit.  In some areas not all of these types of data are available, for example, in Clay County, only Driving route request data is available.  In fact, it looks like only driving data is available at the county level regardless of the county (at least in Minnesota). Cities can contain additional formation, although only very large cities appear to be in Apple's data files.
+# Apple tracks three kinds of Apple Maps routing requests: Driving, Walking, Transit.  But the only data available at the state and county level is the Driving data.
 #
+# **Developer Notes**: Apple's mobility data only exists for 2090 out of 3142 counties in the US. 
 
 # %%
 # Scraping the original Apple page was proving tricky as it had a bunch of javascript used to generate the URL, so I poked around and found a reference 
@@ -879,18 +1035,197 @@ if (result.status_code == 200):
     aapl_mobility_csv_url = aapl_server+jsondata['basePath']+jsondata['regions']['en-us']['csvPath']
     aapl_mobility_df=pd.read_csv(aapl_mobility_csv_url, low_memory=False)
     
+# There are four 'geo_types' (aapl_mobility_df['geo_type' == ].unique() returns ['country/region', 'city', 'sub-region', 'county'])
+# Checking those types here
+
 # Creating subsets of the full Apple Mobility Data for experimentation
-aapl_mobility_cities = aapl_mobility_df[(aapl_mobility_df['geo_type'] == 'city') & (aapl_mobility_df['country'] == 'United States')]
-aapl_mobility_minneapolis = aapl_mobility_df[(aapl_mobility_df['region'] == 'Minneapolis') & (aapl_mobility_df['sub-region'] == 'Minnesota')]
-aapl_mobility_clay = aapl_mobility_df[(aapl_mobility_df['region'] == 'Clay County') & (aapl_mobility_df['sub-region'] == 'Minnesota')]
+#aapl_mobility_cities = aapl_mobility_df[(aapl_mobility_df['geo_type'] == 'city') & (aapl_mobility_df['country'] == 'United States')]
+#aapl_mobility_minneapolis = aapl_mobility_df[(aapl_mobility_df['region'] == 'Minneapolis') & (aapl_mobility_df['sub-region'] == 'Minnesota')]
+
+# Get Washington DC Data
+dc_entry = aapl_mobility_df[(aapl_mobility_df['country'] == 'United States') 
+                            & (aapl_mobility_df['region'] =='Washington DC') 
+                            & (aapl_mobility_df['transportation_type'] =='driving')].copy()
+dc_entry['region'] = 'District of Columbia'
+dc_entry['sub-region'] = 'District of Columbia'
+
+# Get state-level mobility data from Apple (only contains 'transportation_type' of 'driving')
+aapl_mobility_states = aapl_mobility_df[(aapl_mobility_df['geo_type'] == 'sub-region') & (aapl_mobility_df['country'] == 'United States') ].copy()
+# Append DC data to state-level data
+aapl_mobility_states = aapl_mobility_states.append(dc_entry, ignore_index=True)
+# Remove redundant columns and rename columns to be more precise
+aapl_mobility_states.drop(columns=['country', 'geo_type', 'sub-region'], inplace=True) 
+aapl_mobility_states.rename(columns={ 'region': 'state'}, inplace = True)
+state_transport = aapl_mobility_states['transportation_type'].unique().tolist()
+#print("Apple mobility data at state level transportation types: "+",".join(state_transport)+"\n" )
+# Assuming there is still only a 'driving' transportation type, drop those redundant columns
+if (len(state_transport) == 1):
+    aapl_mobility_states.drop(columns=['transportation_type', 'alternative_name'], inplace=True)
+# Purge territories
+aapl_mobility_states = aapl_mobility_states[aapl_mobility_states.state != 'Guam'].copy()
+aapl_mobility_states = aapl_mobility_states[aapl_mobility_states.state != 'Puerto Rico'].copy()
+aapl_mobility_states = aapl_mobility_states[aapl_mobility_states.state != 'Virgin Islands'].copy()
+
+# Get county-level mobility data from Apple
+aapl_mobility_cnty = aapl_mobility_df[(aapl_mobility_df['geo_type'] == 'county') & (aapl_mobility_df['country'] == 'United States')].copy()
+aapl_mobility_cnty.drop(columns=['country', 'geo_type'], inplace=True) 
+aapl_mobility_cnty.rename(columns={ 'sub-region': 'state', 'region': 'county'}, inplace = True)
+cnty_transport = aapl_mobility_cnty['transportation_type'].unique().tolist()
+#print("Apple mobility data at county level transportation types: "+",".join(state_transport)+"\n" )
+# Assuming there is still only a 'driving' transportation type, drop those redundant columns
+if (len(cnty_transport) == 1):
+    aapl_mobility_cnty.drop(columns=['transportation_type', 'alternative_name'], inplace=True)    
+
+# Purge complete Apple mobility dataframe once subsets built
+#del aapl_mobility_df
 
 # Notice only driving information is available at the county level here
-print("APPLE MOBILITY DATA IN aapl_mobility_df() FOR CLAY COUNTY")
+print("APPLE MOBILITY DATA IN aapl_mobility_clay() FOR CLAY COUNTY")
+aapl_mobility_clay = aapl_mobility_cnty[(aapl_mobility_cnty['county'] == 'Clay County') & (aapl_mobility_cnty['state'] == 'Minnesota')]
 print(aapl_mobility_clay)
 
-# Notice additional information is available for larger cities (Sadly not for Fargo)
-print("\nAPPLE MOBILITY DATA IN aapl_mobility_df() FOR MINNEAPOLIS (CITY)")
-print(aapl_mobility_minneapolis)
+# %%
+##
+## Cross-match known US Bureau Census FIPS entries with Apple Mobility Data here to allow easier cross-matching later.
+##
+
+# Build a dataframe containing legitimate FIPS values using state and county level data
+state_fips_df = state_data_df.copy()
+state_fips_df.drop(columns=['POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
+cnty_fips_df = county_data_df.copy()
+cnty_fips_df.drop(columns=['POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
+
+##
+## Match state-level mobility data to FIPS and then drop redundant columns and rename state name to be consistent.  
+##
+aapl_mobility_states_cleaned = pd.merge(state_fips_df,aapl_mobility_states,left_on='STNAME', right_on='state', how='left', copy=True)
+aapl_mobility_states_cleaned.drop(columns=['STNAME'], inplace=True)
+
+# Convert all the mobility data into one massive list of lists (and columns into dates list), this will allow collapsing multiple columns into lists
+dates_list = aapl_mobility_states_cleaned[ aapl_mobility_states_cleaned.columns[(aapl_mobility_states_cleaned.columns!='FIPS') & (aapl_mobility_states_cleaned.columns!='state')] ].columns.tolist()
+driving_mobility_listOlists = aapl_mobility_states_cleaned[ aapl_mobility_states_cleaned.columns[(aapl_mobility_states_cleaned.columns!='FIPS') & (aapl_mobility_states_cleaned.columns!='state')] ].values.tolist()
+
+# Create reduced mobility data file with all the data collapsed into lists
+aapl_mobility_states_reduced = aapl_mobility_states_cleaned[['FIPS','state']].copy()
+aapl_mobility_states_reduced['dates'] = [dates_list]*len(aapl_mobility_states_reduced)
+aapl_mobility_states_reduced['driving_mobility'] = driving_mobility_listOlists
+
+##
+## Match county-level mobility data to FIPS 
+##
+# Rename county names which are actually cities
+aapl_mobility_cnty['county'] = aapl_mobility_cnty['county'].str.replace(' City',' city')
+aapl_mobility_cnty['county'] = aapl_mobility_cnty['county'].str.replace(' city and Borough',' City and Borough')
+aapl_mobility_cnty['county'] = aapl_mobility_cnty['county'].str.replace('Carson city','Carson City')
+aapl_mobility_cnty['county'] = aapl_mobility_cnty['county'].str.replace('James city County','James City County')
+
+# Attempt the match
+aapl_mobility_cnty_cleaned = pd.merge(cnty_fips_df,aapl_mobility_cnty,left_on=['STNAME', 'CTYNAME'], right_on=['state', 'county'], how='left', copy=True)
+
+print(f"There are {len(cnty_fips_df)} counties, Apple mobility data exists for {len(aapl_mobility_cnty)} counties.")
+expected = len(cnty_fips_df)-len(aapl_mobility_cnty)
+nomatch = len(aapl_mobility_cnty_cleaned[aapl_mobility_cnty_cleaned['state'].isna()])
+n_errors = nomatch - expected
+print(f"When cross-matching, there are {nomatch} Census counties with no match, expected {expected} [We need to account for {n_errors} errors].")
+
+
+# %%
+states_list = []
+cleared_states = []
+last_state = "Alabama"
+fatal_error = 0
+bad_entries = ""
+cnt = 0
+unmatched_cnt = 0
+
+for FIPS in cnty_fips_df['FIPS']:
+    # Check this FIPS number
+    row  = aapl_mobility_cnty_cleaned[aapl_mobility_cnty_cleaned['FIPS'] == FIPS]
+    city = row['CTYNAME'].iloc[0]
+    state = row['STNAME'].iloc[0]
+    aapl_state= row['state'].iloc[0]
+    if (pd.isna(aapl_state)):
+        
+        if state not in states_list:
+            states_list.append(state)
+            
+        if ((state != last_state) & (last_state not in cleared_states)):
+            # Check on number of counties matching on per state basis
+            reduced_ctys = aapl_mobility_cnty_cleaned[aapl_mobility_cnty_cleaned['STNAME'] == last_state]['CTYNAME'].unique()
+            mobility_ctys = aapl_mobility_cnty[aapl_mobility_cnty['state'] == last_state]['county'].unique()
+            mismatch = len(reduced_ctys) - len(mobility_ctys)
+            
+            if (cnt != mismatch):
+                print(f"\nFor State {last_state}:")
+                print(bad_entries)
+                print(f"\n  reduced counties: {reduced_ctys} {len(reduced_ctys)}\n")
+                print(f"  mobility counties: {mobility_ctys} {len(mobility_ctys)}\n")
+                
+                print(f"WARNING: {cnt} not matched vs. {mismatch} fewer counties in Apple mobility data!\n")
+                fatal_error += 1
+            
+            cnt = 0 # Reset the count of mismatches in this state
+            bad_entries = ""
+        
+        if (state not in cleared_states):
+            cnt += 1
+            # Count this as a mismatch
+            bad_entries += f'{cnt}) {city}, {state} ({FIPS}) contains no real matches.\n'
+        
+        last_state = state
+        unmatched_cnt += 1
+
+# Check lists of counties
+reduced_ctys = aapl_mobility_cnty_cleaned[aapl_mobility_cnty_cleaned['STNAME'] == last_state]['CTYNAME'].unique()
+mobility_ctys = aapl_mobility_cnty[aapl_mobility_cnty['state'] == last_state]['county'].unique()
+mismatch = len(reduced_ctys) - len(mobility_ctys)
+
+if (cnt != mismatch):
+    print(f"\nFor State {last_state}:")
+    print(bad_entries)
+    print(f"\n  reduced counties: {reduced_ctys} {len(reduced_ctys)}\n")
+    print(f"  mobility counties: {mobility_ctys} {len(mobility_ctys)}\n")
+
+    print(f"WARNING: {cnt} not matched vs. {mismatch} fewer counties in Apple mobility data!\n")
+    fatal_error += 1
+print(f"A total of {unmatched_cnt} FIPS not matched to Apple mobility data (if nothing printed above this, all US Census Bureau counties accounted for)")
+
+# %%
+##
+## Process county level data if tests pass
+##
+if (fatal_error == 0):
+    # Purge Redundant Columns
+    aapl_mobility_cnty_cleaned.drop(columns=['county', 'state'], inplace=True)
+    aapl_mobility_cnty_cleaned.rename(columns={ 'STNAME': 'state', 'CTYNAME': 'county'}, inplace = True)
+    
+    # Convert all the county level mobility data into one massive list of lists (and columns into dates list), this will allow collapsing multiple columns into lists
+    dates_list = aapl_mobility_cnty_cleaned[ aapl_mobility_cnty_cleaned.columns[(aapl_mobility_cnty_cleaned.columns!='FIPS') & (aapl_mobility_cnty_cleaned.columns!='state') & (aapl_mobility_cnty_cleaned.columns!='county')] ].columns.tolist()
+    driving_mobility_listOlists = aapl_mobility_cnty_cleaned[ aapl_mobility_cnty_cleaned.columns[(aapl_mobility_cnty_cleaned.columns!='FIPS') & (aapl_mobility_cnty_cleaned.columns!='state')& (aapl_mobility_cnty_cleaned.columns!='county')] ].values.tolist()
+
+    # Create reduced mobility data file with all the data collapsed into lists 
+    # Did this goofy line next becayse 'county' wasn't being recognized with shorthand approach.  WTF?
+    aapl_mobility_cnty_reduced = aapl_mobility_cnty_cleaned[ aapl_mobility_cnty_cleaned.columns[(aapl_mobility_cnty_cleaned.columns=='FIPS') | (aapl_mobility_cnty_cleaned.columns=='state') | (aapl_mobility_cnty_cleaned.columns=='county')] ].copy()
+    aapl_mobility_cnty_reduced['dates'] = [dates_list]*len(aapl_mobility_cnty_reduced)
+    aapl_mobility_cnty_reduced['driving_mobility'] = driving_mobility_listOlists
+
+# %%
+# Once data has been checked, remove redundant columns and export to CSV for quick importing
+if (fatal_error == 0):
+    print("Exporting data, no fatal errors in matching")
+    
+    aapl_mobility_states_fname = data_dir + "aapl_mobility_state.csv"
+    print(" - Apple state level mobility data exported to ", aapl_mobility_states_fname)
+    aapl_mobility_states_reduced.to_csv(aapl_mobility_states_fname, index=False)
+    
+    aapl_mobility_cnty_fname = data_dir + "aapl_mobility_cnty.csv"
+    print(" - Apple county level mobility data exported to ", aapl_mobility_cnty_fname)
+    aapl_mobility_cnty_reduced.to_csv(aapl_mobility_cnty_fname, index=False)
+
+# %% [markdown]
+# ### FIPS coded Apple Mobility data exported here!
+#
+# **Note to Developers:** Check the `date` column in the reduced data to see if it is a real match or just a marker for a non-match.  Furthermore be away Google has a lot of blank (`NaN`) entries in a lot of columns and variable numbers of entries for each county/state.  Also note that I did **NOT** collapse the different dates of Google mobility data into a single list entry, in essence because it doesn't save time reading the data later, BUT it means this will be a different format of data than the other datasets.  Whatever reading routine we generate is going to have to be aware of it.
 
 # %% [markdown]
 # ## IMHE Data on Local Resources
