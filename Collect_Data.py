@@ -92,8 +92,8 @@ state_data_df['PPOPCHG_2019'] = 100*(state_data_df['NPOPCHG_2019']/state_data_df
 # overkill since the increased deaths from Coronavirus are not taken into account in such an extrapolation.
 
 # Save the processed data file
-out_states = data_dir + "population_data_states.csv"
-state_data_df.to_csv(out_states, index=False)
+# out_states = data_dir + "population_data_states.csv"
+# state_data_df.to_csv(out_states, index=False)
 
 # %%
 ##
@@ -113,8 +113,8 @@ county_data_df['PPOPCHG_2019'] = 100*(county_data_df['NPOPCHG_2019']/county_data
 # overkill since the increased deaths from Coronavirus are not taken into account in such an extrapolation.
 
 # Save the processed data file
-out_counties = data_dir + "population_data_counties.csv"
-county_data_df.to_csv(out_counties, index=False)
+# out_counties = data_dir + "population_data_counties.csv"
+# county_data_df.to_csv(out_counties, index=False)
 
 # %%
 # Showing the local state level population data
