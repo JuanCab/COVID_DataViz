@@ -1064,7 +1064,9 @@ residential_listOlists = []
 for fips in cnty_fips_df['FIPS']:
     # print(f"Processing FIPS {fips}")
     # Pull only the data for this FIPS number and extract the time series
-    subset = goog_mobility_cnty_cleaned[goog_mobility_cnty_cleaned['FIPS'] == fips].copy()
+    # Convert fips to int64 to avoid numpy warning
+    fips64 = np.int64(fips)
+    subset = goog_mobility_cnty_cleaned[goog_mobility_cnty_cleaned['FIPS'] == fips64].copy()
     timeseries = subset[subset.columns[(subset.columns!='FIPS') & (subset.columns!='state')]].copy()
     timeseries = timeseries.set_index('date')
     trans = timeseries.T
