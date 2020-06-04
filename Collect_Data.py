@@ -88,7 +88,7 @@ NDFIPS = 38
 (ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVID.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
 
 #
-# Save the county and state-level processed daily datafra,es into CSV files
+# Save the county and state-level processed daily dataframes into CSV files
 #
 combined_datafile = data_dir + "countylevel_combinedCDR.csv"
 combined_cnty_df.to_csv(combined_datafile, index=False)
