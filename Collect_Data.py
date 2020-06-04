@@ -33,7 +33,6 @@
 # %autoreload 2
 
 # %%
-import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -413,7 +412,7 @@ print("\nIMHE SUMMARY DATA IN imhe_summary() FOR MN and ND")
 imhe_summary_local = imhe_summary[(imhe_summary.FIPS == MNFIPS) | (imhe_summary.FIPS == NDFIPS) ]
 print(imhe_summary_local)
 
-# Present summary data for local area
+# Present hospitalizations data for local area
 print("\nIMHE SUMMARY DATA IN imhe_hospitalizations() FOR MN and ND")
 imhe_hospitalizations_local = imhe_hospitalizations[(imhe_hospitalizations.FIPS == MNFIPS) | (imhe_hospitalizations.FIPS == NDFIPS) ]
 print(imhe_hospitalizations_local)
