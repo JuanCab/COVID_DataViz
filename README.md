@@ -21,27 +21,17 @@ If you installed Jupyter using the Anaconda (or miniconda) python distribution
 then you can install all these using the following command on the command
 line: `conda install gitpython pandas requests`
 
-## Initialization
+## Initialize Data collection by Running Collect_Data Notebook
 
-The Apple and Google mobility data are single files and are retrieved on the
-fly.
+The US Census Bureau population files, Apple and Google mobility data are
+all single files and are retrieved on the fly.  However, The John Hopkins and
+NY Times data on the spread of the disease consist of entire directory
+structures full of files.  As such, I decided it made sense to pull their
+entire directories off GitHub and use 'git pull' to keep it updated (since
+that would be quick).
 
-The John Hopkins and NY Times data on the spread of the disease consist of
-entire directory structures full of files.  As such, I decided it made sense
-to pull their entire directories off GitHub and use 'git pull' to keep it
-updated (since that would be quick).
-
-1. **Download the John Hopkins data**: In the same directory storing this
-README file and the Jupyter notebooks:
-
-   - `git clone https://github.com/CSSEGISandData/COVID-19.git` - This creates
-   a `COVID-19` directory, which I renamed `JH_Data`.
-
-2. **Download the New York Times data**: In the same directory storing this
-README file and the Jupyter notebooks:
-
-   - `git clone https://github.com/nytimes/covid-19-data` - This creates a
-   `covid-19-data` directory, which I renamed `NYT_Data`.
-
-3. **Create output data directory**: Create the `our_data` directory for
-storing data.
+As of June 7, the `COVIDlib.collectors` library automatically handles creation
+of local github repos as necessary.  **All you need to do to initialize the
+data directories is to make sure to run the Collect_Data notebook
+before trying to generate vizualizations so all the necessary COVID data is up
+to date.**
