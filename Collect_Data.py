@@ -33,6 +33,7 @@
 # %autoreload 2
 
 # %%
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -40,7 +41,7 @@ import pandas as pd
 import git
 
 # Import COVID data retrieval routines from external python library
-import COVID_collectors as COVID
+import COVIDlib.collectors as COVIDdata
 
 # %%
 ## Define variables of interest below
@@ -51,6 +52,10 @@ ClayFIPS = 27027
 CassFIPS = 38017
 MNFIPS = 27
 NDFIPS = 38
+
+## Check if data directory exists, if not, create it
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
 
 # %% [markdown]
 # ##  John Hopkins Cases Data (FIPS Present)
@@ -81,10 +86,10 @@ NDFIPS = 38
 ##
 
 # Retrieve needed Census Bureau data first
-(cnty_pop_df, state_pop_df) = COVID.retrieve_census_population_data()
+(cnty_pop_df, state_pop_df) = COVIDdata.retrieve_census_population_data()
 
 # Retrieve John Hopkins data
-(ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVID.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
+(ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVIDdata.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
 
 #
 # Save the county and state-level processed daily dataframes into CSV files
@@ -310,7 +315,7 @@ title = this_axs.set_title("COVID Death Change Rate")
 
 # %%
 # Retrieve the Google Mobility dataframes
-(goog_mobility_cnty_df, goog_mobility_states_df) = COVID.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
+(goog_mobility_cnty_df, goog_mobility_states_df) = COVIDdata.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
 
 # Export the google mobility data to CSV files
 print("Exporting Google mobility data")
@@ -337,7 +342,7 @@ goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 
 # %%
 # Retrieve the Apple Mobility dataframes
-(aapl_mobility_cnty_df, aapl_mobility_states_df) = COVID.retrieve_aapl_mobility_data(cnty_pop_df, state_pop_df)
+(aapl_mobility_cnty_df, aapl_mobility_states_df) = COVIDdata.retrieve_aapl_mobility_data(cnty_pop_df, state_pop_df)
 
 # Notice only driving information is available at the county level here
 print("APPLE MOBILITY DATA IN aapl_mobility_cnty_df() FOR CLAY COUNTY")
@@ -366,7 +371,7 @@ aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 
 # %%
 # Retrieve IMHE data
-(imhe_summary, imhe_hospitalizations) = COVID.retrieve_imhe_data(cnty_pop_df, state_pop_df)
+(imhe_summary, imhe_hospitalizations) = COVIDdata.retrieve_imhe_data(cnty_pop_df, state_pop_df)
 
 ## Summary data includes numbers or dates for the following for each state
 #             'peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper': Mean/Lower/Upper Uncertainty peak bed use date
@@ -441,8 +446,17 @@ print(imhe_hospitalizations_local)
 ## Retrieve the NYT datafiles to see what is there that might be of interest
 ##
 
-# Update the NYT Datafiles
+# NYT COVID data GIT repo
+NYT_gitrepo = "https://github.com/nytimes/covid-19-data.git"
+
+# Local repo location for the NYT Datafiles
 NYTdata_dir = "NYT_Data/"
+
+# Check if the local git repository directory exists, if not, create it and clone the repo to it
+if not os.path.exists(NYTdata_dir):
+    os.makedirs(NYTdata_dir)
+    git.Repo.clone_from(NYT_gitrepo, NYTdata_dir)
+    
 g = git.cmd.Git(NYTdata_dir)
 # We should check status to see everything is good eventually, 
 # for now, I am using this to hide the status message from GitPython module

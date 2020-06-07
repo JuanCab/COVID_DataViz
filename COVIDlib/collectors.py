@@ -1,5 +1,5 @@
 ##
-## This is a set of functions for collecting COVID datafiles together into Pandas dataframes
+## This is a set of functions for collecting the COVID data from the internet.
 ##
 
 import os
@@ -214,6 +214,13 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     # Define local variables
     ClayFIPS = 27027
     MNFIPS = 27
+
+    # Check if the local git repository directory exists, if not, create it and clone the repo to it
+    JH_repo = "https://github.com/CSSEGISandData/COVID-19.git"
+    if not os.path.exists(JHdata_dir):
+        os.makedirs(JHdata_dir)
+        git.Repo.clone_from(JH_repo, JHdata_dir)
+
 
     # Git pull to sync up the data set to the current version on GitHub
     g = git.cmd.Git(JHdata_dir)

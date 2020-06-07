@@ -38,7 +38,7 @@ import pandas as pd
 from datetime import date, timedelta, datetime
 
 # Import COVID data retrieval routines from external python library
-import COVID_collectors as COVID
+import COVIDlib.collectors as COVIDdata
 
 # %%
 ## Define variables of interest below
@@ -50,6 +50,14 @@ ClayFIPS = 27027
 CassFIPS = 38017
 MNFIPS = 27
 NDFIPS = 38
+
+## Check if data directory exists, if not, create it
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
+        
+## Create test directory if necessary
+if not os.path.exists(test_dir):
+    os.makedirs(test_dir)
 
 
 # %%
@@ -72,10 +80,10 @@ def daterange(date1, date2):
 ##
 
 # Retrieve needed Census Bureau data first
-(cnty_pop_df, state_pop_df) = COVID.retrieve_census_population_data()
+(cnty_pop_df, state_pop_df) = COVIDdata.retrieve_census_population_data()
 
 # Retrieve John Hopkins data
-(ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVID.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
+(ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVIDdata.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
 
 
 # %%
@@ -131,7 +139,7 @@ test_combined_cnty_df['Recovered'] = [recovered_CLAY_list, recovered_CASS_list ]
 dates = test_combined_cnty_df[test_combined_cnty_df['FIPS'] == ClayFIPS]['Dates'].tolist()[0]
 dates_list = []
 for dat in dates:
-    dates_list.append( COVID.iso2days(dat) )
+    dates_list.append( COVIDdata.iso2days(dat) )
 dates_arr = np.array([dates_list]*len(test_combined_cnty_df))
 
 # Convert confirmed/deaths/recovered into arrays
@@ -139,12 +147,12 @@ confirmed_arr = np.array(test_combined_cnty_df['Confirmed'].values.tolist())
 deaths_arr = np.array(test_combined_cnty_df['Deaths'].values.tolist())
 
 # Compute the derivatives (using forward derivative approach)
-dconfirmed_arr = COVID.derivative(dates_arr, confirmed_arr)
-ddeaths_arr = COVID.derivative(dates_arr, deaths_arr)
+dconfirmed_arr = COVIDdata.derivative(dates_arr, confirmed_arr)
+ddeaths_arr = COVIDdata.derivative(dates_arr, deaths_arr)
 
 # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
-d2confirmed_arr = COVID.derivative(dates_arr, dconfirmed_arr)
-d2deaths_arr = COVID.derivative(dates_arr, ddeaths_arr)
+d2confirmed_arr = COVIDdata.derivative(dates_arr, dconfirmed_arr)
+d2deaths_arr = COVIDdata.derivative(dates_arr, ddeaths_arr)
 
 # Convert numpy arrays to lists of lists for storage in combined dataframe
 test_combined_cnty_df['dConfirmed'] = dconfirmed_arr.tolist()
@@ -206,7 +214,7 @@ test_combined_states_df['Recovered'] = [recovered_MN_list, recovered_ND_list ]
 dates = test_combined_states_df[test_combined_states_df['FIPS'] == MNFIPS]['Dates'].tolist()[0]
 dates_list = []
 for dat in dates:
-    dates_list.append( COVID.iso2days(dat) )
+    dates_list.append( COVIDdata.iso2days(dat) )
 dates_arr = np.array([dates_list]*len(test_combined_states_df))
 
 # Convert confirmed/deaths/recovered into arrays
@@ -214,12 +222,12 @@ confirmed_arr = np.array(test_combined_states_df['Confirmed'].values.tolist())
 deaths_arr = np.array(test_combined_states_df['Deaths'].values.tolist())
 
 # Compute the derivatives (using forward derivative approach)
-dconfirmed_arr = COVID.derivative(dates_arr, confirmed_arr)
-ddeaths_arr = COVID.derivative(dates_arr, deaths_arr)
+dconfirmed_arr = COVIDdata.derivative(dates_arr, confirmed_arr)
+ddeaths_arr = COVIDdata.derivative(dates_arr, deaths_arr)
 
 # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
-d2confirmed_arr = COVID.derivative(dates_arr, dconfirmed_arr)
-d2deaths_arr = COVID.derivative(dates_arr, ddeaths_arr)
+d2confirmed_arr = COVIDdata.derivative(dates_arr, dconfirmed_arr)
+d2deaths_arr = COVIDdata.derivative(dates_arr, ddeaths_arr)
 
 # Convert numpy arrays to lists of lists for storage in combined dataframe
 test_combined_states_df['dConfirmed'] = dconfirmed_arr.tolist()
@@ -435,7 +443,7 @@ title = this_axs.set_title("COVID Death Rate")
 
 # %%
 # Retrieve the Google Mobility dataframes
-(goog_mobility_cnty_df, goog_mobility_states_df) = COVID.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
+(goog_mobility_cnty_df, goog_mobility_states_df) = COVIDdata.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
 
 # %%
 # Create test subsets containing only local data
@@ -530,7 +538,7 @@ test_goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 
 # %%
 # Retrieve the Apple Mobility dataframes
-(aapl_mobility_cnty_df, aapl_mobility_states_df) = COVID.retrieve_aapl_mobility_data(cnty_pop_df, state_pop_df)
+(aapl_mobility_cnty_df, aapl_mobility_states_df) = COVIDdata.retrieve_aapl_mobility_data(cnty_pop_df, state_pop_df)
 
 
 # %%
@@ -586,7 +594,7 @@ test_aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 
 # %%
 # Retrieve IMHE data
-(imhe_summary, imhe_hospitalizations) = COVID.retrieve_imhe_data(cnty_pop_df, state_pop_df)
+(imhe_summary, imhe_hospitalizations) = COVIDdata.retrieve_imhe_data(cnty_pop_df, state_pop_df)
 
 ## Summary data includes numbers or dates for the following for each state
 #             'peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper': Mean/Lower/Upper Uncertainty peak bed use date
