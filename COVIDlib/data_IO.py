@@ -57,22 +57,22 @@ def GetCDRState(stateFIPS, stateDataFrame): # currently having issues
     # Note: This function requires calling the GetCDRDataFrames first; this uses the first data frame returned
     # Initial author: Luke
     state = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['State']
-    dates = pd.Series(StringToListDate(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates'].values[0]))
+    dates = StringToListDate(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates'].values[0])
 
-    confirmed = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed'].values[0]))
-    deaths = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths'].values[0]))
-    recovered = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Recovered'].values[0]))
+    confirmed = StringToListInt(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed'].values[0])
+    deaths = StringToListInt(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths'].values[0])
+    recovered = StringToListInt(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Recovered'].values[0])
 
-    dConfirmed = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dConfirmed'].values[0]))
-    d2Confirmed = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Confirmed'].values[0]))
-    dDeaths = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dDeaths'].values[0]))
-    d2Deaths = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Deaths'].values[0]))
+    dConfirmed = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dConfirmed'].values[0])
+    d2Confirmed = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Confirmed'].values[0])
+    dDeaths = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dDeaths'].values[0])
+    d2Deaths = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Deaths'].values[0])
 
-    outDF = pd.DataFrame({'FIPS':stateFIPS, 'state':state, 'Dates':dates,
-                    'Confirmed':confirmed, 'Deaths':deaths,
-                    'Recovered':recovered, 'dConfirmed':dConfirmed,
-                    'd2Confirmed':d2Confirmed, 'dDeaths':dDeaths,
-                    'd2Deaths':d2Deaths})
+    outDF = pd.DataFrame({'FIPS':stateFIPS, 'state':state, 'Dates':[dates],
+                    'Confirmed':[confirmed], 'Deaths':[deaths],
+                    'Recovered':[recovered], 'dConfirmed':[dConfirmed],
+                    'd2Confirmed':[d2Confirmed], 'dDeaths':[dDeaths],
+                    'd2Deaths':[d2Deaths]})
     return outDF
 
 
@@ -82,22 +82,22 @@ def GetCDRCounty(countyFIPS, countyDataFrame): # currently having issues
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
     county = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['County']
-    dates = pd.Series(StringToListDate(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Dates'].values[0]))
+    dates = StringToListDate(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Dates'].values[0])
 
-    confirmed = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Confirmed']
-    deaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Deaths']
-    recovered = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Recovered']
+    confirmed = StringToListInt(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Confirmed'].values[0])
+    deaths = StringToListInt(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Deaths'].values[0])
+    recovered = StringToListInt(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Recovered'].values[0])
 
-    dConfirmed = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dConfirmed']
-    d2Confirmed = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Confirmed']
-    dDeaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dDeaths'] 
-    d2Deaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Deaths']
+    dConfirmed = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dConfirmed'].values[0])
+    d2Confirmed = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Confirmed'].values[0])
+    dDeaths = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dDeaths'].values[0])
+    d2Deaths = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Deaths'].values[0])
 
-    outDF = pd.DataFrame({'FIPS':countyFIPS, 'County':county, 'Dates':dates,
-                    'Confirmed':confirmed, 'Deaths':deaths,
-                    'Recovered':recovered, 'dConfirmed':dConfirmed,
-                    'd2Confirmed':d2Confirmed, 'dDeaths':dDeaths,
-                    'd2Deaths':d2Deaths})
+    outDF = pd.DataFrame({'FIPS':countyFIPS, 'County':county, 'Dates':[dates],
+                    'Confirmed':[confirmed], 'Deaths':[deaths],
+                    'Recovered':[recovered], 'dConfirmed':[dConfirmed],
+                    'd2Confirmed':[d2Confirmed], 'dDeaths':[dDeaths],
+                    'd2Deaths':[d2Deaths]})
     return outDF
 
 
@@ -193,34 +193,29 @@ def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having iss
     # Note: This function requires calling the GetIMHEData first; this uses the second data frame returned
     # Initial author: Luke
 
-    #imhe_local_data = pd.read_csv(fileName)
-
     state = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['state']
-    dates = pd.Series(StringToListDate(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates'].values[0]))
-    
-    #datesList = pd.Series(StringToListDate(dates.values[0]))
+    dates = StringToListDate(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates'].values[0])
 
     # Will the StringToList function be called here or later on...?
-    allbed_mean = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_mean'].values[0]))
-    allbed_lower = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_lower'].values[0]))
-    allbed_upper = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_upper'].values[0]))
+    allbed_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_mean'].values[0])
+    allbed_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_lower'].values[0])
+    allbed_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_upper'].values[0])
 
-    ICUbed_mean = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_mean'].values[0]))
-    ICUbed_lower = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_lower'].values[0]))
-    ICUbed_upper = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_upper'].values[0]))
+    ICUbed_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_mean'].values[0])
+    ICUbed_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_lower'].values[0])
+    ICUbed_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_upper'].values[0])
 
-    InvVen_mean = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_mean'].values[0]))
-    InvVen_lower = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_lower'].values[0]))
-    InvVen_upper = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_upper'].values[0]))
+    InvVen_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_mean'].values[0])
+    InvVen_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_lower'].values[0])
+    InvVen_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_upper'].values[0])
 
-    outDF = pd.DataFrame({'FIPS':fipsNum, 'state':state, 'dates':dates,
-                    'allbed_mean':allbed_mean, 'allbed_lower':allbed_lower,
-                    'allbed_upper':allbed_upper, 'ICUbed_mean':ICUbed_mean,
-                    'ICUbed_lower':ICUbed_lower, 'ICUbed_upper':ICUbed_upper,
-                    'InvVen_mean':InvVen_mean, 'InvVen_lower':InvVen_lower,
-                    'InvVen_upper':InvVen_upper})
+    outDF = pd.DataFrame({'FIPS':fipsNum, 'state':state, 'dates':[dates],
+                    'allbed_mean':[allbed_mean], 'allbed_lower':[allbed_lower],
+                    'allbed_upper':[allbed_upper], 'ICUbed_mean':[ICUbed_mean],
+                    'ICUbed_lower':[ICUbed_lower], 'ICUbed_upper':[ICUbed_upper],
+                    'InvVen_mean':[InvVen_mean], 'InvVen_lower':[InvVen_lower],
+                    'InvVen_upper':[InvVen_upper] })
     return outDF
-    #return type(StringToListDate(dates.values[0])) #StringToListDate(
 
 
 ## APPLE AND GOOGLE MOBILITY DATA IO
