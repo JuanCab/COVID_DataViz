@@ -51,23 +51,24 @@ def GetCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', countyFi
     return stateDataFrame, countyDataFrame
 
 
-def GetCDRState(stateFIPS, stateDataFrame):
+def GetCDRState(stateFIPS, stateDataFrame): # currently having issues
+    
     # Gets number of confirmed cases, deaths and recoveries at the state level
     # Note: This function requires calling the GetCDRDataFrames first; this uses the first data frame returned
     # Initial author: Luke
     state = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['State']
-    #dates = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates']
+    dates = pd.Series(StringToListDate(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates'].values[0]))
 
-    confirmed = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed']
-    deaths = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths']
-    recovered = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Recovered']
+    confirmed = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed'].values[0]))
+    deaths = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths'].values[0]))
+    recovered = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Recovered'].values[0]))
 
-    dConfirmed = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dConfirmed']
-    d2Confirmed = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Confirmed']
-    dDeaths = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dDeaths'] 
-    d2Deaths = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Deaths']
+    dConfirmed = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dConfirmed'].values[0]))
+    d2Confirmed = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Confirmed'].values[0]))
+    dDeaths = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dDeaths'].values[0]))
+    d2Deaths = pd.Series(StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Deaths'].values[0]))
 
-    outDF = pd.DataFrame({'FIPS':stateFIPS, 'state':state,
+    outDF = pd.DataFrame({'FIPS':stateFIPS, 'state':state, 'Dates':dates,
                     'Confirmed':confirmed, 'Deaths':deaths,
                     'Recovered':recovered, 'dConfirmed':dConfirmed,
                     'd2Confirmed':d2Confirmed, 'dDeaths':dDeaths,
@@ -75,11 +76,13 @@ def GetCDRState(stateFIPS, stateDataFrame):
     return outDF
 
 
-def GetCDRCounty(countyFIPS, countyDataFrame):
+def GetCDRCounty(countyFIPS, countyDataFrame): # currently having issues
+    
     # Gets number of confirmed cases, deaths and recoveries at the state level
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
     county = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['County']
+    dates = pd.Series(StringToListDate(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Dates'].values[0]))
 
     confirmed = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Confirmed']
     deaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Deaths']
@@ -90,7 +93,7 @@ def GetCDRCounty(countyFIPS, countyDataFrame):
     dDeaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dDeaths'] 
     d2Deaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Deaths']
 
-    outDF = pd.DataFrame({'FIPS':countyFIPS, 'County':county,
+    outDF = pd.DataFrame({'FIPS':countyFIPS, 'County':county, 'Dates':dates,
                     'Confirmed':confirmed, 'Deaths':deaths,
                     'Recovered':recovered, 'dConfirmed':dConfirmed,
                     'd2Confirmed':d2Confirmed, 'dDeaths':dDeaths,
@@ -110,7 +113,7 @@ def GetIMHEDataFrames(summaryFile = 'our_data/imhe_summary.csv', hospitalFile = 
     return summaryDF, hospitalizationsDF
 
 
-def GetEquipData(fipsNum, summaryDataFrame):
+def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
     # Returns data on bed and ventilator usage/availability from imhe_summary.csv as a data frame
     # Note: This function requires calling the GetIMHEData first; this uses the first data frame returned
     # Initial author: Luke
@@ -184,7 +187,8 @@ def GetAllBedUsage(fipsNum, summaryDataFrame):
     return mn_icu_beds
 
 
-def GetHospitalizationData(fipsNum, hospitalizationsDF):
+def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having issues
+    
     # Returns data from imhe_hospitalizations.csv as a data frame
     # Note: This function requires calling the GetIMHEData first; this uses the second data frame returned
     # Initial author: Luke
