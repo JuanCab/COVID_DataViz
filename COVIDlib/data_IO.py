@@ -56,6 +56,7 @@ def GetCDRState(stateFIPS, stateDataFrame):
     # Note: This function requires calling the GetCDRDataFrames first; this uses the first data frame returned
     # Initial author: Luke
     state = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['State']
+    #dates = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates']
 
     confirmed = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed']
     deaths = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths']
@@ -191,27 +192,31 @@ def GetHospitalizationData(fipsNum, hospitalizationsDF):
     #imhe_local_data = pd.read_csv(fileName)
 
     state = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['state']
+    dates = pd.Series(StringToListDate(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates'].values[0]))
+    
+    #datesList = pd.Series(StringToListDate(dates.values[0]))
 
     # Will the StringToList function be called here or later on...?
-    allbed_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_mean']
-    allbed_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_lower']
-    allbed_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_upper']
+    allbed_mean = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_mean'].values[0]))
+    allbed_lower = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_lower'].values[0]))
+    allbed_upper = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_upper'].values[0]))
 
-    ICUbed_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_mean']
-    ICUbed_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_lower']
-    ICUbed_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_upper']
+    ICUbed_mean = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_mean'].values[0]))
+    ICUbed_lower = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_lower'].values[0]))
+    ICUbed_upper = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_upper'].values[0]))
 
-    InvVen_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_mean']
-    InvVen_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_lower']
-    InvVen_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_upper']
+    InvVen_mean = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_mean'].values[0]))
+    InvVen_lower = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_lower'].values[0]))
+    InvVen_upper = pd.Series(StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_upper'].values[0]))
 
-    outDF = pd.DataFrame({'FIPS':fipsNum, 'state':state,
+    outDF = pd.DataFrame({'FIPS':fipsNum, 'state':state, 'dates':dates,
                     'allbed_mean':allbed_mean, 'allbed_lower':allbed_lower,
                     'allbed_upper':allbed_upper, 'ICUbed_mean':ICUbed_mean,
                     'ICUbed_lower':ICUbed_lower, 'ICUbed_upper':ICUbed_upper,
                     'InvVen_mean':InvVen_mean, 'InvVen_lower':InvVen_lower,
                     'InvVen_upper':InvVen_upper})
     return outDF
+    #return type(StringToListDate(dates.values[0])) #StringToListDate(
 
 
 ## APPLE AND GOOGLE MOBILITY DATA IO
