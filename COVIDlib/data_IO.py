@@ -37,6 +37,22 @@ def StringToListFloat(flt):
     return flt_list
 
 
+def getLocalDataFrame(FIPS, DataFrame):
+    # Returns a copied dataframe of just one FIP's entry.
+    # Initial Author: Juan
+    return DataFrame[DataFrame['FIPS'] == FIPS].copy()
+
+
+def fixDataFrame(cols2convert, DataFrame):
+    # This function will take a dictionayr cols2convert which lists columns and the function to
+    # apply to them and then applies those functions to the columns of the DataFrame.
+    # Initial author: Juan
+    for key in cols2convert:
+        DataFrame[key] = DataFrame[key].apply(cols2convert[key])
+
+    return
+
+
 ## JOHN HOPKINS DATA IO
 ## The following block of routines are designed for reading in John Hopkins
 ## data on confirmed cases, deaths, and recovered numbers.
@@ -97,16 +113,6 @@ def GetCDRCounty(countyFIPS, countyDataFrame):
                     'd2Confirmed':[d2Confirmed], 'dDeaths':[dDeaths],
                     'd2Deaths':[d2Deaths]})
     return outDF
-
-
-def fixDataFrame(cols2convert, DataFrame):
-    # This function will take a dictionayr cols2convert which lists columns and the function to
-    # apply to them and then applies those functions to the columns of the DataFrame.
-    # Initial author: Juan
-    for key in cols2convert:
-        DataFrame[key] = DataFrame[key].apply(cols2convert[key])
-
-    return
 
 
 def CSVtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', countyFile = 'our_data/countylevel_combinedCDR.csv'):
@@ -470,9 +476,3 @@ def CSVtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.csv', 
     googMobilityStateFrame = pd.read_csv(stateFile)
     fixDataFrame(cols2convert, googMobilityStateFrame)
     return googMobilityCountyFrame, googMobilityStateFrame
-
-
-def getLocalDataFrame(FIPS, DataFrame):
-    # Returns a copied dataframe of just one FIP's entry.
-    # Initial Author: Juan
-    return DataFrame[DataFrame['FIPS'] == FIPS].copy()
