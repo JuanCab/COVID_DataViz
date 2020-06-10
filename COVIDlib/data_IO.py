@@ -151,6 +151,19 @@ def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
                         'peak_vent_day_mean':peak_vent_day_mean, 'peak_vent_day_lower':peak_vent_day_lower,
                         'peak_vent_day_upper':peak_vent_day_upper, 'all_bed_capacity':all_bed_capacity,
                         'icu_bed_capacity':icu_bed_capacity, 'all_bed_usage':all_bed_usage, 'icu_bed_usage':icu_bed_usage})
+    
+    outDF['peak_bed_day_mean'] = pd.to_datetime(outDF['peak_bed_day_mean'], format = '%Y-%m-%d')
+    outDF['peak_bed_day_lower'] = pd.to_datetime(outDF['peak_bed_day_lower'], format = '%Y-%m-%d')
+    outDF['peak_bed_day_upper'] = pd.to_datetime(outDF['peak_bed_day_upper'], format = '%Y-%m-%d')
+    
+    outDF['peak_icu_bed_day_mean'] = pd.to_datetime(outDF['peak_icu_bed_day_mean'], format = '%Y-%m-%d')
+    outDF['peak_icu_bed_day_lower'] = pd.to_datetime(outDF['peak_icu_bed_day_lower'], format = '%Y-%m-%d')
+    outDF['peak_icu_bed_day_upper'] = pd.to_datetime(outDF['peak_icu_bed_day_upper'], format = '%Y-%m-%d')
+    
+    outDF['peak_vent_day_mean'] = pd.to_datetime(outDF['peak_vent_day_mean'], format = '%Y-%m-%d')
+    outDF['peak_vent_day_lower'] = pd.to_datetime(outDF['peak_vent_day_lower'], format = '%Y-%m-%d')
+    outDF['peak_vent_day_upper'] = pd.to_datetime(outDF['peak_vent_day_upper'], format = '%Y-%m-%d')
+    
     return outDF
 
 
@@ -160,7 +173,7 @@ def GetNumICUBeds(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_capacity']
-    return mn_icu_beds # make a return
+    return mn_icu_beds.values[0] # make a return
 
 
 def GetNumAllBeds(fipsNum, summaryDataFrame):
@@ -168,7 +181,7 @@ def GetNumAllBeds(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_capacity']
-    return mn_icu_beds # make a return
+    return mn_icu_beds.values[0]
 
 
 def GetICUBedUsage(fipsNum, summaryDataFrame):
@@ -176,7 +189,7 @@ def GetICUBedUsage(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_usage']
-    return mn_icu_beds # make a return
+    return mn_icu_beds.values[0]
 
 
 def GetAllBedUsage(fipsNum, summaryDataFrame):
@@ -184,7 +197,7 @@ def GetAllBedUsage(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_usage']
-    return mn_icu_beds
+    return mn_icu_beds.values[0]
 
 
 def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having issues
