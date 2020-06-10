@@ -7,7 +7,7 @@
 
 import numpy as np
 import pandas as pd
-from datetime import datetime 
+from datetime import datetime
 
 
 ## STRING TO LIST FUNCTIONS
@@ -23,15 +23,9 @@ def StringToListDate(string):
     return dates_list
 
 
-def StringToListInt(integer):
-    # Converts string to list of ints
-    # Initial author: Juan
-    int_list = list(map(int, integer.replace('\'','').strip('][').split(', '))) 
-    return int_list
-
-
 def StringToListFloat(flt):
-    # Converts string to list of floats
+    # Converts string to list of floats (We even treat integers as floats to
+    # allow for NaN values)
     # Initial Author: Juan
     flt_list = list(map(float, flt.replace('\'','').strip('][').split(', ')))
     return flt_list
@@ -51,16 +45,15 @@ def GetCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', countyFi
     return stateDataFrame, countyDataFrame
 
 
-def GetCDRState(stateFIPS, stateDataFrame): # currently having issues
-    
+def GetCDRState(stateFIPS, stateDataFrame):
     # Gets number of confirmed cases, deaths and recoveries at the state level
     # Note: This function requires calling the GetCDRDataFrames first; this uses the first data frame returned
     # Initial author: Luke
     state = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['State']
     dates = StringToListDate(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates'].values[0])
 
-    confirmed = StringToListInt(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed'].values[0])
-    deaths = StringToListInt(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths'].values[0])
+    confirmed = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed'].values[0])
+    deaths = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths'].values[0])
     recovered = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Recovered'].values[0])
 
     dConfirmed = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dConfirmed'].values[0])
@@ -76,16 +69,15 @@ def GetCDRState(stateFIPS, stateDataFrame): # currently having issues
     return outDF
 
 
-def GetCDRCounty(countyFIPS, countyDataFrame): # currently having issues
-    
+def GetCDRCounty(countyFIPS, countyDataFrame):
     # Gets number of confirmed cases, deaths and recoveries at the state level
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
     county = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['County']
     dates = StringToListDate(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Dates'].values[0])
 
-    confirmed = StringToListInt(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Confirmed'].values[0])
-    deaths = StringToListInt(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Deaths'].values[0])
+    confirmed = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Confirmed'].values[0])
+    deaths = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Deaths'].values[0])
     recovered = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Recovered'].values[0])
 
     dConfirmed = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dConfirmed'].values[0])
@@ -99,6 +91,36 @@ def GetCDRCounty(countyFIPS, countyDataFrame): # currently having issues
                     'd2Confirmed':[d2Confirmed], 'dDeaths':[dDeaths],
                     'd2Deaths':[d2Deaths]})
     return outDF
+
+
+def CSVtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', countyFile = 'our_data/countylevel_combinedCDR.csv'):
+    # This function creates the data frames which are used in the functions below.
+    # It also handles the conversion of lists (stored as strings in the CSV file)
+    # back into lists.
+    # Initial author: Luke
+
+    # List columns needing string to list conversion, use literal_eval to handle them
+    # and import
+    cols2convert = { 'Dates' : StringToListDate,
+                     'Confirmed' : StringToListFloat,
+                     'Deaths'  : StringToListFloat,
+                     'Recovered' : StringToListFloat,
+                     'dConfirmed'  : StringToListFloat,
+                     'd2Confirmed'  : StringToListFloat,
+                     'dDeaths' : StringToListFloat,
+                     'd2Deaths' : StringToListFloat }
+    countyDataFrame = pd.read_csv(countyFile, converters=cols2convert)
+
+    # Now add the additional columns to process in state CSV file
+    cols2convert.update( { 'Incident_Rate' : StringToListFloat,
+                           'People_Tested' : StringToListFloat,
+                           'People_Hospitalized' : StringToListFloat,
+                           'Mortality_Rate' : StringToListFloat,
+                           'Testing_Rate' : StringToListFloat,
+                           'Hospitalization_Rate' : StringToListFloat } )
+    stateDataFrame = pd.read_csv(stateFile, converters=cols2convert)
+
+    return stateDataFrame, countyDataFrame
 
 
 ## IMHE DATA IO
@@ -151,19 +173,19 @@ def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
                         'peak_vent_day_mean':peak_vent_day_mean, 'peak_vent_day_lower':peak_vent_day_lower,
                         'peak_vent_day_upper':peak_vent_day_upper, 'all_bed_capacity':all_bed_capacity,
                         'icu_bed_capacity':icu_bed_capacity, 'all_bed_usage':all_bed_usage, 'icu_bed_usage':icu_bed_usage})
-    
+
     outDF['peak_bed_day_mean'] = pd.to_datetime(outDF['peak_bed_day_mean'], format = '%Y-%m-%d')
     outDF['peak_bed_day_lower'] = pd.to_datetime(outDF['peak_bed_day_lower'], format = '%Y-%m-%d')
     outDF['peak_bed_day_upper'] = pd.to_datetime(outDF['peak_bed_day_upper'], format = '%Y-%m-%d')
-    
+
     outDF['peak_icu_bed_day_mean'] = pd.to_datetime(outDF['peak_icu_bed_day_mean'], format = '%Y-%m-%d')
     outDF['peak_icu_bed_day_lower'] = pd.to_datetime(outDF['peak_icu_bed_day_lower'], format = '%Y-%m-%d')
     outDF['peak_icu_bed_day_upper'] = pd.to_datetime(outDF['peak_icu_bed_day_upper'], format = '%Y-%m-%d')
-    
+
     outDF['peak_vent_day_mean'] = pd.to_datetime(outDF['peak_vent_day_mean'], format = '%Y-%m-%d')
     outDF['peak_vent_day_lower'] = pd.to_datetime(outDF['peak_vent_day_lower'], format = '%Y-%m-%d')
     outDF['peak_vent_day_upper'] = pd.to_datetime(outDF['peak_vent_day_upper'], format = '%Y-%m-%d')
-    
+
     return outDF
 
 
@@ -201,7 +223,6 @@ def GetAllBedUsage(fipsNum, summaryDataFrame):
 
 
 def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having issues
-    
     # Returns data from imhe_hospitalizations.csv as a data frame
     # Note: This function requires calling the GetIMHEData first; this uses the second data frame returned
     # Initial author: Luke
@@ -229,6 +250,70 @@ def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having iss
                     'InvVen_mean':[InvVen_mean], 'InvVen_lower':[InvVen_lower],
                     'InvVen_upper':[InvVen_upper] })
     return outDF
+
+
+def CSVtoIMHEDataFrames(summaryFile = 'our_data/imhe_summary.csv', hospitalFile = 'our_data/imhe_hospitalizations.csv'):
+    # This reads the local IMHE data files and returns data frames. It also handles
+    # the conversion of lists (stored as strings in the CSV file) back into lists.
+    # Original Author: Luke
+
+    # Summary file has no columns needing strings converted to other variables,
+    # however, many of the dates (stored as strings) have NaN in them.
+    summaryDF = pd.read_csv(summaryFile)
+    # Columns with dates
+    datecols = [ 'peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper',
+                 'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper',
+                 'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper',
+                 'travel_limit_start_date', 'travel_limit_end_date',
+                 'stay_home_start_date', 'stay_home_end_date',
+                 'educational_fac_start_date', 'educational_fac_end_date',
+                 'any_gathering_restrict_start_date', 'any_gathering_restrict_end_date',
+                 'any_business_start_date', 'any_business_end_date',
+                 'all_non-ess_business_start_date', 'all_non-ess_business_end_date' ]
+    for col in datecols:
+        summaryDF[col] = pd.to_datetime(summaryDF[col], errors='coerce')
+
+    # Hospitalization CSV has a lot of time series data stored as strings, need
+    # to convert those in input
+
+    hospitalizationsDF = pd.read_csv(hospitalFile)
+    cols2convert = { 'Dates' : StringToListDate,
+                     'Confirmed' : StringToListFloat,
+                     'allbed_mean' : StringToListFloat,
+                     'allbed_lower' : StringToListFloat,
+                     'allbed_upper' : StringToListFloat,
+                     'ICUbed_mean' : StringToListFloat,
+                     'ICUbed_lower' : StringToListFloat,
+                     'ICUbed_upper' : StringToListFloat,
+                     'InvVen_mean' : StringToListFloat,
+                     'InvVen_lower' : StringToListFloat,
+                     'InvVen_upper' : StringToListFloat,
+                     'deaths_mean' : StringToListFloat,
+                     'deaths_lower' : StringToListFloat,
+                     'deaths_upper' : StringToListFloat,
+                     'admis_mean' : StringToListFloat,
+                     'admis_lower' : StringToListFloat,
+                     'admis_upper' : StringToListFloat,
+                     'newICU_mean' : StringToListFloat,
+                     'newICU_lower' : StringToListFloat,
+                     'newICU_upper' : StringToListFloat,
+                     'totdea_mean' : StringToListFloat,
+                     'totdea_lower' : StringToListFloat,
+                     'totdea_upper' : StringToListFloat,
+                     'deaths_mean_smoothed' : StringToListFloat,
+                     'deaths_lower_smoothed' : StringToListFloat,
+                     'deaths_upper_smoothed' : StringToListFloat,
+                     'totdea_mean_smoothed' : StringToListFloat,
+                     'totdea_lower_smoothed' : StringToListFloat,
+                     'totdea_upper_smoothed' : StringToListFloat,
+                     'total_tests' : StringToListFloat,
+                     'confirmed_infections' : StringToListFloat,
+                     'est_infections_mean' : StringToListFloat,
+                     'est_infections_lower' : StringToListFloat,
+                     'est_infections_upper' : StringToListFloat }
+    hospitalizationsDF = pd.read_csv(hospitalFile, converters=cols2convert)
+
+    return summaryDF, hospitalizationsDF
 
 
 ## APPLE AND GOOGLE MOBILITY DATA IO
@@ -327,3 +412,44 @@ def getGoogleStateMobility(stateFIPS, stateMobilityDataframe):
                                'transit_stations_percent':[transit_stations_percent],'residential_percent':[residential_percent],
                                'workplace_percent':[workplace_percent]})
     return outputFrame
+
+
+def CSVtoAAPLMobilityDataFrames(countyFile = 'our_data/aapl_mobility_cnty.csv', stateFile = 'our_data/aapl_mobility_state.csv'):
+    # Retrieves the Apple mobility data from the CSV files, handling to conversion
+    # of strings to lists in the dataframe.
+    # Initial Author: Dio
+
+    # List columns to convert from strings to lists
+    cols2convert = { 'Dates' : StringToListDate,
+                     'driving_mobility' : StringToListFloat }
+    # Import CSV and convert appropriate columns
+    aaplMobilityCountyFrame = pd.read_csv(countyFile, converters=cols2convert)
+    aaplMobilityStateFrame = pd.read_csv(stateFile, converters=cols2convert)
+
+    return aaplMobilityCountyFrame, aaplMobilityStateFrame
+
+
+def CSVtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.csv', stateFile = 'our_data/goog_mobility_state.csv'):
+    # Retrieves the Google mobility data from the CSV files, handling to conversion
+    # of strings to lists in the dataframe.
+    # Initial Author: Dio
+
+    # List columns to convert
+    cols2convert = { 'Dates' : StringToListDate,
+                     'driving_mobility' : StringToListFloat,
+                     'retail_and_recreation_percent_change_from_baseline' : StringToListFloat,
+                     'grocery_and_pharmacy_percent_change_from_baseline' : StringToListFloat,
+                     'parks_percent_change_from_baseline' : StringToListFloat,
+                     'transit_stations_percent_change_from_baseline' : StringToListFloat,
+                     'workplaces_percent_change_from_baseline' : StringToListFloat,
+                     'residential_percent_change_from_baseline' : StringToListFloat }
+
+    googMobilityCountyFrame = pd.read_csv(countyFile, converters=cols2convert)
+    googMobilityStateFrame = pd.read_csv(stateFile, converters=cols2convert)
+    return googMobilityCountyFrame, googMobilityStateFrame
+
+
+def getLocalDataFrame(FIPS, DataFrame):
+    # Returns a copied dataframe of just one FIP's entry.
+    # Initial Author: Juan
+    return DataFrame[DataFrame['FIPS'] == FIPS].copy()
