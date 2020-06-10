@@ -8,7 +8,7 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
-
+from ast import literal_eval
 
 ## STRING TO LIST FUNCTIONS
 ## The following functions convert strings in the saved CSV files into
@@ -16,10 +16,16 @@ from datetime import datetime
 
 
 def StringToListDate(string):
-    # Converts string to list of date objects
+    # Converts string to list of date objects (and handles non-dates gracefully)
     # Initial Author: Juan
     dates_str_list = string.replace('\'','').strip('][').split(', ')
-    dates_list = [datetime.strptime(date, '%Y-%m-%d').date() for date in dates_str_list]
+    dates_list = []
+    for date in dates_str_list:
+        try:
+            newdate = datetime.strptime(date, '%Y-%m-%d').date()
+        except ValueError:
+            newdate = ""
+        dates_list.append(newdate)
     return dates_list
 
 
@@ -93,6 +99,16 @@ def GetCDRCounty(countyFIPS, countyDataFrame):
     return outDF
 
 
+def fixDataFrame(cols2convert, DataFrame):
+    # This function will take a dictionayr cols2convert which lists columns and the function to
+    # apply to them and then applies those functions to the columns of the DataFrame.
+    # Initial author: Juan
+    for key in cols2convert:
+        DataFrame[key] = DataFrame[key].apply(cols2convert[key])
+
+    return
+
+
 def CSVtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', countyFile = 'our_data/countylevel_combinedCDR.csv'):
     # This function creates the data frames which are used in the functions below.
     # It also handles the conversion of lists (stored as strings in the CSV file)
@@ -109,7 +125,8 @@ def CSVtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', county
                      'd2Confirmed'  : StringToListFloat,
                      'dDeaths' : StringToListFloat,
                      'd2Deaths' : StringToListFloat }
-    countyDataFrame = pd.read_csv(countyFile, converters=cols2convert)
+    countyDataFrame = pd.read_csv(countyFile)
+    fixDataFrame(cols2convert, countyDataFrame)
 
     # Now add the additional columns to process in state CSV file
     cols2convert.update( { 'Incident_Rate' : StringToListFloat,
@@ -118,7 +135,8 @@ def CSVtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', county
                            'Mortality_Rate' : StringToListFloat,
                            'Testing_Rate' : StringToListFloat,
                            'Hospitalization_Rate' : StringToListFloat } )
-    stateDataFrame = pd.read_csv(stateFile, converters=cols2convert)
+    stateDataFrame = pd.read_csv(stateFile)
+    fixDataFrame(cols2convert, stateDataFrame)
 
     return stateDataFrame, countyDataFrame
 
@@ -270,6 +288,7 @@ def CSVtoIMHEDataFrames(summaryFile = 'our_data/imhe_summary.csv', hospitalFile 
                  'any_gathering_restrict_start_date', 'any_gathering_restrict_end_date',
                  'any_business_start_date', 'any_business_end_date',
                  'all_non-ess_business_start_date', 'all_non-ess_business_end_date' ]
+    # Convert SINGLE date entries
     for col in datecols:
         summaryDF[col] = pd.to_datetime(summaryDF[col], errors='coerce')
 
@@ -277,8 +296,7 @@ def CSVtoIMHEDataFrames(summaryFile = 'our_data/imhe_summary.csv', hospitalFile 
     # to convert those in input
 
     hospitalizationsDF = pd.read_csv(hospitalFile)
-    cols2convert = { 'Dates' : StringToListDate,
-                     'Confirmed' : StringToListFloat,
+    cols2convert = { 'dates' : StringToListDate,
                      'allbed_mean' : StringToListFloat,
                      'allbed_lower' : StringToListFloat,
                      'allbed_upper' : StringToListFloat,
@@ -311,7 +329,8 @@ def CSVtoIMHEDataFrames(summaryFile = 'our_data/imhe_summary.csv', hospitalFile 
                      'est_infections_mean' : StringToListFloat,
                      'est_infections_lower' : StringToListFloat,
                      'est_infections_upper' : StringToListFloat }
-    hospitalizationsDF = pd.read_csv(hospitalFile, converters=cols2convert)
+    hospitalizationsDF = pd.read_csv(hospitalFile)
+    fixDataFrame(cols2convert, hospitalizationsDF)
 
     return summaryDF, hospitalizationsDF
 
@@ -345,7 +364,7 @@ def getAaplCountyMobility(countyFIPS, countyMobilityDataframe):
     # Initial Author: Dio
 
     #dates = StringToListDate(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates'].values[0])
-    county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']   
+    county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']
     dates = StringToListDate(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates'].values[0])
     driving_mobility = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['driving_mobility'].values[0])
     #creates data frame for the output
@@ -373,7 +392,7 @@ def getGoogleCountyMobility(countyFIPS, countyMobilityDataframe):
     # Initial Author: Dio
 
     #dataframe is being used from another function
-    county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']   
+    county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']
     dates = StringToListDate(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates'].values[0])
     #All of the percentages are changes from the baseline
     retail_recreation_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS] ['retail_and_recreation_percent_change_from_baseline'].values[0])
@@ -396,7 +415,7 @@ def getGoogleStateMobility(stateFIPS, stateMobilityDataframe):
     # Initial Author: Dio
 
     #dataframe is being used from another function
-    State = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['state']   
+    State = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['state']
     dates = StringToListDate(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates'].values[0])
     #All of the percentages are changes from the baseline
     retail_recreation_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_and_recreation_percent_change_from_baseline'].values[0])
@@ -420,11 +439,13 @@ def CSVtoAAPLMobilityDataFrames(countyFile = 'our_data/aapl_mobility_cnty.csv', 
     # Initial Author: Dio
 
     # List columns to convert from strings to lists
-    cols2convert = { 'Dates' : StringToListDate,
+    cols2convert = { 'dates' : StringToListDate,
                      'driving_mobility' : StringToListFloat }
     # Import CSV and convert appropriate columns
-    aaplMobilityCountyFrame = pd.read_csv(countyFile, converters=cols2convert)
-    aaplMobilityStateFrame = pd.read_csv(stateFile, converters=cols2convert)
+    aaplMobilityCountyFrame = pd.read_csv(countyFile)
+    fixDataFrame(cols2convert, aaplMobilityCountyFrame)
+    aaplMobilityStateFrame = pd.read_csv(stateFile)
+    fixDataFrame(cols2convert, aaplMobilityStateFrame)
 
     return aaplMobilityCountyFrame, aaplMobilityStateFrame
 
@@ -435,8 +456,7 @@ def CSVtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.csv', 
     # Initial Author: Dio
 
     # List columns to convert
-    cols2convert = { 'Dates' : StringToListDate,
-                     'driving_mobility' : StringToListFloat,
+    cols2convert = { 'dates' : StringToListDate,
                      'retail_and_recreation_percent_change_from_baseline' : StringToListFloat,
                      'grocery_and_pharmacy_percent_change_from_baseline' : StringToListFloat,
                      'parks_percent_change_from_baseline' : StringToListFloat,
@@ -444,8 +464,11 @@ def CSVtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.csv', 
                      'workplaces_percent_change_from_baseline' : StringToListFloat,
                      'residential_percent_change_from_baseline' : StringToListFloat }
 
-    googMobilityCountyFrame = pd.read_csv(countyFile, converters=cols2convert)
-    googMobilityStateFrame = pd.read_csv(stateFile, converters=cols2convert)
+    # Fix the columns that are strings that should be lists in the dataframe
+    googMobilityCountyFrame = pd.read_csv(countyFile)
+    fixDataFrame(cols2convert, googMobilityCountyFrame)
+    googMobilityStateFrame = pd.read_csv(stateFile)
+    fixDataFrame(cols2convert, googMobilityStateFrame)
     return googMobilityCountyFrame, googMobilityStateFrame
 
 
