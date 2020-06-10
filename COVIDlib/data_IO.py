@@ -151,6 +151,19 @@ def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
                         'peak_vent_day_mean':peak_vent_day_mean, 'peak_vent_day_lower':peak_vent_day_lower,
                         'peak_vent_day_upper':peak_vent_day_upper, 'all_bed_capacity':all_bed_capacity,
                         'icu_bed_capacity':icu_bed_capacity, 'all_bed_usage':all_bed_usage, 'icu_bed_usage':icu_bed_usage})
+    
+    outDF['peak_bed_day_mean'] = pd.to_datetime(outDF['peak_bed_day_mean'], format = '%Y-%m-%d')
+    outDF['peak_bed_day_lower'] = pd.to_datetime(outDF['peak_bed_day_lower'], format = '%Y-%m-%d')
+    outDF['peak_bed_day_upper'] = pd.to_datetime(outDF['peak_bed_day_upper'], format = '%Y-%m-%d')
+    
+    outDF['peak_icu_bed_day_mean'] = pd.to_datetime(outDF['peak_icu_bed_day_mean'], format = '%Y-%m-%d')
+    outDF['peak_icu_bed_day_lower'] = pd.to_datetime(outDF['peak_icu_bed_day_lower'], format = '%Y-%m-%d')
+    outDF['peak_icu_bed_day_upper'] = pd.to_datetime(outDF['peak_icu_bed_day_upper'], format = '%Y-%m-%d')
+    
+    outDF['peak_vent_day_mean'] = pd.to_datetime(outDF['peak_vent_day_mean'], format = '%Y-%m-%d')
+    outDF['peak_vent_day_lower'] = pd.to_datetime(outDF['peak_vent_day_lower'], format = '%Y-%m-%d')
+    outDF['peak_vent_day_upper'] = pd.to_datetime(outDF['peak_vent_day_upper'], format = '%Y-%m-%d')
+    
     return outDF
 
 
@@ -160,7 +173,7 @@ def GetNumICUBeds(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_capacity']
-    return mn_icu_beds # make a return
+    return mn_icu_beds.values[0] # make a return
 
 
 def GetNumAllBeds(fipsNum, summaryDataFrame):
@@ -168,7 +181,7 @@ def GetNumAllBeds(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_capacity']
-    return mn_icu_beds # make a return
+    return mn_icu_beds.values[0] # make a return
 
 
 def GetICUBedUsage(fipsNum, summaryDataFrame):
@@ -176,7 +189,7 @@ def GetICUBedUsage(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_usage']
-    return mn_icu_beds # make a return
+    return mn_icu_beds.values[0] # make a return
 
 
 def GetAllBedUsage(fipsNum, summaryDataFrame):
@@ -184,7 +197,7 @@ def GetAllBedUsage(fipsNum, summaryDataFrame):
 
     #imhe_local_data = pd.read_csv(fileName)
     mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_usage']
-    return mn_icu_beds
+    return mn_icu_beds.values[0]
 
 
 def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having issues
@@ -248,11 +261,11 @@ def getAaplCountyMobility(countyFIPS, countyMobilityDataframe):
 
     #dates = StringToListDate(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates'].values[0])
     county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']   
-    dates = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates']
-    driving_mobility = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['driving_mobility']
+    dates = StringToListDate(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates'].values[0])
+    driving_mobility = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['driving_mobility'].values[0])
     #creates data frame for the output
     outputFrame = pd.DataFrame({'FIPS':countyFIPS, 'state':county,
-                    'dates':dates, 'driving_mobility':driving_mobility,})
+                    'dates':[dates], 'driving_mobility':[driving_mobility],})
     return outputFrame
 
 
@@ -261,11 +274,11 @@ def getAaplStateMobility(stateFIPS, stateMobilityDataframe):
     # Initial Author: Dio
 
     states = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['state']
-    dates = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates']
-    driving_mobility = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['driving_mobility']
+    dates = StringToListDate(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates'].values[0])
+    driving_mobility = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['driving_mobility'].values[0])
 
     #creates data frame for the output
-    outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'state':states,'dates':dates, 'driving_mobility':driving_mobility,})
+    outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'state':states,'dates':[dates], 'driving_mobility':[driving_mobility],})
     #returns output for function
     return outputFrame
 
@@ -276,20 +289,20 @@ def getGoogleCountyMobility(countyFIPS, countyMobilityDataframe):
 
     #dataframe is being used from another function
     county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']   
-    dates = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates']
+    dates = StringToListDate(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates'].values[0])
     #All of the percentages are changes from the baseline
-    retail_recreation_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['retail_and_recreation_percent_change_from_baseline']
-    grocery_pharm_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['grocery_and_pharmacy_percent_change_from_baseline']
-    parks_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['parks_percent_change_from_baseline']
-    transit_stations_percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_percent_change_from_baseline']
-    residential_percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplaces_percent_change_from_baseline']
-    workplace_percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_percent_change_from_baseline']
+    retail_recreation_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS] ['retail_and_recreation_percent_change_from_baseline'].values[0])
+    grocery_pharm_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['grocery_and_pharmacy_percent_change_from_baseline'].values[0])
+    parks_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['parks_percent_change_from_baseline'].values[0])
+    transit_stations_percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_percent_change_from_baseline'].values[0])
+    residential_percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplaces_percent_change_from_baseline'].values[0])
+    workplace_percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_percent_change_from_baseline'].values[0])
 
     outputFrame = pd.DataFrame({'FIPS':countyFIPS, 'county':county,
-                    'dates':dates, 'retail_recreation_Percent':retail_recreation_Percent,
-                               'grocery_pharm_Percent':grocery_pharm_Percent,'parks_Percent':parks_Percent,
-                               'transit_stations_percent':transit_stations_percent,'residential_percent':residential_percent,
-                               'workplace_percent':workplace_percent})
+                    'dates':[dates], 'retail_recreation_Percent':[retail_recreation_Percent],
+                               'grocery_pharm_Percent':[grocery_pharm_Percent],'parks_Percent':[parks_Percent],
+                               'transit_stations_percent':[transit_stations_percent],'residential_percent':[residential_percent],
+                               'workplace_percent':[workplace_percent]})
     return outputFrame
 
 
@@ -299,18 +312,18 @@ def getGoogleStateMobility(stateFIPS, stateMobilityDataframe):
 
     #dataframe is being used from another function
     State = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['state']   
-    dates = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates']
+    dates = StringToListDate(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates'].values[0])
     #All of the percentages are changes from the baseline
-    retail_recreation_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_and_recreation_percent_change_from_baseline']
-    grocery_pharm_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['grocery_and_pharmacy_percent_change_from_baseline']
-    parks_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['parks_percent_change_from_baseline']
-    transit_stations_percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_percent_change_from_baseline']
-    residential_percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplaces_percent_change_from_baseline']
-    workplace_percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_percent_change_from_baseline']
+    retail_recreation_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_and_recreation_percent_change_from_baseline'].values[0])
+    grocery_pharm_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['grocery_and_pharmacy_percent_change_from_baseline'].values[0])
+    parks_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['parks_percent_change_from_baseline'].values[0])
+    transit_stations_percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_percent_change_from_baseline'].values[0])
+    residential_percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplaces_percent_change_from_baseline'].values[0])
+    workplace_percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_percent_change_from_baseline'].values[0])
 
     outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'State':State,
-                    'dates':dates, 'retail_recreation_Percent':retail_recreation_Percent,
-                               'grocery_pharm_Percent':grocery_pharm_Percent,'parks_Percent':parks_Percent,
-                               'transit_stations_percent':transit_stations_percent,'residential_percent':residential_percent,
-                               'workplace_percent':workplace_percent})
+                    'dates':[dates], 'retail_recreation_Percent':[retail_recreation_Percent],
+                               'grocery_pharm_Percent':[grocery_pharm_Percent],'parks_Percent':[parks_Percent],
+                               'transit_stations_percent':[transit_stations_percent],'residential_percent':[residential_percent],
+                               'workplace_percent':[workplace_percent]})
     return outputFrame
