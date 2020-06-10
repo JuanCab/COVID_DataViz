@@ -762,8 +762,8 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
         dates_listOlists.append(dates_list)
         retail_listOlists.append(retail_list)
         grocery_listOlists.append(grocery_list)
-        parks_listOlists.append(transit_list)
-        transit_listOlists.append(dates_list)
+        parks_listOlists.append(parks_list)
+        transit_listOlists.append(transit_list)
         workplaces_listOlists.append(workplaces_list)
         residential_listOlists.append(residential_list)
 
@@ -824,8 +824,8 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
         dates_listOlists.append(dates_list)
         retail_listOlists.append(retail_list)
         grocery_listOlists.append(grocery_list)
-        parks_listOlists.append(transit_list)
-        transit_listOlists.append(dates_list)
+        parks_listOlists.append(parks_list)
+        transit_listOlists.append(transit_list)
         workplaces_listOlists.append(workplaces_list)
         residential_listOlists.append(residential_list)
 
