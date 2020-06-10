@@ -168,17 +168,17 @@ def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
 
     state = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['state']
 
-    peak_bed_day_mean = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_bed_day_mean'].values[0], '%Y-%m-%d').date()
-    peak_bed_day_lower = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_bed_day_lower'].values[0], '%Y-%m-%d').date()
-    peak_bed_day_upper = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_bed_day_upper'].values[0], '%Y-%m-%d').date()
+    peak_bed_day_mean = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_bed_day_mean']
+    peak_bed_day_lower = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_bed_day_lower']
+    peak_bed_day_upper = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_bed_day_upper']
 
-    peak_icu_bed_day_mean = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_icu_bed_day_mean'].values[0], '%Y-%m-%d').date()
-    peak_icu_bed_day_lower = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_icu_bed_day_lower'].values[0], '%Y-%m-%d').date()
-    peak_icu_bed_day_upper = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_icu_bed_day_upper'].values[0], '%Y-%m-%d').date()
+    peak_icu_bed_day_mean = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_icu_bed_day_mean']
+    peak_icu_bed_day_lower = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_icu_bed_day_lower']
+    peak_icu_bed_day_upper = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_icu_bed_day_upper']
 
-    peak_vent_day_mean = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_vent_day_mean'].values[0], '%Y-%m-%d').date()
-    peak_vent_day_lower = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_vent_day_lower'].values[0], '%Y-%m-%d').date()
-    peak_vent_day_upper = datetime.strptime(summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_vent_day_upper'].values[0], '%Y-%m-%d').date()
+    peak_vent_day_mean = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_vent_day_mean']
+    peak_vent_day_lower = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_vent_day_lower']
+    peak_vent_day_upper = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['peak_vent_day_upper']
 
     all_bed_capacity = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_capacity']
     icu_bed_capacity = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_capacity']
@@ -193,35 +193,7 @@ def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
                         'peak_vent_day_mean':peak_vent_day_mean, 'peak_vent_day_lower':peak_vent_day_lower,
                         'peak_vent_day_upper':peak_vent_day_upper, 'all_bed_capacity':all_bed_capacity,
                         'icu_bed_capacity':icu_bed_capacity, 'all_bed_usage':all_bed_usage, 'icu_bed_usage':icu_bed_usage})
-<<<<<<< HEAD
-    
-#     #outDF['peak_bed_day_mean'] = pd.to_datetime(outDF['peak_bed_day_mean'], format = '%Y-%m-%d')
-#     outDF['peak_bed_day_lower'] = pd.to_datetime(outDF['peak_bed_day_lower'], format = '%Y-%m-%d')
-#     outDF['peak_bed_day_upper'] = pd.to_datetime(outDF['peak_bed_day_upper'], format = '%Y-%m-%d')
-    
-#     #outDF['peak_icu_bed_day_mean'] = pd.to_datetime(outDF['peak_icu_bed_day_mean'], format = '%Y-%m-%d')
-#     outDF['peak_icu_bed_day_lower'] = pd.to_datetime(outDF['peak_icu_bed_day_lower'], format = '%Y-%m-%d')
-#     outDF['peak_icu_bed_day_upper'] = pd.to_datetime(outDF['peak_icu_bed_day_upper'], format = '%Y-%m-%d')
-    
-#     outDF['peak_vent_day_mean'] = pd.to_datetime(outDF['peak_vent_day_mean'], format = '%Y-%m-%d')
-#     outDF['peak_vent_day_lower'] = pd.to_datetime(outDF['peak_vent_day_lower'], format = '%Y-%m-%d')
-#     outDF['peak_vent_day_upper'] = pd.to_datetime(outDF['peak_vent_day_upper'], format = '%Y-%m-%d')
-    
-=======
 
-    outDF['peak_bed_day_mean'] = pd.to_datetime(outDF['peak_bed_day_mean'], format = '%Y-%m-%d')
-    outDF['peak_bed_day_lower'] = pd.to_datetime(outDF['peak_bed_day_lower'], format = '%Y-%m-%d')
-    outDF['peak_bed_day_upper'] = pd.to_datetime(outDF['peak_bed_day_upper'], format = '%Y-%m-%d')
-
-    outDF['peak_icu_bed_day_mean'] = pd.to_datetime(outDF['peak_icu_bed_day_mean'], format = '%Y-%m-%d')
-    outDF['peak_icu_bed_day_lower'] = pd.to_datetime(outDF['peak_icu_bed_day_lower'], format = '%Y-%m-%d')
-    outDF['peak_icu_bed_day_upper'] = pd.to_datetime(outDF['peak_icu_bed_day_upper'], format = '%Y-%m-%d')
-
-    outDF['peak_vent_day_mean'] = pd.to_datetime(outDF['peak_vent_day_mean'], format = '%Y-%m-%d')
-    outDF['peak_vent_day_lower'] = pd.to_datetime(outDF['peak_vent_day_lower'], format = '%Y-%m-%d')
-    outDF['peak_vent_day_upper'] = pd.to_datetime(outDF['peak_vent_day_upper'], format = '%Y-%m-%d')
-
->>>>>>> f96ae64dfd114f59825d2ec65e2dfc88c77a373e
     return outDF
 
 
