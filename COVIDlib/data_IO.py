@@ -30,11 +30,11 @@ def StringToListDate(string):
     return dates_list
 
 
-def StringToListFloat(flt):
+def StringToListFloat(string):
     # Converts string to list of floats (We even treat integers as floats to
     # allow for NaN values)
     # Initial Author: Juan
-    flt_list = list(map(float, flt.replace('\'','').strip('][').split(', ')))
+    flt_list = list(map(float, string.replace('\'','').strip('][').split(', ')))
     return flt_list
 
 
@@ -174,6 +174,9 @@ def GetIMHEDataFrames(summaryFile = 'our_data/imhe_summary.csv', hospitalFile = 
     # This reads the local IMHE data files and returns data frames, which are to be used in the following functions
     summaryDF = pd.read_csv(summaryFile)
     hospitalizationsDF = pd.read_csv(hospitalFile)
+
+    # Fix the column formats
+
     return summaryDF, hospitalizationsDF
 
 
@@ -203,7 +206,6 @@ def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
     all_bed_usage = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_usage']
     icu_bed_usage = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_usage']
 
-
     outDF = pd.DataFrame({'FIPS':fipsNum, 'state':state,
                         'peak_bed_day_mean':peak_bed_day_mean, 'peak_bed_day_lower':peak_bed_day_lower,
                         'peak_bed_day_upper':peak_bed_day_upper, 'peak_icu_bed_day_mean':peak_icu_bed_day_mean,
@@ -211,6 +213,14 @@ def GetEquipData(fipsNum, summaryDataFrame): # This one's fine
                         'peak_vent_day_mean':peak_vent_day_mean, 'peak_vent_day_lower':peak_vent_day_lower,
                         'peak_vent_day_upper':peak_vent_day_upper, 'all_bed_capacity':all_bed_capacity,
                         'icu_bed_capacity':icu_bed_capacity, 'all_bed_usage':all_bed_usage, 'icu_bed_usage':icu_bed_usage})
+
+    # Columns with dates
+    datecols = [ 'peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper',
+                 'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper',
+                 'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper', ]
+    # Convert SINGLE date entries to proper pandas.datetime64 format
+    for col in datecols:
+        outDF[col] = pd.to_datetime(outDF[col], errors='coerce')
 
     return outDF
 

@@ -116,6 +116,8 @@ with open(combined_datafile, 'wb') as pickle_file:
 
 
 
+
+
 # %%
 # Convert datetime lists into strings
 combined_cnty_df['Dates'] = combined_cnty_df['Dates'].apply(COVIDdata.dates2strings)

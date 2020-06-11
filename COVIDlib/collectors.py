@@ -578,6 +578,12 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     del dates_arr, confirmed_arr, deaths_arr
     del dconfirmed_arr, ddeaths_arr, d2confirmed_arr, d2deaths_arr
 
+    # Reset indices before exporting
+    ts_us_confirmed_df.reset_index(drop=True, inplace=True)
+    ts_us_dead_df.reset_index(drop=True, inplace=True)
+    combined_cnty_df.reset_index(drop=True, inplace=True)
+    combined_state_df.reset_index(drop=True, inplace=True)
+
     ## Return the John Hopkins dataframes
     return (ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df)
 
@@ -867,6 +873,10 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
     goog_mobility_cnty_reduced.rename(columns={'STNAME': 'state', 'CTYNAME': 'county'}, errors="raise", inplace=True)
     goog_mobility_cnty_reduced.drop(columns=['CTYNAME_MATCH'], inplace=True)
 
+    # Reset indices before exporting
+    goog_mobility_cnty_reduced.reset_index(drop=True, inplace=True)
+    goog_mobility_states_reduced.reset_index(drop=True, inplace=True)
+
     return (goog_mobility_cnty_reduced, goog_mobility_states_reduced)
 
 
@@ -1075,6 +1085,10 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
     aapl_mobility_cnty_reduced['dates'] = [dates_list]*len(aapl_mobility_cnty_reduced)
     aapl_mobility_cnty_reduced['driving_mobility'] = driving_mobility_listOlists
 
+    # Reset indices before exporting
+    aapl_mobility_cnty_reduced.reset_index(drop=True, inplace=True)
+    aapl_mobility_states_reduced.reset_index(drop=True, inplace=True)
+
     return(aapl_mobility_cnty_reduced, aapl_mobility_states_reduced)
 
 
@@ -1140,7 +1154,7 @@ def retrieve_imhe_data(county_data_df, state_data_df):
     imhe_summary_cleaned.rename(columns={ 'location_name': 'state' }, inplace = True)
 
     # Convert all dates to datetime objects in memory
-    cols_w_dates = ['peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper', 
+    cols_w_dates = ['peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper',
                     'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper',
                     'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper',
                     'travel_limit_start_date', 'travel_limit_end_date',
@@ -1150,7 +1164,7 @@ def retrieve_imhe_data(county_data_df, state_data_df):
                     'any_business_start_date', 'any_business_end_date',
                     'all_non-ess_business_start_date', 'all_non-ess_business_end_date']
     for col in cols_w_dates:
-        imhe_summary_cleaned[col]= pd.to_datetime(imhe_summary_cleaned[col]) 
+        imhe_summary_cleaned[col]= pd.to_datetime(imhe_summary_cleaned[col])
 
     ##
     ## Hospitalization data processing
@@ -1341,6 +1355,10 @@ def retrieve_imhe_data(county_data_df, state_data_df):
     imhe_hospitalizations_reduced['est_infections_mean'] = est_infections_mean_listOlists
     imhe_hospitalizations_reduced['est_infections_lower'] = est_infections_lower_listOlists
     imhe_hospitalizations_reduced['est_infections_upper'] = est_infections_upper_listOlists
+
+    # Reset indices before exporting
+    imhe_summary_cleaned.reset_index(drop=True, inplace=True)
+    imhe_hospitalizations_reduced.reset_index(drop=True, inplace=True)
 
     # Return dataframes
     return(imhe_summary_cleaned, imhe_hospitalizations_reduced)

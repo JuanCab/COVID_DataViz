@@ -268,7 +268,10 @@ test_combined_states_df['Testing_Rate'] = np.around(100000*(cumilative_tested_ar
 
 
 # %%
-#
+# Reset indices before exporting
+test_combined_cnty_df.reset_index(drop=True, inplace=True)
+test_combined_states_df.reset_index(drop=True, inplace=True)
+    
 # Save the same data to pickle files
 #
 combined_datafile = test_dir + "TEST_countylevel_combinedCDR.p"
@@ -282,6 +285,9 @@ print(" - John Hopkins state level test data exported to ", combined_datafile)
 with open(combined_datafile, 'wb') as pickle_file:
     pickle.dump(test_combined_states_df, pickle_file)
     pickle_file.close()
+
+# %%
+test_combined_cnty_df.reset_index(drop=True)
 
 # %%
 # Convert datetime lists into strings
@@ -298,8 +304,6 @@ test_combined_cnty_df.to_csv(combined_datafile, index=False)
 combined_datafile = test_dir + "TEST_statelevel_combinedCDR.csv"
 print(" - John Hopkins state level test data also exported to ", combined_datafile)
 test_combined_states_df.to_csv(combined_datafile, index=False)
-
-
 
 # %%
 # Show demonstrations of plotting this data here by producing plots of data for Cass and Clay counties and North Dakota and Minnesota
@@ -553,6 +557,10 @@ test_goog_mobility_states_df['residential_percent_change_from_baseline'] = [sign
 
 
 # %%
+# Reset indices before exporting
+test_goog_mobility_cnty_df.reset_index(drop=True, inplace=True)
+test_goog_mobility_states_df.reset_index(drop=True, inplace=True)
+
 #
 # Save the same data to pickle files
 #
@@ -629,6 +637,10 @@ test_aapl_mobility_states_df['driving_mobility'] = [signalMN, signalND]
 # %%
 # Export the test Apple mobility data to CSV files
 print("\nExporting Test Apple mobility data")
+
+# Reset indices before exporting
+test_aapl_mobility_cnty_df.reset_index(drop=True, inplace=True)
+test_aapl_mobility_states_df.reset_index(drop=True, inplace=True)
     
 #
 # Save the same data to pickle files
@@ -815,6 +827,11 @@ test_imhe_hospitalizations['est_infections_upper'] = [ (1.2*infections).astype(i
 #
 # Save the same data to pickle files
 #
+
+# Reset indices before exporting
+test_imhe_summary.reset_index(drop=True, inplace=True)
+test_imhe_hospitalizations.reset_index(drop=True, inplace=True)
+
 imhe_summary_fname = test_dir + "TEST_imhe_summary.p"
 print(" - IMHE state level summary test data exported to ", imhe_summary_fname)
 with open(imhe_summary_fname, 'wb') as pickle_file:
@@ -847,5 +864,3 @@ test_imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
 end = time.perf_counter()
 
 print(f"Entire process of executing this script took {end-start:0.2f} sec.")
-
-# %%
