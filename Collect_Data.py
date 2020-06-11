@@ -34,16 +34,21 @@
 
 # %%
 import os
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 import git
+import pickle
 
 # Import COVID data retrieval routines from external python library
 import COVIDlib.collectors as COVIDdata
 
 # %%
+# Mark the start of processing
+start = time.perf_counter()
+
 ## Define variables of interest below
 data_dir = 'our_data/'    # Data directory for files we created
 
@@ -95,10 +100,28 @@ if not os.path.exists(data_dir):
 # Save the county and state-level processed daily dataframes into CSV files
 #
 combined_datafile = data_dir + "countylevel_combinedCDR.csv"
+print(" - John Hopkins county level data exported to ", combined_datafile)
 combined_cnty_df.to_csv(combined_datafile, index=False)
 
 combined_datafile = data_dir + "statelevel_combinedCDR.csv"
+print(" - John Hopkins state level data exported to ", combined_datafile)
 combined_state_df.to_csv(combined_datafile, index=False)
+
+#
+# Save the same data to pickle files
+#
+combined_datafile = data_dir + "countylevel_combinedCDR.p"
+print(" - John Hopkins county level data also exported to ", combined_datafile)
+with open(combined_datafile, 'wb') as pickle_file:
+    pickle.dump(combined_cnty_df, pickle_file)
+    pickle_file.close()
+
+combined_datafile = data_dir + "statelevel_combinedCDR.p"
+print(" - John Hopkins state level data also exported to ", combined_datafile)
+with open(combined_datafile, 'wb') as pickle_file:
+    pickle.dump(combined_state_df, pickle_file)
+    pickle_file.close()
+
 
 # %%
 ##
@@ -328,6 +351,22 @@ goog_mobility_states_fname = data_dir + "goog_mobility_state.csv"
 print(" - Google state level mobility data exported to ", goog_mobility_states_fname)
 goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 
+#
+# Save the same data to pickle files
+#
+goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.p"
+print(" - Google county level mobility data also exported to ", goog_mobility_cnty_fname)
+with open(goog_mobility_cnty_fname, 'wb') as pickle_file:
+    pickle.dump(goog_mobility_cnty_df, pickle_file)
+    pickle_file.close()
+
+goog_mobility_states_fname = data_dir + "goog_mobility_state.p"
+print(" - Google state level mobility data also exported to ", goog_mobility_states_fname)
+with open(goog_mobility_states_fname, 'wb') as pickle_file:
+    pickle.dump(goog_mobility_states_df, pickle_file)
+    pickle_file.close()
+
+
 # %% [markdown]
 # ## Apple Mobility Data  (FIPS cross-identification performed)
 #
@@ -359,6 +398,22 @@ aapl_mobility_cnty_df.to_csv(aapl_mobility_cnty_fname, index=False)
 aapl_mobility_states_fname = data_dir + "aapl_mobility_state.csv"
 print(" - Apple state level mobility data exported to ", aapl_mobility_states_fname)
 aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
+
+#
+# Save the same data to pickle files
+#
+aapl_mobility_cnty_fname = data_dir + "aapl_mobility_cnty.p"
+print(" - Apple county level mobility data also exported to ", aapl_mobility_cnty_fname)
+with open(aapl_mobility_cnty_fname, 'wb') as pickle_file:
+    pickle.dump(aapl_mobility_cnty_df, pickle_file)
+    pickle_file.close()
+
+aapl_mobility_states_fname = data_dir + "aapl_mobility_state.p"
+print(" - Apple state level mobility data also exported to ", aapl_mobility_states_fname)
+with open(aapl_mobility_states_fname, 'wb') as pickle_file:
+    pickle.dump(aapl_mobility_states_df, pickle_file)
+    pickle_file.close()
+
 
 # %% [markdown]
 # ## Institute for Health Metrics and Evaluation (IMHE) Data on Local Resources  (FIPS cross-identification performed)
@@ -411,6 +466,21 @@ imhe_summary.to_csv(imhe_summary_fname, index=False)
 imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.csv"
 print(" - IMHE hospitalization level summary data exported to ", imhe_summary_fname)
 imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
+
+#
+# Save the same data to pickle files
+#
+imhe_summary_fname = data_dir + "imhe_summary.p"
+print(" - IMHE state level summary data also exported to ", imhe_summary_fname)
+with open(imhe_summary_fname, 'wb') as pickle_file:
+    pickle.dump(imhe_summary, pickle_file)
+    pickle_file.close()
+
+imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.p"
+print(" - IMHE hospitalization level summary data also exported to ", imhe_summary_fname)
+with open(imhe_hospitalizations_fname, 'wb') as pickle_file:
+    pickle.dump(imhe_hospitalizations, pickle_file)
+    pickle_file.close()
 
 # Present summary data for local area
 print("\nIMHE SUMMARY DATA IN imhe_summary() FOR MN and ND")
@@ -483,3 +553,9 @@ print(live_state_df[ (live_state_df['fips'] == MNFIPS) | (live_state_df['fips'] 
 # Print national data
 print("\nNATIONAL DATA IN live_us_df() DATAFRAME")
 print(live_us_df)
+
+# %%
+# Mark the start of processing
+end = time.perf_counter()
+
+print(f"Entire process of executing this script took {end-start:0.2f} sec.")

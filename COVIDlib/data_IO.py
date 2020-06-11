@@ -58,7 +58,7 @@ def fixDataFrame(cols2convert, DataFrame):
 ## data on confirmed cases, deaths, and recovered numbers.
 
 
-def GetCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', countyFile = 'our_data/countylevel_combinedCDR.csv'):
+def GetCDRDataFrames(countyFile = 'our_data/countylevel_combinedCDR.csv', stateFile = 'our_data/statelevel_combinedCDR.csv'):
     # This function creates the data frames which are used in the functions below.
     # Initial author: Luke
     stateDataFrame = pd.read_csv(stateFile)
@@ -115,8 +115,8 @@ def GetCDRCounty(countyFIPS, countyDataFrame):
     return outDF
 
 
-def CSVtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', countyFile = 'our_data/countylevel_combinedCDR.csv'):
-    # This function creates the data frames which are used in the functions below.
+def CSVtoCDRDataFrames(countyFile = 'our_data/countylevel_combinedCDR.csv', stateFile = 'our_data/statelevel_combinedCDR.csv'):
+    # This function creates the data frames from the John Hopkins data files.
     # It also handles the conversion of lists (stored as strings in the CSV file)
     # back into lists.
     # Initial author: Luke
@@ -143,6 +143,23 @@ def CSVtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.csv', county
                            'Hospitalization_Rate' : StringToListFloat } )
     stateDataFrame = pd.read_csv(stateFile)
     fixDataFrame(cols2convert, stateDataFrame)
+
+    return stateDataFrame, countyDataFrame
+
+
+def PtoCDRDataFrames(stateFile = 'our_data/statelevel_combinedCDR.p', countyFile = 'our_data/countylevel_combinedCDR.p'):
+    # This function creates the data frames from the John Hopkins data files.
+    # It reads the pickle files, trying to avoid the time needed to convert strings to lists when reading CSVs.
+    # Initial author: Luke
+
+    # Import pickle files and convert appropriate columns
+    pickle_file = open(countyFile,'rb')
+    countyDataFrame = pickle.load(pickle_file)
+    pickle_file.close()
+
+    pickle_file = open(stateFile,'rb')
+    stateDataFrame = pickle.load(pickle_file)
+    pickle_file.close()
 
     return stateDataFrame, countyDataFrame
 
@@ -250,15 +267,15 @@ def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having iss
     InvVen_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_mean'].values[0])
     InvVen_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_lower'].values[0])
     InvVen_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_upper'].values[0])
-    
+
     Deaths_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_mean'].values[0])
     Deaths_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_lower'].values[0])
     Deaths_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_upper'].values[0])
-    
+
     Admis_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_mean'].values[0])
     Admis_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_lower'].values[0])
     Admis_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_upper'].values[0])
-    
+
     newICU_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_mean'].values[0])
     newICU_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_lower'].values[0])
     newICU_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_upper'].values[0])
@@ -337,6 +354,23 @@ def CSVtoIMHEDataFrames(summaryFile = 'our_data/imhe_summary.csv', hospitalFile 
                      'est_infections_upper' : StringToListFloat }
     hospitalizationsDF = pd.read_csv(hospitalFile)
     fixDataFrame(cols2convert, hospitalizationsDF)
+
+    return summaryDF, hospitalizationsDF
+
+
+def PtoIMHEDataFrames(summaryFile = 'our_data/imhe_summary.p', hospitalFile = 'our_data/imhe_hospitalizations.p'):
+    # This reads the local IMHE data files and returns data frames. It loads from pickle files, avoiding the entire
+    # need to fix the lists stored as strings in the CSV files.
+    # Original Author: Luke
+
+    # Import pickle files and convert appropriate columns
+    pickle_file = open(summaryFile,'rb')
+    summaryDF = pickle.load(pickle_file)
+    pickle_file.close()
+
+    pickle_file = open(hospitalFile,'rb')
+    hospitalizationsDF = pickle.load(pickle_file)
+    pickle_file.close()
 
     return summaryDF, hospitalizationsDF
 
@@ -485,4 +519,48 @@ def CSVtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.csv', 
     googMobilityStateFrame = pd.read_csv(stateFile)
     fixDataFrame(cols2convert, googMobilityStateFrame)
     googMobilityStateFrame.rename(columns=newnames, errors="raise", inplace=True)
+    return googMobilityCountyFrame, googMobilityStateFrame
+
+
+def PtoAAPLMobilityDataFrames(countyFile = 'our_data/aapl_mobility_cnty.p', stateFile = 'our_data/aapl_mobility_state.p'):
+    # Retrieves the Apple mobility data from the pickle files so dataframe shouldn't need fixing.
+    # Initial Author: Dio
+
+    # Import pickle files and convert appropriate columns
+    pickle_file = open(countyFile,'rb')
+    aaplMobilityCountyFrame = pickle.load(pickle_file)
+    pickle_file.close()
+
+    pickle_file = open(stateFile,'rb')
+    aaplMobilityStateFrame = pickle.load(pickle_file)
+    pickle_file.close()
+
+    return aaplMobilityCountyFrame, aaplMobilityStateFrame
+
+
+def PtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.p', stateFile = 'our_data/goog_mobility_state.p'):
+    # Retrieves the Google mobility data from the pickle files so dataframe shouldn't need fixing.
+    # Initial Author: Dio
+
+    # Import pickle files and convert appropriate columns
+    pickle_file = open(countyFile,'rb')
+    googMobilityCountyFrame = pickle.load(pickle_file)
+    pickle_file.close()
+
+    pickle_file = open(stateFile,'rb')
+    googMobilityStateFrame = pickle.load(pickle_file)
+    pickle_file.close()
+
+    # Dictionary of renamed columns
+    newnames = { 'retail_and_recreation_percent_change_from_baseline': 'retail_recreation_Percent',
+                 'grocery_and_pharmacy_percent_change_from_baseline' : 'grocery_pharm_Percent',
+                 'parks_percent_change_from_baseline' : 'parks_Percent',
+                 'transit_stations_percent_change_from_baseline' : 'transit_stations_Percent',
+                 'workplaces_percent_change_from_baseline' : 'residential_Percent',
+                 'residential_percent_change_from_baseline' : 'workplace_Percent' }
+
+    # Fix the columns that are strings that should be lists in the dataframe
+    googMobilityCountyFrame.rename(columns=newnames, errors="raise", inplace=True)
+    googMobilityStateFrame.rename(columns=newnames, errors="raise", inplace=True)
+
     return googMobilityCountyFrame, googMobilityStateFrame
