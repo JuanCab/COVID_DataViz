@@ -99,29 +99,35 @@ if not os.path.exists(data_dir):
 #
 # Save the county and state-level processed daily dataframes into CSV files
 #
-combined_datafile = data_dir + "countylevel_combinedCDR.csv"
-print(" - John Hopkins county level data exported to ", combined_datafile)
-combined_cnty_df.to_csv(combined_datafile, index=False)
-
-combined_datafile = data_dir + "statelevel_combinedCDR.csv"
-print(" - John Hopkins state level data exported to ", combined_datafile)
-combined_state_df.to_csv(combined_datafile, index=False)
-
 #
 # Save the same data to pickle files
 #
 combined_datafile = data_dir + "countylevel_combinedCDR.p"
-print(" - John Hopkins county level data also exported to ", combined_datafile)
+print(" - John Hopkins county level data exported to ", combined_datafile)
 with open(combined_datafile, 'wb') as pickle_file:
     pickle.dump(combined_cnty_df, pickle_file)
     pickle_file.close()
 
 combined_datafile = data_dir + "statelevel_combinedCDR.p"
-print(" - John Hopkins state level data also exported to ", combined_datafile)
+print(" - John Hopkins state level data exported to ", combined_datafile)
 with open(combined_datafile, 'wb') as pickle_file:
     pickle.dump(combined_state_df, pickle_file)
     pickle_file.close()
 
+
+
+# %%
+# Convert datetime lists into strings
+combined_cnty_df['Dates'] = combined_cnty_df['Dates'].apply(COVIDdata.dates2strings)
+combined_state_df['Dates'] = combined_state_df['Dates'].apply(COVIDdata.dates2strings)
+
+combined_datafile = data_dir + "countylevel_combinedCDR.csv"
+print(" - John Hopkins county level data also exported to ", combined_datafile)
+combined_cnty_df.to_csv(combined_datafile, index=False)
+
+combined_datafile = data_dir + "statelevel_combinedCDR.csv"
+print(" - John Hopkins state level data also exported to ", combined_datafile)
+combined_state_df.to_csv(combined_datafile, index=False)
 
 # %%
 ##
@@ -340,32 +346,37 @@ title = this_axs.set_title("COVID Death Change Rate")
 # Retrieve the Google Mobility dataframes
 (goog_mobility_cnty_df, goog_mobility_states_df) = COVIDdata.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
 
-# Export the google mobility data to CSV files
-print("Exporting Google mobility data")
-    
-goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.csv"
-print(" - Google county level mobility data exported to ", goog_mobility_cnty_fname)
-goog_mobility_cnty_df.to_csv(goog_mobility_cnty_fname, index=False)
-
-goog_mobility_states_fname = data_dir + "goog_mobility_state.csv"
-print(" - Google state level mobility data exported to ", goog_mobility_states_fname)
-goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
-
 #
 # Save the same data to pickle files
 #
+print("Exporting Google mobility data")
+
 goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.p"
-print(" - Google county level mobility data also exported to ", goog_mobility_cnty_fname)
+print(" - Google county level mobility data exported to ", goog_mobility_cnty_fname)
 with open(goog_mobility_cnty_fname, 'wb') as pickle_file:
     pickle.dump(goog_mobility_cnty_df, pickle_file)
     pickle_file.close()
 
 goog_mobility_states_fname = data_dir + "goog_mobility_state.p"
-print(" - Google state level mobility data also exported to ", goog_mobility_states_fname)
+print(" - Google state level mobility data exported to ", goog_mobility_states_fname)
 with open(goog_mobility_states_fname, 'wb') as pickle_file:
     pickle.dump(goog_mobility_states_df, pickle_file)
     pickle_file.close()
 
+
+# %%
+# Convert datetime lists into strings
+goog_mobility_cnty_df['dates'] = goog_mobility_cnty_df['dates'].apply(COVIDdata.dates2strings)
+goog_mobility_states_df['dates'] = goog_mobility_states_df['dates'].apply(COVIDdata.dates2strings)
+
+# Export the google mobility data to CSV files
+goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.csv"
+print(" - Google county level mobility data also exported to ", goog_mobility_cnty_fname)
+goog_mobility_cnty_df.to_csv(goog_mobility_cnty_fname, index=False)
+
+goog_mobility_states_fname = data_dir + "goog_mobility_state.csv"
+print(" - Google state level mobility data also exported to ", goog_mobility_states_fname)
+goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 
 # %% [markdown]
 # ## Apple Mobility Data  (FIPS cross-identification performed)
@@ -391,29 +402,35 @@ print(aapl_mobility_clay)
 # Export the Apple mobility data to CSV files
 print("\nExporting Apple mobility data")
     
-aapl_mobility_cnty_fname = data_dir + "aapl_mobility_cnty.csv"
-print(" - Apple county level mobility data exported to ", aapl_mobility_cnty_fname)
-aapl_mobility_cnty_df.to_csv(aapl_mobility_cnty_fname, index=False)
-
-aapl_mobility_states_fname = data_dir + "aapl_mobility_state.csv"
-print(" - Apple state level mobility data exported to ", aapl_mobility_states_fname)
-aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 
 #
 # Save the same data to pickle files
 #
 aapl_mobility_cnty_fname = data_dir + "aapl_mobility_cnty.p"
-print(" - Apple county level mobility data also exported to ", aapl_mobility_cnty_fname)
+print(" - Apple county level mobility data exported to ", aapl_mobility_cnty_fname)
 with open(aapl_mobility_cnty_fname, 'wb') as pickle_file:
     pickle.dump(aapl_mobility_cnty_df, pickle_file)
     pickle_file.close()
 
 aapl_mobility_states_fname = data_dir + "aapl_mobility_state.p"
-print(" - Apple state level mobility data also exported to ", aapl_mobility_states_fname)
+print(" - Apple state level mobility data exported to ", aapl_mobility_states_fname)
 with open(aapl_mobility_states_fname, 'wb') as pickle_file:
     pickle.dump(aapl_mobility_states_df, pickle_file)
     pickle_file.close()
 
+
+# %%
+# Convert datetime lists into strings
+aapl_mobility_cnty_df['dates'] = aapl_mobility_cnty_df['dates'].apply(COVIDdata.dates2strings)
+aapl_mobility_states_df['dates'] = aapl_mobility_states_df['dates'].apply(COVIDdata.dates2strings)
+    
+aapl_mobility_cnty_fname = data_dir + "aapl_mobility_cnty.csv"
+print(" - Apple county level mobility data also exported to ", aapl_mobility_cnty_fname)
+aapl_mobility_cnty_df.to_csv(aapl_mobility_cnty_fname, index=False)
+
+aapl_mobility_states_fname = data_dir + "aapl_mobility_state.csv"
+print(" - Apple state level mobility data also exported to ", aapl_mobility_states_fname)
+aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 
 # %% [markdown]
 # ## Institute for Health Metrics and Evaluation (IMHE) Data on Local Resources  (FIPS cross-identification performed)
@@ -458,30 +475,36 @@ with open(aapl_mobility_states_fname, 'wb') as pickle_file:
 #
 # 'NaN' present for dates means it isn't known.
 
-# Write out CSV files to disk
-imhe_summary_fname = data_dir + "imhe_summary.csv"
-print(" - IMHE state level summary data exported to ", imhe_summary_fname)
-imhe_summary.to_csv(imhe_summary_fname, index=False)
-
-imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.csv"
-print(" - IMHE hospitalization level summary data exported to ", imhe_summary_fname)
-imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
-
 #
 # Save the same data to pickle files
 #
 imhe_summary_fname = data_dir + "imhe_summary.p"
-print(" - IMHE state level summary data also exported to ", imhe_summary_fname)
+print(" - IMHE state level summary data exported to ", imhe_summary_fname)
 with open(imhe_summary_fname, 'wb') as pickle_file:
     pickle.dump(imhe_summary, pickle_file)
     pickle_file.close()
 
 imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.p"
-print(" - IMHE hospitalization level summary data also exported to ", imhe_summary_fname)
+print(" - IMHE hospitalization level summary data exported to ", imhe_summary_fname)
 with open(imhe_hospitalizations_fname, 'wb') as pickle_file:
     pickle.dump(imhe_hospitalizations, pickle_file)
     pickle_file.close()
 
+# %%
+# Convert datetime lists into strings
+imhe_hospitalizations['dates'] = imhe_hospitalizations['dates'].apply(COVIDdata.dates2strings)
+
+# Write out CSV files to disk
+imhe_summary_fname = data_dir + "imhe_summary.csv"
+print(" - IMHE state level summary data also exported to ", imhe_summary_fname)
+imhe_summary.to_csv(imhe_summary_fname, index=False)
+
+imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.csv"
+print(" - IMHE hospitalization level summary data also exported to ", imhe_summary_fname)
+imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
+
+
+# %%
 # Present summary data for local area
 print("\nIMHE SUMMARY DATA IN imhe_summary() FOR MN and ND")
 imhe_summary_local = imhe_summary[(imhe_summary.FIPS == MNFIPS) | (imhe_summary.FIPS == NDFIPS) ]

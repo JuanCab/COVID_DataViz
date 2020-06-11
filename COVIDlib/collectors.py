@@ -49,6 +49,19 @@ def iso2days(iso):
     return (datetime.fromisoformat(iso) - ref)/timedelta(days=1)
 
 
+def days_since(date):
+    # To make computing the derivative easy, compute days since January 1, 2020
+    ref = datetime.fromisoformat("2020-01-01").date()
+    return (date - ref)/timedelta(days=1)
+
+
+def dates2strings(this_list):
+    # Converts a list of datetime.date objects into a list of string dates
+    try:
+        return [day.strftime('%Y-%m-%d') for day in this_list]
+    except:
+        return this_list
+
 def derivative(x, y):
     """
     Compute forward difference estimate for the derivative of y with respect
@@ -311,7 +324,8 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
 
             ## Create dataframes for temporarily storing time series date
             # Append date to list of dates
-            dates_list.append(this_isodate)
+            # dates_list.append(this_isodate)
+            dates_list.append(datetime.strptime(this_isodate, '%Y-%m-%d').date())
 
             # Store Confirmed by merging reduced list and renaming column
             confirmed_df = pd.merge(confirmed_df,reduced_df[['FIPS','Confirmed']],on='FIPS', how='left', copy=True)
@@ -348,7 +362,7 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     dates = combined_cnty_df[combined_cnty_df['FIPS'] == ClayFIPS]['Dates'].tolist()[0]
     dates_list = []
     for dat in dates:
-        dates_list.append( iso2days(dat) )
+        dates_list.append( days_since(dat) )
     dates_arr = np.array([dates_list]*len(combined_cnty_df))
 
     # Convert confirmed/deaths/recovered into arrays
@@ -437,7 +451,8 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
 
         ## Create dataframes for temporarily storing time series date
         # Append date to list of dates
-        dates_list.append(this_isodate)
+        #dates_list.append(this_isodate)
+        dates_list.append(datetime.strptime(this_isodate, '%Y-%m-%d').date())
 
         # Store Confirmed by merging reduced list and renaming column
         confirmed_df = pd.merge(confirmed_df,reduced_df[['FIPS','Confirmed']],on='FIPS', how='left', copy=True)
@@ -522,7 +537,7 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     dates = combined_state_df[combined_state_df['FIPS'] == MNFIPS]['Dates'].tolist()[0]
     dates_list = []
     for dat in dates:
-        dates_list.append( iso2days(dat) )
+        dates_list.append( days_since(dat) )
     dates_arr = np.array([dates_list]*len(combined_state_df))
 
     # Convert confirmed/deaths/recovered into arrays
@@ -658,7 +673,7 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
 
     # As a test, loop through all the county FIPS codes and see which are NOT represented in the mobility data
     unmatched_cnt = 0
-    cleared_states = [] 
+    cleared_states = []
     states_list = []
     last_state = 'Alaska' # Set to avoid issue in loop below with undefined variable
 
@@ -750,7 +765,10 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
         trans = timeseries.T
 
         # Convert the time series into lists in memory
-        dates_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+        dates_str_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+        # Convert dates list to datetime.dates list
+        dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
+
         retail_list = trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()
         grocery_list = trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()
         parks_list = trans.loc['parks_percent_change_from_baseline'].values.tolist()
@@ -811,14 +829,21 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
         timeseries = timeseries.set_index('date')
         trans = timeseries.T
 
-        # Convert the time series into lists in memory
-        dates_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
         retail_list = trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()
         grocery_list = trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()
         parks_list = trans.loc['parks_percent_change_from_baseline'].values.tolist()
         transit_list = trans.loc['transit_stations_percent_change_from_baseline'].values.tolist()
         workplaces_list = trans.loc['workplaces_percent_change_from_baseline'].values.tolist()
         residential_list = trans.loc['residential_percent_change_from_baseline'].values.tolist()
+
+        # Convert the time series into lists in memory
+        dates_str_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+        # Convert dates list to datetime.dates list (this approach handles blank counties, returning empty list)
+        try:
+            dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
+        except:
+            # This line is triggered when the text is nan
+            dates_list = retail_list  # Copy "NaN" list from other column
 
         # Add lists to lists
         dates_listOlists.append(dates_list)
@@ -946,7 +971,8 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
     aapl_mobility_states_cleaned.drop(columns=['STNAME'], inplace=True)
 
     # Convert all the mobility data into one massive list of lists (and columns into dates list), this will allow collapsing multiple columns into lists
-    dates_list = aapl_mobility_states_cleaned[ aapl_mobility_states_cleaned.columns[(aapl_mobility_states_cleaned.columns!='FIPS') & (aapl_mobility_states_cleaned.columns!='state')] ].columns.tolist()
+    dates_str_list = aapl_mobility_states_cleaned[ aapl_mobility_states_cleaned.columns[(aapl_mobility_states_cleaned.columns!='FIPS') & (aapl_mobility_states_cleaned.columns!='state')] ].columns.tolist()
+    dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
     driving_mobility_listOlists = aapl_mobility_states_cleaned[ aapl_mobility_states_cleaned.columns[(aapl_mobility_states_cleaned.columns!='FIPS') & (aapl_mobility_states_cleaned.columns!='state')] ].values.tolist()
 
     # Create reduced mobility data file with all the data collapsed into lists
@@ -1039,7 +1065,8 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
     aapl_mobility_cnty_cleaned.rename(columns={ 'STNAME': 'state', 'CTYNAME': 'county'}, inplace = True)
 
     # Convert all the county level mobility data into one massive list of lists (and columns into dates list), this will allow collapsing multiple columns into lists
-    dates_list = aapl_mobility_cnty_cleaned[ aapl_mobility_cnty_cleaned.columns[(aapl_mobility_cnty_cleaned.columns!='FIPS') & (aapl_mobility_cnty_cleaned.columns!='state') & (aapl_mobility_cnty_cleaned.columns!='county')] ].columns.tolist()
+    dates_str_list = aapl_mobility_cnty_cleaned[ aapl_mobility_cnty_cleaned.columns[(aapl_mobility_cnty_cleaned.columns!='FIPS') & (aapl_mobility_cnty_cleaned.columns!='state') & (aapl_mobility_cnty_cleaned.columns!='county')] ].columns.tolist()
+    dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
     driving_mobility_listOlists = aapl_mobility_cnty_cleaned[ aapl_mobility_cnty_cleaned.columns[(aapl_mobility_cnty_cleaned.columns!='FIPS') & (aapl_mobility_cnty_cleaned.columns!='state')& (aapl_mobility_cnty_cleaned.columns!='county')] ].values.tolist()
 
     # Create reduced mobility data file with all the data collapsed into lists
@@ -1111,6 +1138,19 @@ def retrieve_imhe_data(county_data_df, state_data_df):
     # Dropped redundant state name and excess capacity of beds, since computable from available columns
     imhe_summary_cleaned.drop(columns=['STNAME', 'available_all_nbr', 'available_icu_nbr'], inplace=True)
     imhe_summary_cleaned.rename(columns={ 'location_name': 'state' }, inplace = True)
+
+    # Convert all dates to datetime objects in memory
+    cols_w_dates = ['peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper', 
+                    'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper',
+                    'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper',
+                    'travel_limit_start_date', 'travel_limit_end_date',
+                    'stay_home_start_date', 'stay_home_end_date',
+                    'educational_fac_start_date', 'educational_fac_end_date',
+                    'any_gathering_restrict_start_date', 'any_gathering_restrict_end_date',
+                    'any_business_start_date', 'any_business_end_date',
+                    'all_non-ess_business_start_date', 'all_non-ess_business_end_date']
+    for col in cols_w_dates:
+        imhe_summary_cleaned[col]= pd.to_datetime(imhe_summary_cleaned[col]) 
 
     ##
     ## Hospitalization data processing
@@ -1192,7 +1232,10 @@ def retrieve_imhe_data(county_data_df, state_data_df):
         trans = timeseries.T
 
         # Convert the time series into lists in memory
-        dates_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+        dates_str_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
+        # Convert dates list to datetime.dates list (this approach handles blank counties, returning empty list)
+        dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
+
         allbed_mean_list = trans.loc['allbed_mean'].values.tolist()
         allbed_lower_list = trans.loc['allbed_lower'].values.tolist()
         allbed_upper_list = trans.loc['allbed_upper'].values.tolist()
