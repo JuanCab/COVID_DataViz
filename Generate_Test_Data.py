@@ -102,7 +102,8 @@ test_combined_cnty_df = combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS) 
 # Generate a test dataset
 date1 = date(2020, 3, 22)
 date2 = date(2020, 6, 1)
-dates = list(daterange(date1, date2))
+dates_str_list = list(daterange(date1, date2))
+dates = [datetime.fromisoformat(day).date() for day in dates_str_list]
 
 # Assume an unreal situation of 10 new cases a day from March 22 to June 1 
 # to allow easy check of read in numbers.
@@ -144,7 +145,7 @@ test_combined_cnty_df['Recovered'] = [recovered_CLAY_list, recovered_CASS_list ]
 dates = test_combined_cnty_df[test_combined_cnty_df['FIPS'] == ClayFIPS]['Dates'].tolist()[0]
 dates_list = []
 for dat in dates:
-    dates_list.append( COVIDdata.iso2days(dat) )
+    dates_list.append( COVIDdata.days_since(dat) )
 dates_arr = np.array([dates_list]*len(test_combined_cnty_df))
 
 # Convert confirmed/deaths/recovered into arrays
@@ -176,7 +177,8 @@ test_combined_states_df = combined_state_df[(combined_state_df['FIPS'] == MNFIPS
 # Generate a test dataset
 date1 = date(2020, 3, 22)
 date2 = date(2020, 6, 1)
-dates = list(daterange(date1, date2))
+dates_str_list = list(daterange(date1, date2))
+dates = [datetime.fromisoformat(day).date() for day in dates_str_list]
 
 # Assume an unreal situation of 10 additional new cases a day from March 22 to June 1 
 # to allow easy check of read in numbers.
@@ -219,7 +221,7 @@ test_combined_states_df['Recovered'] = [recovered_MN_list, recovered_ND_list ]
 dates = test_combined_states_df[test_combined_states_df['FIPS'] == MNFIPS]['Dates'].tolist()[0]
 dates_list = []
 for dat in dates:
-    dates_list.append( COVIDdata.iso2days(dat) )
+    dates_list.append( COVIDdata.days_since(dat) )
 dates_arr = np.array([dates_list]*len(test_combined_states_df))
 
 # Convert confirmed/deaths/recovered into arrays
@@ -267,30 +269,37 @@ test_combined_states_df['Testing_Rate'] = np.around(100000*(cumilative_tested_ar
 
 # %%
 #
-# Save the county and state-level test dataframes into CSV files
-#
-combined_datafile = test_dir + "TEST_countylevel_combinedCDR.csv"
-print(" - John Hopkins county level test data exported to ", combined_datafile)
-test_combined_cnty_df.to_csv(combined_datafile, index=False)
-
-combined_datafile = test_dir + "TEST_statelevel_combinedCDR.csv"
-print(" - John Hopkins state level test data exported to ", combined_datafile)
-test_combined_states_df.to_csv(combined_datafile, index=False)
-
-#
 # Save the same data to pickle files
 #
 combined_datafile = test_dir + "TEST_countylevel_combinedCDR.p"
-print(" - John Hopkins county level test data also exported to ", combined_datafile)
+print(" - John Hopkins county level test data exported to ", combined_datafile)
 with open(combined_datafile, 'wb') as pickle_file:
     pickle.dump(test_combined_cnty_df, pickle_file)
     pickle_file.close()
 
 combined_datafile = test_dir + "TEST_statelevel_combinedCDR.p"
-print(" - John Hopkins state level test data also exported to ", combined_datafile)
+print(" - John Hopkins state level test data exported to ", combined_datafile)
 with open(combined_datafile, 'wb') as pickle_file:
     pickle.dump(test_combined_states_df, pickle_file)
     pickle_file.close()
+
+# %%
+# Convert datetime lists into strings
+test_combined_cnty_df['Dates'] = test_combined_cnty_df['Dates'].apply(COVIDdata.dates2strings)
+test_combined_states_df['Dates'] = test_combined_states_df['Dates'].apply(COVIDdata.dates2strings)
+
+#
+# Save the county and state-level test dataframes into CSV files
+#
+combined_datafile = test_dir + "TEST_countylevel_combinedCDR.csv"
+print(" - John Hopkins county level test data also exported to ", combined_datafile)
+test_combined_cnty_df.to_csv(combined_datafile, index=False)
+
+combined_datafile = test_dir + "TEST_statelevel_combinedCDR.csv"
+print(" - John Hopkins state level test data also exported to ", combined_datafile)
+test_combined_states_df.to_csv(combined_datafile, index=False)
+
+
 
 # %%
 # Show demonstrations of plotting this data here by producing plots of data for Cass and Clay counties and North Dakota and Minnesota
@@ -544,32 +553,34 @@ test_goog_mobility_states_df['residential_percent_change_from_baseline'] = [sign
 
 
 # %%
-# Export the test google mobility data to CSV files
-print("Exporting test Google mobility data")
-    
-goog_mobility_cnty_fname = test_dir + "TEST_goog_mobility_cnty.csv"
-print(" - Test Google county level mobility data exported to ", goog_mobility_cnty_fname)
-test_goog_mobility_cnty_df.to_csv(goog_mobility_cnty_fname, index=False)
-
-goog_mobility_states_fname = test_dir + "TEST_goog_mobility_state.csv"
-print(" - Test Google state level mobility data exported to ", goog_mobility_states_fname)
-test_goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
-
-
 #
 # Save the same data to pickle files
 #
 goog_mobility_cnty_fname = test_dir + "TEST_goog_mobility_cnty.p"
-print(" - Test Google county level mobility data also exported to ", goog_mobility_cnty_fname)
+print(" - Test Google county level mobility data exported to ", goog_mobility_cnty_fname)
 with open(goog_mobility_cnty_fname, 'wb') as pickle_file:
     pickle.dump(test_goog_mobility_cnty_df, pickle_file)
     pickle_file.close()
 
 goog_mobility_states_fname = test_dir + "TEST_goog_mobility_state.p"
-print(" - Test Google state level mobility data also exported to ", goog_mobility_states_fname)
+print(" - Test Google state level mobility data exported to ", goog_mobility_states_fname)
 with open(goog_mobility_states_fname, 'wb') as pickle_file:
     pickle.dump(test_goog_mobility_states_df, pickle_file)
     pickle_file.close()
+
+# %%
+# Convert datetime lists into strings
+test_goog_mobility_cnty_df['dates'] = test_goog_mobility_cnty_df['dates'].apply(COVIDdata.dates2strings)
+test_goog_mobility_states_df['dates'] = test_goog_mobility_states_df['dates'].apply(COVIDdata.dates2strings)
+
+# Export the google mobility data to CSV files
+goog_mobility_cnty_fname = test_dir + "TEST_goog_mobility_cnty.csv"
+print(" - Google county level mobility data also exported to ", goog_mobility_cnty_fname)
+test_goog_mobility_cnty_df.to_csv(goog_mobility_cnty_fname, index=False)
+
+goog_mobility_states_fname = test_dir + "TEST_goog_mobility_state.csv"
+print(" - Google state level mobility data also exported to ", goog_mobility_states_fname)
+test_goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 
 # %% [markdown]
 # ## Generate Test Apple Mobility Data
@@ -619,15 +630,6 @@ test_aapl_mobility_states_df['driving_mobility'] = [signalMN, signalND]
 # Export the test Apple mobility data to CSV files
 print("\nExporting Test Apple mobility data")
     
-aapl_mobility_cnty_fname = test_dir + "TEST_aapl_mobility_cnty.csv"
-print(" - Apple county level mobility test data exported to ", aapl_mobility_cnty_fname)
-test_aapl_mobility_cnty_df.to_csv(aapl_mobility_cnty_fname, index=False)
-
-aapl_mobility_states_fname = test_dir + "TEST_aapl_mobility_state.csv"
-print(" - Apple state level mobility test data exported to ", aapl_mobility_states_fname)
-test_aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
-
-
 #
 # Save the same data to pickle files
 #
@@ -642,6 +644,19 @@ print(" - Apple state level mobility test data also exported to ", aapl_mobility
 with open(aapl_mobility_states_fname, 'wb') as pickle_file:
     pickle.dump(test_aapl_mobility_states_df, pickle_file)
     pickle_file.close()
+
+# %%
+# Convert datetime lists into strings
+test_aapl_mobility_cnty_df['dates'] = test_aapl_mobility_cnty_df['dates'].apply(COVIDdata.dates2strings)
+test_aapl_mobility_states_df['dates'] = test_aapl_mobility_states_df['dates'].apply(COVIDdata.dates2strings)
+    
+aapl_mobility_cnty_fname = test_dir + "TEST_aapl_mobility_cnty.csv"
+print(" - Apple county level mobility test data exported to ", aapl_mobility_cnty_fname)
+test_aapl_mobility_cnty_df.to_csv(aapl_mobility_cnty_fname, index=False)
+
+aapl_mobility_states_fname = test_dir + "TEST_aapl_mobility_state.csv"
+print(" - Apple state level mobility test data exported to ", aapl_mobility_states_fname)
+test_aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 
 # %% [markdown]
 # ## Generating IMHE Data
@@ -683,6 +698,9 @@ with open(aapl_mobility_states_fname, 'wb') as pickle_file:
 
 
 # %%
+# Retrieve IMHE data
+(imhe_summary, imhe_hospitalizations) = COVIDdata.retrieve_imhe_data(cnty_pop_df, state_pop_df)
+
 # Create test subsets containing only local data
 test_imhe_summary = imhe_summary[(imhe_summary['FIPS'] == MNFIPS) | (imhe_summary['FIPS'] == NDFIPS)].copy()
 test_imhe_hospitalizations = imhe_hospitalizations[(imhe_hospitalizations['FIPS'] == MNFIPS) | (imhe_hospitalizations['FIPS'] == NDFIPS)].copy()
@@ -714,12 +732,27 @@ test_imhe_summary['any_business_end_date'] = ['2020-06-01',  np.nan]
 test_imhe_summary['all_non-ess_business_start_date'] = [ '2020-03-01',  np.nan ]
 test_imhe_summary['all_non-ess_business_end_date'] = [ '2020-06-01',  np.nan]
 
+# Convert columns to have dates in datetime64 format
+cols_w_dates = ['peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper',
+                'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper',
+                'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper',
+                'travel_limit_start_date', 'travel_limit_end_date',
+                'stay_home_start_date', 'stay_home_end_date',
+                'educational_fac_start_date', 'educational_fac_end_date',
+                'any_gathering_restrict_start_date', 'any_gathering_restrict_end_date',
+                'any_business_start_date', 'any_business_end_date',
+                'all_non-ess_business_start_date', 'all_non-ess_business_end_date']
+for col in cols_w_dates:
+    test_imhe_summary[col]= pd.to_datetime(test_imhe_summary[col])
+        
 # Set fixed values for test hospitalizations but for a limited date range
 
 # Generate a test date range
 date1 = date(2020, 3, 22)
 date2 = date(2020, 8, 1)
-dates = list(daterange(date1, date2))
+dates_str_list = list(daterange(date1, date2))
+dates = [datetime.fromisoformat(day).date() for day in dates_str_list]
+
 allbed = np.arange(len(dates))*1000
 allicu = allbed*0.1
 allvent = allbed*0.05
@@ -779,32 +812,40 @@ test_imhe_hospitalizations['est_infections_upper'] = [ (1.2*infections).astype(i
 
 
 # %%
-# Write out CSV files to disk
-imhe_summary_fname = test_dir + "TEST_imhe_summary.csv"
-print(" - IMHE state level summary test data exported to ", imhe_summary_fname)
-test_imhe_summary.to_csv(imhe_summary_fname, index=False)
-
-imhe_hospitalizations_fname = test_dir + "TEST_imhe_hospitalizations.csv"
-print(" - IMHE hospitalization level summary test data exported to ", imhe_summary_fname)
-test_imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
-
 #
 # Save the same data to pickle files
 #
 imhe_summary_fname = test_dir + "TEST_imhe_summary.p"
-print(" - IMHE state level summary test data also exported to ", imhe_summary_fname)
+print(" - IMHE state level summary test data exported to ", imhe_summary_fname)
 with open(imhe_summary_fname, 'wb') as pickle_file:
     pickle.dump(test_imhe_summary, pickle_file)
     pickle_file.close()
 
 imhe_hospitalizations_fname = test_dir + "TEST_imhe_hospitalizations.p"
-print(" - IMHE hospitalization level summary test data also exported to ", imhe_summary_fname)
+print(" - IMHE hospitalization level summary test data exported to ", imhe_summary_fname)
 with open(imhe_hospitalizations_fname, 'wb') as pickle_file:
     pickle.dump(test_imhe_hospitalizations, pickle_file)
     pickle_file.close()
+
+# %%
+# Convert datetime lists into strings
+test_imhe_hospitalizations['dates'] = test_imhe_hospitalizations['dates'].apply(COVIDdata.dates2strings)
+
+# Write out CSV files to disk
+imhe_summary_fname = test_dir + "TEST_imhe_summary.csv"
+print(" - IMHE state level summary test data also exported to ", imhe_summary_fname)
+test_imhe_summary.to_csv(imhe_summary_fname, index=False)
+
+imhe_hospitalizations_fname = test_dir + "TEST_imhe_hospitalizations.csv"
+print(" - IMHE hospitalization level summary test also data exported to ", imhe_summary_fname)
+test_imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
+
+
 
 # %%
 # Mark the start of processing
 end = time.perf_counter()
 
 print(f"Entire process of executing this script took {end-start:0.2f} sec.")
+
+# %%
