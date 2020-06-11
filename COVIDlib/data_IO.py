@@ -404,15 +404,15 @@ def getGoogleCountyMobility(countyFIPS, countyMobilityDataframe):
     retail_recreation_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS] ['retail_and_recreation_percent_change_from_baseline'].values[0])
     grocery_pharm_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['grocery_and_pharmacy_percent_change_from_baseline'].values[0])
     parks_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['parks_percent_change_from_baseline'].values[0])
-    transit_stations_percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_percent_change_from_baseline'].values[0])
-    residential_percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplaces_percent_change_from_baseline'].values[0])
-    workplace_percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_percent_change_from_baseline'].values[0])
+    transit_stations_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_percent_change_from_baseline'].values[0])
+    workplace_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplaces_percent_change_from_baseline'].values[0])
+    residential_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_percent_change_from_baseline'].values[0])
 
     outputFrame = pd.DataFrame({'FIPS':countyFIPS, 'county':county,
                     'dates':[dates], 'retail_recreation_Percent':[retail_recreation_Percent],
                                'grocery_pharm_Percent':[grocery_pharm_Percent],'parks_Percent':[parks_Percent],
-                               'transit_stations_percent':[transit_stations_percent],'residential_percent':[residential_percent],
-                               'workplace_percent':[workplace_percent]})
+                               'transit_stations_Percent':[transit_stations_Percent],'residential_Percent':[residential_Percent],
+                               'workplace_Percent':[workplace_Percent]})
     return outputFrame
 
 
@@ -427,15 +427,15 @@ def getGoogleStateMobility(stateFIPS, stateMobilityDataframe):
     retail_recreation_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_and_recreation_percent_change_from_baseline'].values[0])
     grocery_pharm_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['grocery_and_pharmacy_percent_change_from_baseline'].values[0])
     parks_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['parks_percent_change_from_baseline'].values[0])
-    transit_stations_percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_percent_change_from_baseline'].values[0])
-    residential_percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplaces_percent_change_from_baseline'].values[0])
-    workplace_percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_percent_change_from_baseline'].values[0])
+    transit_stations_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_percent_change_from_baseline'].values[0])
+    workplace_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplaces_percent_change_from_baseline'].values[0])
+    residential_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_percent_change_from_baseline'].values[0])
 
-    outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'State':State,
+    outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'state':State,
                     'dates':[dates], 'retail_recreation_Percent':[retail_recreation_Percent],
                                'grocery_pharm_Percent':[grocery_pharm_Percent],'parks_Percent':[parks_Percent],
-                               'transit_stations_percent':[transit_stations_percent],'residential_percent':[residential_percent],
-                               'workplace_percent':[workplace_percent]})
+                               'transit_stations_Percent':[transit_stations_Percent],'residential_Percent':[residential_Percent],
+                               'workplace_Percent':[workplace_Percent]})
     return outputFrame
 
 
@@ -470,9 +470,19 @@ def CSVtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.csv', 
                      'workplaces_percent_change_from_baseline' : StringToListFloat,
                      'residential_percent_change_from_baseline' : StringToListFloat }
 
+    # Dictionary of renamed columns
+    newnames = { 'retail_and_recreation_percent_change_from_baseline': 'retail_recreation_Percent',
+                 'grocery_and_pharmacy_percent_change_from_baseline' : 'grocery_pharm_Percent',
+                 'parks_percent_change_from_baseline' : 'parks_Percent',
+                 'transit_stations_percent_change_from_baseline' : 'transit_stations_Percent',
+                 'workplaces_percent_change_from_baseline' : 'residential_Percent',
+                 'residential_percent_change_from_baseline' : 'workplace_Percent' }
+
     # Fix the columns that are strings that should be lists in the dataframe
     googMobilityCountyFrame = pd.read_csv(countyFile)
     fixDataFrame(cols2convert, googMobilityCountyFrame)
+    googMobilityCountyFrame.rename(columns=newnames, errors="raise", inplace=True)
     googMobilityStateFrame = pd.read_csv(stateFile)
     fixDataFrame(cols2convert, googMobilityStateFrame)
+    googMobilityStateFrame.rename(columns=newnames, errors="raise", inplace=True)
     return googMobilityCountyFrame, googMobilityStateFrame
