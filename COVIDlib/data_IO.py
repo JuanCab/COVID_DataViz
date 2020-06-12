@@ -73,22 +73,22 @@ def GetCDRState(stateFIPS, stateDataFrame):
     # Note: This function requires calling the GetCDRDataFrames first; this uses the first data frame returned
     # Initial author: Luke
     state = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['State']
-    dates = StringToListDate(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates'].values[0])
+    dates = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Dates']
 
-    confirmed = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed'].values[0])
-    deaths = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths'].values[0])
-    recovered = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Recovered'].values[0])
+    confirmed = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Confirmed']
+    deaths = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Deaths']
+    recovered = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['Recovered']
 
-    dConfirmed = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dConfirmed'].values[0])
-    d2Confirmed = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Confirmed'].values[0])
-    dDeaths = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dDeaths'].values[0])
-    d2Deaths = StringToListFloat(stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Deaths'].values[0])
+    dConfirmed = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dConfirmed']
+    d2Confirmed = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Confirmed']
+    dDeaths = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['dDeaths']
+    d2Deaths = stateDataFrame[stateDataFrame['FIPS'] == stateFIPS]['d2Deaths']
 
-    outDF = pd.DataFrame({'FIPS':stateFIPS, 'state':state, 'Dates':[dates],
-                    'Confirmed':[confirmed], 'Deaths':[deaths],
-                    'Recovered':[recovered], 'dConfirmed':[dConfirmed],
-                    'd2Confirmed':[d2Confirmed], 'dDeaths':[dDeaths],
-                    'd2Deaths':[d2Deaths]})
+    outDF = pd.DataFrame({'FIPS':stateFIPS, 'state':state, 'Dates':dates,
+                    'Confirmed':confirmed, 'Deaths':deaths,
+                    'Recovered':recovered, 'dConfirmed':dConfirmed,
+                    'd2Confirmed':d2Confirmed, 'dDeaths':dDeaths,
+                    'd2Deaths':d2Deaths})
     return outDF
 
 
@@ -97,22 +97,22 @@ def GetCDRCounty(countyFIPS, countyDataFrame):
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
     county = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['County']
-    dates = StringToListDate(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Dates'].values[0])
+    dates = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Dates']
 
-    confirmed = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Confirmed'].values[0])
-    deaths = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Deaths'].values[0])
-    recovered = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Recovered'].values[0])
+    confirmed = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Confirmed']
+    deaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Deaths']
+    recovered = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['Recovered']
 
-    dConfirmed = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dConfirmed'].values[0])
-    d2Confirmed = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Confirmed'].values[0])
-    dDeaths = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dDeaths'].values[0])
-    d2Deaths = StringToListFloat(countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Deaths'].values[0])
+    dConfirmed = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dConfirmed']
+    d2Confirmed = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Confirmed']
+    dDeaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['dDeaths']
+    d2Deaths = countyDataFrame[countyDataFrame['FIPS'] == countyFIPS]['d2Deaths']
 
-    outDF = pd.DataFrame({'FIPS':countyFIPS, 'County':county, 'Dates':[dates],
-                    'Confirmed':[confirmed], 'Deaths':[deaths],
-                    'Recovered':[recovered], 'dConfirmed':[dConfirmed],
-                    'd2Confirmed':[d2Confirmed], 'dDeaths':[dDeaths],
-                    'd2Deaths':[d2Deaths]})
+    outDF = pd.DataFrame({'FIPS':countyFIPS, 'County':county, 'Dates':dates,
+                    'Confirmed':confirmed, 'Deaths':deaths,
+                    'Recovered':recovered, 'dConfirmed':dConfirmed,
+                    'd2Confirmed':d2Confirmed, 'dDeaths':dDeaths,
+                    'd2Deaths':d2Deaths})
     return outDF
 
 
@@ -264,42 +264,42 @@ def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having iss
     # Initial author: Luke
 
     state = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['state']
-    dates = StringToListDate(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates'].values[0])
+    dates = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates']
 
     # Will the StringToList function be called here or later on...?
-    allbed_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_mean'].values[0])
-    allbed_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_lower'].values[0])
-    allbed_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_upper'].values[0])
+    allbed_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_mean']
+    allbed_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_lower']
+    allbed_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['allbed_upper']
 
-    ICUbed_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_mean'].values[0])
-    ICUbed_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_lower'].values[0])
-    ICUbed_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_upper'].values[0])
+    ICUbed_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_mean']
+    ICUbed_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_lower']
+    ICUbed_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['ICUbed_upper']
 
-    InvVen_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_mean'].values[0])
-    InvVen_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_lower'].values[0])
-    InvVen_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_upper'].values[0])
+    InvVen_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_mean']
+    InvVen_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_lower']
+    InvVen_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['InvVen_upper']
 
-    Deaths_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_mean'].values[0])
-    Deaths_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_lower'].values[0])
-    Deaths_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_upper'].values[0])
+    Deaths_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_mean']
+    Deaths_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_lower']
+    Deaths_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['deaths_upper']
 
-    Admis_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_mean'].values[0])
-    Admis_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_lower'].values[0])
-    Admis_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_upper'].values[0])
+    Admis_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_mean']
+    Admis_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_lower']
+    Admis_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['admis_upper']
 
-    newICU_mean = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_mean'].values[0])
-    newICU_lower = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_lower'].values[0])
-    newICU_upper = StringToListFloat(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_upper'].values[0])
+    newICU_mean = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_mean']
+    newICU_lower = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_lower']
+    newICU_upper = hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['newICU_upper']
 
-    outDF = pd.DataFrame({'FIPS':fipsNum, 'state':state, 'dates':[dates],
-                    'allbed_mean':[allbed_mean], 'allbed_lower':[allbed_lower],
-                    'allbed_upper':[allbed_upper], 'ICUbed_mean':[ICUbed_mean],
-                    'ICUbed_lower':[ICUbed_lower], 'ICUbed_upper':[ICUbed_upper],
-                    'InvVen_mean':[InvVen_mean], 'InvVen_lower':[InvVen_lower],
-                    'InvVen_upper':[InvVen_upper], 'deaths_mean':[Deaths_mean],
-                    'deaths_lower':[Deaths_lower], 'deaths_upper':[Deaths_upper],
-                    'admis_mean':[Admis_mean], 'admis_lower':[Admis_lower], 'admis_upper':[Admis_lower],
-                    'newICU_mean':[newICU_mean], 'newICU_lower':[newICU_lower], 'newICU_upper':[newICU_lower]
+    outDF = pd.DataFrame({'FIPS':fipsNum, 'state':state, 'dates':dates,
+                    'allbed_mean':allbed_mean, 'allbed_lower':allbed_lower,
+                    'allbed_upper':allbed_upper, 'ICUbed_mean':ICUbed_mean,
+                    'ICUbed_lower':ICUbed_lower, 'ICUbed_upper':ICUbed_upper,
+                    'InvVen_mean':InvVen_mean, 'InvVen_lower':InvVen_lower,
+                    'InvVen_upper':InvVen_upper, 'deaths_mean':Deaths_mean,
+                    'deaths_lower':Deaths_lower, 'deaths_upper':Deaths_upper,
+                    'admis_mean':Admis_mean, 'admis_lower':Admis_lower, 'admis_upper':Admis_lower,
+                    'newICU_mean':newICU_mean, 'newICU_lower':newICU_lower, 'newICU_upper':newICU_lower
                     })
     return outDF
 
@@ -416,11 +416,11 @@ def getAaplCountyMobility(countyFIPS, countyMobilityDataframe):
 
     #dates = StringToListDate(hospitalizationsDF[hospitalizationsDF['FIPS'] == fipsNum]['dates'].values[0])
     county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']
-    dates = StringToListDate(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates'].values[0])
-    driving_mobility = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['driving_mobility'].values[0])
+    dates = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates']
+    driving_mobility = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['driving_mobility']
     #creates data frame for the output
     outputFrame = pd.DataFrame({'FIPS':countyFIPS, 'state':county,
-                    'dates':[dates], 'driving_mobility':[driving_mobility],})
+                    'dates':dates, 'driving_mobility':driving_mobility,})
     return outputFrame
 
 
@@ -429,11 +429,11 @@ def getAaplStateMobility(stateFIPS, stateMobilityDataframe):
     # Initial Author: Dio
 
     states = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['state']
-    dates = StringToListDate(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates'].values[0])
-    driving_mobility = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['driving_mobility'].values[0])
+    dates = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates']
+    driving_mobility = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['driving_mobility']
 
     #creates data frame for the output
-    outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'state':states,'dates':[dates], 'driving_mobility':[driving_mobility],})
+    outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'state':states,'dates':dates, 'driving_mobility':driving_mobility,})
     #returns output for function
     return outputFrame
 
@@ -444,20 +444,20 @@ def getGoogleCountyMobility(countyFIPS, countyMobilityDataframe):
 
     #dataframe is being used from another function
     county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']
-    dates = StringToListDate(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates'].values[0])
+    dates = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates']
     #All of the percentages are changes from the baseline
-    retail_recreation_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS] ['retail_and_recreation_percent_change_from_baseline'].values[0])
-    grocery_pharm_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['grocery_and_pharmacy_percent_change_from_baseline'].values[0])
-    parks_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['parks_percent_change_from_baseline'].values[0])
-    transit_stations_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_percent_change_from_baseline'].values[0])
-    workplace_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplaces_percent_change_from_baseline'].values[0])
-    residential_Percent = StringToListFloat(countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_percent_change_from_baseline'].values[0])
+    retail_recreation_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS] ['retail_and_recreation_percent_change_from_baseline']
+    grocery_pharm_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['grocery_and_pharmacy_percent_change_from_baseline']
+    parks_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['parks_percent_change_from_baseline']
+    transit_stations_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_percent_change_from_baseline']
+    workplace_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplaces_percent_change_from_baseline']
+    residential_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_percent_change_from_baseline']
 
     outputFrame = pd.DataFrame({'FIPS':countyFIPS, 'county':county,
-                    'dates':[dates], 'retail_recreation_Percent':[retail_recreation_Percent],
-                               'grocery_pharm_Percent':[grocery_pharm_Percent],'parks_Percent':[parks_Percent],
-                               'transit_stations_Percent':[transit_stations_Percent],'residential_Percent':[residential_Percent],
-                               'workplace_Percent':[workplace_Percent]})
+                    'dates':dates, 'retail_recreation_Percent':retail_recreation_Percent,
+                               'grocery_pharm_Percent':grocery_pharm_Percent,'parks_Percent':parks_Percent,
+                               'transit_stations_Percent':transit_stations_Percent,'residential_Percent':residential_Percent,
+                               'workplace_Percent':workplace_Percent})
     return outputFrame
 
 
@@ -467,20 +467,20 @@ def getGoogleStateMobility(stateFIPS, stateMobilityDataframe):
 
     #dataframe is being used from another function
     State = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['state']
-    dates = StringToListDate(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates'].values[0])
+    dates = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates']
     #All of the percentages are changes from the baseline
-    retail_recreation_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_and_recreation_percent_change_from_baseline'].values[0])
-    grocery_pharm_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['grocery_and_pharmacy_percent_change_from_baseline'].values[0])
-    parks_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['parks_percent_change_from_baseline'].values[0])
-    transit_stations_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_percent_change_from_baseline'].values[0])
-    workplace_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplaces_percent_change_from_baseline'].values[0])
-    residential_Percent = StringToListFloat(stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_percent_change_from_baseline'].values[0])
+    retail_recreation_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_and_recreation_percent_change_from_baseline']
+    grocery_pharm_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['grocery_and_pharmacy_percent_change_from_baseline']
+    parks_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['parks_percent_change_from_baseline']
+    transit_stations_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_percent_change_from_baseline']
+    workplace_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplaces_percent_change_from_baseline']
+    residential_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_percent_change_from_baseline']
 
     outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'state':State,
-                    'dates':[dates], 'retail_recreation_Percent':[retail_recreation_Percent],
-                               'grocery_pharm_Percent':[grocery_pharm_Percent],'parks_Percent':[parks_Percent],
-                               'transit_stations_Percent':[transit_stations_Percent],'residential_Percent':[residential_Percent],
-                               'workplace_Percent':[workplace_Percent]})
+                    'dates':dates, 'retail_recreation_Percent':retail_recreation_Percent,
+                               'grocery_pharm_Percent':grocery_pharm_Percent,'parks_Percent':parks_Percent,
+                               'transit_stations_Percent':transit_stations_Percent,'residential_Percent':residential_Percent,
+                               'workplace_Percent':workplace_Percent})
     return outputFrame
 
 
