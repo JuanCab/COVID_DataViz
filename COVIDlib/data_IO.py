@@ -611,8 +611,8 @@ def PtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.p', stat
                  'grocery_and_pharmacy_percent_change_from_baseline' : 'grocery_pharm_Percent',
                  'parks_percent_change_from_baseline' : 'parks_Percent',
                  'transit_stations_percent_change_from_baseline' : 'transit_stations_Percent',
-                 'workplaces_percent_change_from_baseline' : 'residential_Percent',
-                 'residential_percent_change_from_baseline' : 'workplace_Percent' }
+                 'workplaces_percent_change_from_baseline' : 'workplace_Percent',
+                 'residential_percent_change_from_baseline' : 'residential_Percent' }
 
     # Fix the columns that are strings that should be lists in the dataframe
     googMobilityCountyFrame.rename(columns=newnames, errors="raise", inplace=True)
