@@ -490,12 +490,12 @@ def getGoogleCountyMobility(countyFIPS, countyMobilityDataframe):
     county = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['county']
     dates = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['dates']
     #All of the percentages are changes from the baseline
-    retail_recreation_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS] ['retail_and_recreation_percent_change_from_baseline']
-    grocery_pharm_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['grocery_and_pharmacy_percent_change_from_baseline']
-    parks_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['parks_percent_change_from_baseline']
-    transit_stations_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_percent_change_from_baseline']
-    workplace_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplaces_percent_change_from_baseline']
-    residential_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_percent_change_from_baseline']
+    retail_recreation_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS] ['retail_recreation_Percent']
+    grocery_pharm_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['grocery_pharm_Percent']
+    parks_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['parks_Percent']
+    transit_stations_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['transit_stations_Percent']
+    workplace_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['workplace_Percent']
+    residential_Percent = countyMobilityDataframe[countyMobilityDataframe['FIPS'] == countyFIPS]['residential_Percent']
 
     outputFrame = pd.DataFrame({'FIPS':countyFIPS, 'county':county,
                     'dates':dates, 'retail_recreation_Percent':retail_recreation_Percent,
@@ -513,12 +513,12 @@ def getGoogleStateMobility(stateFIPS, stateMobilityDataframe):
     State = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['state']
     dates = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['dates']
     #All of the percentages are changes from the baseline
-    retail_recreation_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_and_recreation_percent_change_from_baseline']
-    grocery_pharm_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['grocery_and_pharmacy_percent_change_from_baseline']
-    parks_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['parks_percent_change_from_baseline']
-    transit_stations_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_percent_change_from_baseline']
-    workplace_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplaces_percent_change_from_baseline']
-    residential_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_percent_change_from_baseline']
+    retail_recreation_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['retail_recreation_Percent']
+    grocery_pharm_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['grocery_pharm_Percent']
+    parks_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['parks_Percent']
+    transit_stations_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['transit_stations_Percent']
+    workplace_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['workplace_Percent']
+    residential_Percent = stateMobilityDataframe[stateMobilityDataframe['FIPS'] == stateFIPS]['residential_Percent']
 
     outputFrame = pd.DataFrame({'FIPS':stateFIPS, 'state':State,
                     'dates':dates, 'retail_recreation_Percent':retail_recreation_Percent,
