@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.4.2
+#       jupytext_version: 1.5.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -41,6 +41,7 @@ import matplotlib.dates as mdates
 import pandas as pd
 import git
 import pickle
+import warnings
 
 # Import COVID data retrieval routines from external python library
 import COVIDlib.collectors as COVIDdata
@@ -91,6 +92,7 @@ if not os.path.exists(data_dir):
 ##
 
 # Retrieve needed Census Bureau data first
+print("\n- Retrieving US Census and John Hopkins Data")
 (cnty_pop_df, state_pop_df) = COVIDdata.retrieve_census_population_data()
 
 # Retrieve John Hopkins data
@@ -103,13 +105,13 @@ if not os.path.exists(data_dir):
 # Save the same data to pickle files
 #
 combined_datafile = data_dir + "countylevel_combinedCDR.p"
-print(" - John Hopkins county level data exported to ", combined_datafile)
+print("   - John Hopkins county level data exported to ", combined_datafile)
 with open(combined_datafile, 'wb') as pickle_file:
     pickle.dump(combined_cnty_df, pickle_file)
     pickle_file.close()
 
 combined_datafile = data_dir + "statelevel_combinedCDR.p"
-print(" - John Hopkins state level data exported to ", combined_datafile)
+print("   - John Hopkins state level data exported to ", combined_datafile)
 with open(combined_datafile, 'wb') as pickle_file:
     pickle.dump(combined_state_df, pickle_file)
     pickle_file.close()
@@ -121,11 +123,11 @@ combined_cnty_df['Dates'] = combined_cnty_df['Dates'].apply(COVIDdata.dates2stri
 combined_state_df['Dates'] = combined_state_df['Dates'].apply(COVIDdata.dates2strings)
 
 combined_datafile = data_dir + "countylevel_combinedCDR.csv"
-print(" - John Hopkins county level data also exported to ", combined_datafile)
+print("   - John Hopkins county level data also exported to ", combined_datafile)
 combined_cnty_df.to_csv(combined_datafile, index=False)
 
 combined_datafile = data_dir + "statelevel_combinedCDR.csv"
-print(" - John Hopkins state level data also exported to ", combined_datafile)
+print("   - John Hopkins state level data also exported to ", combined_datafile)
 combined_state_df.to_csv(combined_datafile, index=False)
 
 # %% [markdown]
@@ -150,21 +152,30 @@ combined_state_df.to_csv(combined_datafile, index=False)
 
 # %%
 # Retrieve the Google Mobility dataframes
-(goog_mobility_cnty_df, goog_mobility_states_df) = COVIDdata.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
+
+print("\n- Retrieving Google Mobility Data")
+
+# Issue the google retrieval function while suppressing the FutureWarning
+# as detailed here (https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur)
+# this is an annoying issue of competing open source teams disagreeing about 
+# appropriate behavior.
+with warnings.catch_warnings():
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    (goog_mobility_cnty_df, goog_mobility_states_df) = COVIDdata.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
 
 #
 # Save the same data to pickle files
 #
-print("Exporting Google mobility data")
+print("   - Exporting Google mobility data")
 
 goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.p"
-print(" - Google county level mobility data exported to ", goog_mobility_cnty_fname)
+print("   - Google county level mobility data exported to ", goog_mobility_cnty_fname)
 with open(goog_mobility_cnty_fname, 'wb') as pickle_file:
     pickle.dump(goog_mobility_cnty_df, pickle_file)
     pickle_file.close()
 
 goog_mobility_states_fname = data_dir + "goog_mobility_state.p"
-print(" - Google state level mobility data exported to ", goog_mobility_states_fname)
+print("   - Google state level mobility data exported to ", goog_mobility_states_fname)
 with open(goog_mobility_states_fname, 'wb') as pickle_file:
     pickle.dump(goog_mobility_states_df, pickle_file)
     pickle_file.close()
@@ -177,11 +188,11 @@ goog_mobility_states_df['dates'] = goog_mobility_states_df['dates'].apply(COVIDd
 
 # Export the google mobility data to CSV files
 goog_mobility_cnty_fname = data_dir + "goog_mobility_cnty.csv"
-print(" - Google county level mobility data also exported to ", goog_mobility_cnty_fname)
+print("   - Google county level mobility data also exported to ", goog_mobility_cnty_fname)
 goog_mobility_cnty_df.to_csv(goog_mobility_cnty_fname, index=False)
 
 goog_mobility_states_fname = data_dir + "goog_mobility_state.csv"
-print(" - Google state level mobility data also exported to ", goog_mobility_states_fname)
+print("   - Google state level mobility data also exported to ", goog_mobility_states_fname)
 goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 
 # %% [markdown]
@@ -197,29 +208,31 @@ goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 #
 
 # %%
+print("\n- Retrieving Apple Mobility Data")
+
 # Retrieve the Apple Mobility dataframes
 (aapl_mobility_cnty_df, aapl_mobility_states_df) = COVIDdata.retrieve_aapl_mobility_data(cnty_pop_df, state_pop_df)
 
-# Notice only driving information is available at the county level here
-print("APPLE MOBILITY DATA IN aapl_mobility_cnty_df() FOR CLAY COUNTY")
-aapl_mobility_clay = aapl_mobility_cnty_df[(aapl_mobility_cnty_df['county'] == 'Clay County') & (aapl_mobility_cnty_df['state'] == 'Minnesota')]
-print(aapl_mobility_clay)
+## Notice only driving information is available at the county level here
+#print("APPLE MOBILITY DATA IN aapl_mobility_cnty_df() FOR CLAY COUNTY")
+#aapl_mobility_clay = aapl_mobility_cnty_df[(aapl_mobility_cnty_df['county'] == 'Clay County') & (aapl_mobility_cnty_df['state'] == 'Minnesota')]
+#print(aapl_mobility_clay)
     
 # Export the Apple mobility data to CSV files
-print("\nExporting Apple mobility data")
+print("   - Exporting Apple mobility data")
     
 
 #
 # Save the same data to pickle files
 #
 aapl_mobility_cnty_fname = data_dir + "aapl_mobility_cnty.p"
-print(" - Apple county level mobility data exported to ", aapl_mobility_cnty_fname)
+print("   - Apple county level mobility data exported to ", aapl_mobility_cnty_fname)
 with open(aapl_mobility_cnty_fname, 'wb') as pickle_file:
     pickle.dump(aapl_mobility_cnty_df, pickle_file)
     pickle_file.close()
 
 aapl_mobility_states_fname = data_dir + "aapl_mobility_state.p"
-print(" - Apple state level mobility data exported to ", aapl_mobility_states_fname)
+print("   - Apple state level mobility data exported to ", aapl_mobility_states_fname)
 with open(aapl_mobility_states_fname, 'wb') as pickle_file:
     pickle.dump(aapl_mobility_states_df, pickle_file)
     pickle_file.close()
@@ -231,11 +244,11 @@ aapl_mobility_cnty_df['dates'] = aapl_mobility_cnty_df['dates'].apply(COVIDdata.
 aapl_mobility_states_df['dates'] = aapl_mobility_states_df['dates'].apply(COVIDdata.dates2strings)
     
 aapl_mobility_cnty_fname = data_dir + "aapl_mobility_cnty.csv"
-print(" - Apple county level mobility data also exported to ", aapl_mobility_cnty_fname)
+print("   - Apple county level mobility data also exported to ", aapl_mobility_cnty_fname)
 aapl_mobility_cnty_df.to_csv(aapl_mobility_cnty_fname, index=False)
 
 aapl_mobility_states_fname = data_dir + "aapl_mobility_state.csv"
-print(" - Apple state level mobility data also exported to ", aapl_mobility_states_fname)
+print("   - Apple state level mobility data also exported to ", aapl_mobility_states_fname)
 aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 
 # %% [markdown]
@@ -249,6 +262,7 @@ aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 
 # %%
 # Retrieve IMHE data
+print("\n- Retrieving IMHE Data")
 (imhe_summary, imhe_hospitalizations) = COVIDdata.retrieve_imhe_data(cnty_pop_df, state_pop_df)
 
 ## Summary data includes numbers or dates for the following for each state
@@ -285,13 +299,13 @@ aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 # Save the same data to pickle files
 #
 imhe_summary_fname = data_dir + "imhe_summary.p"
-print(" - IMHE state level summary data exported to ", imhe_summary_fname)
+print("   - IMHE state level summary data exported to ", imhe_summary_fname)
 with open(imhe_summary_fname, 'wb') as pickle_file:
     pickle.dump(imhe_summary, pickle_file)
     pickle_file.close()
 
 imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.p"
-print(" - IMHE hospitalization level summary data exported to ", imhe_summary_fname)
+print("   - IMHE hospitalization level summary data exported to ", imhe_summary_fname)
 with open(imhe_hospitalizations_fname, 'wb') as pickle_file:
     pickle.dump(imhe_hospitalizations, pickle_file)
     pickle_file.close()
@@ -302,24 +316,24 @@ imhe_hospitalizations['dates'] = imhe_hospitalizations['dates'].apply(COVIDdata.
 
 # Write out CSV files to disk
 imhe_summary_fname = data_dir + "imhe_summary.csv"
-print(" - IMHE state level summary data also exported to ", imhe_summary_fname)
+print("   - IMHE state level summary data also exported to ", imhe_summary_fname)
 imhe_summary.to_csv(imhe_summary_fname, index=False)
 
 imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.csv"
-print(" - IMHE hospitalization level summary data also exported to ", imhe_summary_fname)
+print("   - IMHE hospitalization level summary data also exported to ", imhe_summary_fname)
 imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
 
 
 # %%
 # Present summary data for local area
-print("\nIMHE SUMMARY DATA IN imhe_summary() FOR MN and ND")
-imhe_summary_local = imhe_summary[(imhe_summary.FIPS == MNFIPS) | (imhe_summary.FIPS == NDFIPS) ]
-print(imhe_summary_local)
+#print("\nIMHE SUMMARY DATA IN imhe_summary() FOR MN and ND")
+#imhe_summary_local = imhe_summary[(imhe_summary.FIPS == MNFIPS) | (imhe_summary.FIPS == NDFIPS) ]
+#print(imhe_summary_local)
 
 # Present hospitalizations data for local area
-print("\nIMHE SUMMARY DATA IN imhe_hospitalizations() FOR MN and ND")
-imhe_hospitalizations_local = imhe_hospitalizations[(imhe_hospitalizations.FIPS == MNFIPS) | (imhe_hospitalizations.FIPS == NDFIPS) ]
-print(imhe_hospitalizations_local)
+#print("\nIMHE SUMMARY DATA IN imhe_hospitalizations() FOR MN and ND")
+#imhe_hospitalizations_local = imhe_hospitalizations[(imhe_hospitalizations.FIPS == MNFIPS) | (imhe_hospitalizations.FIPS == NDFIPS) ]
+#print(imhe_hospitalizations_local)
 
 # %% [markdown]
 # ## NY Times Data on Probable Deaths/Cases (FIPS Present, NOT CURRENTLY USED FOR PROJECT)
@@ -344,6 +358,7 @@ print(imhe_hospitalizations_local)
 ##
 ## Retrieve the NYT datafiles to see what is there that might be of interest
 ##
+print("\n- Retrieving NYT COVID Data")
 
 # NYT COVID data GIT repo
 NYT_gitrepo = "https://github.com/nytimes/covid-19-data.git"
@@ -372,19 +387,19 @@ live_state_df = pd.read_csv(live_state_csv)    # State totals
 live_us_df = pd.read_csv(live_us_csv)       # National totals
 
 # Print county data to screen
-print("LOCAL COUNTY DATA IN live_county_df() DATAFRAME")
-print(live_county_df[ (live_county_df['fips'] == ClayFIPS) | (live_county_df['fips'] == CassFIPS) ])
+#print("LOCAL COUNTY DATA IN live_county_df() DATAFRAME")
+#print(live_county_df[ (live_county_df['fips'] == ClayFIPS) | (live_county_df['fips'] == CassFIPS) ])
 
 # Print state level data to screen
-print("\nLOCAL STATE DATA IN live_state_df() DATAFRAME")
-print(live_state_df[ (live_state_df['fips'] == MNFIPS) | (live_state_df['fips'] == NDFIPS) ])
+#print("\nLOCAL STATE DATA IN live_state_df() DATAFRAME")
+#print(live_state_df[ (live_state_df['fips'] == MNFIPS) | (live_state_df['fips'] == NDFIPS) ])
 
 # Print national data
-print("\nNATIONAL DATA IN live_us_df() DATAFRAME")
-print(live_us_df)
+#print("\nNATIONAL DATA IN live_us_df() DATAFRAME")
+#print(live_us_df)
 
 # %%
 # Mark the start of processing
 end = time.perf_counter()
 
-print(f"Entire process of executing this script took {end-start:0.2f} sec.")
+print(f"\n\nEntire process of executing this script took {end-start:0.2f} sec.\n")
