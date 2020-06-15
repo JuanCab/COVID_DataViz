@@ -62,6 +62,7 @@ def dates2strings(this_list):
     except:
         return this_list
 
+
 def derivative(x, y):
     """
     Compute forward difference estimate for the derivative of y with respect
@@ -127,7 +128,7 @@ def reduce_local_dataframe(raw_df, fips_df):
         reduced_df.loc[(reduced_df['FIPS'] == key), ['Confirmed', 'Deaths', 'Recovered']] = [update_confirmed[key], update_deaths[key], update_recovered[key]]
 
     # Return the fixed dataframe
-    return reduced_df#
+    return reduced_df
 
 
 def retrieve_census_population_data():
@@ -228,6 +229,66 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     ClayFIPS = 27027
     MNFIPS = 27
 
+    # Define the postal codes for states
+    code2name = {
+        'AL': 'Alabama',
+        'AK': 'Alaska',
+        'AZ': 'Arizona',
+        'AR': 'Arkansas',
+        'CA': 'California',
+        'CO': 'Colorado',
+        'CT': 'Connecticut',
+        'DE': 'Delaware',
+        'DC': 'District of Columbia',
+        'FL': 'Florida',
+        'GA': 'Georgia',
+        'HI': 'Hawaii',
+        'ID': 'Idaho',
+        'IL': 'Illinois',
+        'IN': 'Indiana',
+        'IA': 'Iowa',
+        'KS': 'Kansas',
+        'KY': 'Kentucky',
+        'LA': 'Louisiana',
+        'ME': 'Maine',
+        'MD': 'Maryland',
+        'MA': 'Massachusetts',
+        'MI': 'Michigan',
+        'MN': 'Minnesota',
+        'MS': 'Mississippi',
+        'MO': 'Missouri',
+        'MT': 'Montana',
+        'NE': 'Nebraska',
+        'NV': 'Nevada',
+        'NH': 'New Hampshire',
+        'NJ': 'New Jersey',
+        'NM': 'New Mexico',
+        'NY': 'New York',
+        'NC': 'North Carolina',
+        'ND': 'North Dakota',
+        'OH': 'Ohio',
+        'OK': 'Oklahoma',
+        'OR': 'Oregon',
+        'PA': 'Pennsylvania',
+        'PR': 'Puerto Rico',
+        'RI': 'Rhode Island',
+        'SC': 'South Carolina',
+        'SD': 'South Dakota',
+        'TN': 'Tennessee',
+        'TX': 'Texas',
+        'UT': 'Utah',
+        'VT': 'Vermont',
+        'VA': 'Virginia',
+        'WA': 'Washington',
+        'WV': 'West Virginia',
+        'WI': 'Wisconsin',
+        'WY': 'Wyoming'
+    }
+    # Define dictionaries for storing state level confirmed/death/recovered
+    state_confirmed_cnt = dict.fromkeys(code2name, 0)
+    state_deaths_cnt = dict.fromkeys(code2name, 0)
+    state_recovered_cnt = dict.fromkeys(code2name, 0)
+
     # Check if the local git repository directory exists, if not, create it and clone the repo to it
     JH_repo = "https://github.com/CSSEGISandData/COVID-19.git"
     if not os.path.exists(JHdata_dir):
@@ -282,12 +343,35 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     fips_df = county_data_df.copy()
     fips_df.drop(columns=['STNAME', 'CTYNAME', 'POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
 
+    # Build a dataframe containing legitimate FIPS values using state-level data (doing this now because I will try
+    # to extract early state-level data from the county-level files)
+    state_fips_df = state_data_df.copy()
+    state_fips_df.drop(columns=['STNAME', 'POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
+
+    # Build a state name to FIPS dictionary
+    # Start by converting states dataframe into a dictionary
+    FIPSdf = state_data_df[['FIPS','STNAME']].copy()
+    FIPSd = FIPSdf.set_index('STNAME').T.to_dict('records')[0]
+
+    # Create blank dataframes to store state-evel time series data for later (most of this will be NaN early on)
+    state_confirmed_df = state_fips_df.copy()
+    state_deaths_df = state_fips_df.copy()
+    state_recovered_df = state_fips_df.copy()
+    state_incident_rate_df = state_fips_df.copy()
+    state_tested_df = state_fips_df.copy()
+    state_hospitalized_df = state_fips_df.copy()
+    state_mortality_df = state_fips_df.copy()
+    state_testing_rate_df = state_fips_df.copy()
+    state_hospitalization_rate_df = state_fips_df.copy()
+
     # Scan through the more complete daily files of county level data and construct a single datafile for our use (restricting
     # to US only).  It turns out the format of these local level files changes with the date.  The files before March 22, 2020
     # were in several different forms and the placenames were NOT consistent.  Thus, to make things managable, I am ignoring
     # that early local level data...
     sorted_csvs = []
     dates_list = []
+    state_sorted_csvs = []
+    state_dates_list = []
     for file in csvfiles(daily_cnty_dir):
         # County level date only starts on March 22, before then it is a mis-mosh of place names in the Province_State field
         # So only keep that data
@@ -301,8 +385,8 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
             raw_df = pd.read_csv(sorted_csvs[-1])
 
             # Rename columns in early forms to late forms of column names for consistency
-            raw_df.rename(columns={ 'Province/State': 'Province_State', 
-                                'Country/Region':'Country_Region', 
+            raw_df.rename(columns={ 'Province/State': 'Province_State',
+                                'Country/Region':'Country_Region',
                                 'Last Update':'Last_Update' }, inplace = True)
 
             # Match to the list of known FIPS values from Census data, also removing duplicate rows
@@ -328,19 +412,121 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
             dates_list.append(datetime.strptime(this_isodate, '%Y-%m-%d').date())
 
             # Store Confirmed by merging reduced list and renaming column
+            this_col = "X"+f"{idx:03d}"
             confirmed_df = pd.merge(confirmed_df,reduced_df[['FIPS','Confirmed']],on='FIPS', how='left', copy=True)
-            confirmed_col = "C"+f"{idx:03d}"
-            confirmed_df.rename(columns={'Confirmed': confirmed_col}, errors="raise", inplace=True)
+            confirmed_df.rename(columns={'Confirmed': this_col}, errors="raise", inplace=True)
 
             # Store Deaths by merging reduced list and renaming column
             deaths_df = pd.merge(deaths_df,reduced_df[['FIPS','Deaths']],on='FIPS', how='left', copy=True)
-            deaths_col = "D"+f"{idx:03d}"
-            deaths_df.rename(columns={'Deaths': deaths_col}, errors="raise", inplace=True)
+            deaths_df.rename(columns={'Deaths': this_col}, errors="raise", inplace=True)
 
             # Store Recovered by merging reduced list and renaming column
             recovered_df = pd.merge(recovered_df,reduced_df[['FIPS','Recovered']],on='FIPS', how='left', copy=True)
-            recovered_col = "R"+f"{idx:03d}"
-            recovered_df.rename(columns={'Recovered': recovered_col}, errors="raise", inplace=True)
+            recovered_df.rename(columns={'Recovered': this_col}, errors="raise", inplace=True)
+
+            # Collect state-level counts for dates before April 12 (Since this if statement runs after
+            # the else statement below, it should append to those dataframes)
+            if (int(this_date) < 20200412):
+                # Increment state date count
+                state_idx += 1
+                state_dates_list.append(datetime.strptime(this_isodate, '%Y-%m-%d').date())
+
+                # Add the columns to the storage dataframes
+                this_col = "X"+f"{state_idx:03d}"
+                # print (f"Assigning {this_col}")
+                state_confirmed_df[this_col] = 0
+                state_deaths_df[this_col] =0
+                state_recovered_df[this_col] = 0
+                state_incident_rate_df[this_col] = np.nan
+                state_tested_df[this_col] = np.nan
+                state_hospitalized_df[this_col] = np.nan
+                state_mortality_df[this_col] = np.nan
+                state_testing_rate_df[this_col] = np.nan
+                state_hospitalization_rate_df[this_col] = np.nan
+
+                # Loop through all FIPS codes
+                for key in FIPSd:
+                    # Query for this data
+                    matchstr = f"Province_State == '{key}'"
+                    confirmed = reduced_df.query(matchstr)['Confirmed'].sum()
+                    deaths = reduced_df.query(matchstr)['Deaths'].sum()
+                    recovered = reduced_df.query(matchstr)['Recovered'].sum()
+
+                    # Store in the dataframe
+                    pd.set_option('mode.chained_assignment', None) # Turn off warning, since NOT an issue here
+                    ind = state_confirmed_df.FIPS[state_confirmed_df['FIPS'] == FIPSd[key]].index
+                    state_confirmed_df[this_col][ind] = confirmed
+                    ind = state_deaths_df.FIPS[state_deaths_df['FIPS'] == FIPSd[key]].index
+                    state_deaths_df[this_col][ind] = deaths
+                    ind = state_recovered_df.FIPS[state_recovered_df['FIPS'] == FIPSd[key]].index
+                    state_recovered_df[this_col][ind] = recovered
+                    pd.set_option('mode.chained_assignment', 'warn') # Turn warning back on
+
+        else:  # This is early data and can be processed for later use in state-level datafiles
+            # Append to list of accessed csv files
+            state_sorted_csvs.append(daily_cnty_dir+file)
+
+            # Grab the data from the CSV file
+            raw_df = pd.read_csv(state_sorted_csvs[-1])
+
+            # Rename columns in early forms to late forms of column names for consistency
+            raw_df.rename(columns={ 'Province/State': 'Province_State',
+                                'Country/Region':'Country_Region',
+                                'Last Update':'Last_Update' }, inplace = True)
+
+            state_dates_list.append(datetime.strptime(this_isodate, '%Y-%m-%d').date())
+
+            state_idx = len(state_sorted_csvs)
+
+            # Pull out only the US data and present here for now
+            us_df = raw_df[raw_df['Country_Region'] == 'US']
+            # print(this_isodate)
+
+            # Add the columns to the storage dataframes
+            this_col = "X"+f"{state_idx:03d}"
+            # print (f"Assigning {this_col}")
+            state_confirmed_df[this_col] = 0
+            state_deaths_df[this_col] =0
+            state_recovered_df[this_col] = 0
+            state_incident_rate_df[this_col] = np.nan
+            state_tested_df[this_col] = np.nan
+            state_hospitalized_df[this_col] = np.nan
+            state_mortality_df[this_col] = np.nan
+            state_testing_rate_df[this_col] = np.nan
+            state_hospitalization_rate_df[this_col] = np.nan
+
+            # Before March 10, postal codes used and "(from Diamond Princess)" labels the
+            # Province_State (which are also separating counties).  Remove labels before
+            # postal codes and remove all (from Diamong Princess) cases and then sum by state.
+            # Use this to build initial dataframes.
+            if (int(this_date) < 20200310):
+                # Process the Province_State entry to be proper state names (might be duplicates)
+                us_df = us_df[~us_df.Province_State.str.contains("Princess")] # Drop all entries with Diamond Princess
+                # Reduce all Province_State entries to postal codes and then replace with full state names
+                us_df['Province_State'] = us_df['Province_State'].str.replace('.*, ','')
+                us_df['Province_State'] = us_df['Province_State'].map(code2name).fillna(us_df['Province_State'])
+                # NOTE: There may be multiple rows with the same name which is why I need to SUM below
+
+            # Loop through all FIPS codes
+            for key in FIPSd:
+                # Query for this data
+                matchstr = f"Province_State == '{key}'"
+                confirmed = us_df.query(matchstr)['Confirmed'].sum()
+                deaths = us_df.query(matchstr)['Deaths'].sum()
+                recovered = us_df.query(matchstr)['Recovered'].sum()
+
+                # Store in the dataframe
+                pd.set_option('mode.chained_assignment', None) # Turn off warning, since NOT an issue here
+                ind = state_confirmed_df.FIPS[state_confirmed_df['FIPS'] == FIPSd[key]].index
+                state_confirmed_df[this_col][ind] = confirmed
+                ind = state_deaths_df.FIPS[state_deaths_df['FIPS'] == FIPSd[key]].index
+                state_deaths_df[this_col][ind] = deaths
+                ind = state_recovered_df.FIPS[state_recovered_df['FIPS'] == FIPSd[key]].index
+                state_recovered_df[this_col][ind] = recovered
+                pd.set_option('mode.chained_assignment', 'warn') # Turn warning back on
+
+            # NOTE: Still need to sum up county information for March 22 through April 12, but that comes from the 
+            # "if" part of the decision tree above, by collapsing the county data.
 
     # Final cleanup (convert to integers and remove NaN for the confirmed and deaths [don't touch recovered yet])
     confirmed_df = confirmed_df.replace(np.nan,0).astype('int')
@@ -407,15 +593,14 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     ## Build combined state-level datafiles
     ##
 
-    # Build a dataframe containing legitimate FIPS values using county level data
+    # Build a dataframe containing legitimate FIPS values using state-level data
     fips_df = state_data_df.copy()
     fips_df.drop(columns=['STNAME', 'POPESTIMATE2019', 'NPOPCHG_2019', 'PPOPCHG_2019'], inplace=True)
 
     # Scan through the more complete daily files of state level data and construct a single datafile for our use (restricting
-    # to US only).  These files are all the same format, but only start after April 12, 2020.  For April 18/19 they accidentally
+    # to US only).  These files are all the same format, but only start on April 12, 2020.  For April 18/19 they accidentally
     # included data from other nations.  So this will need to be purged
     sorted_csvs = []
-    dates_list = []
     for file in csvfiles(daily_state_dir):
         # Set up date information in memory
         this_isodate = isodate2num(file)
@@ -438,16 +623,17 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
             combined_cols = ['FIPS', 'Province_State', 'Lat', 'Long_']
             combined_state_df = reduced_df[combined_cols].copy()
 
-            # Create blank dataframes to store time series data
-            confirmed_df = fips_df.copy()
-            deaths_df = fips_df.copy()
-            recovered_df = fips_df.copy()
-            incident_rate_df = fips_df.copy()
-            tested_df = fips_df.copy()
-            hospitalized_df = fips_df.copy()
-            mortality_df = fips_df.copy()
-            testing_rate_df = fips_df.copy()
-            hospitalization_rate_df = fips_df.copy()
+            # Copy pre-existing state dates list and dataframes to store time series data
+            dates_list = state_dates_list
+            confirmed_df = state_confirmed_df.copy()
+            deaths_df = state_deaths_df.copy()
+            recovered_df = state_recovered_df.copy()
+            incident_rate_df = state_incident_rate_df.copy()
+            tested_df = state_tested_df.copy()
+            hospitalized_df = state_hospitalized_df.copy()
+            mortality_df = state_mortality_df.copy()
+            testing_rate_df = state_testing_rate_df.copy()
+            hospitalization_rate_df = state_hospitalization_rate_df.copy()
 
         ## Create dataframes for temporarily storing time series date
         # Append date to list of dates
@@ -455,49 +641,42 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
         dates_list.append(datetime.strptime(this_isodate, '%Y-%m-%d').date())
 
         # Store Confirmed by merging reduced list and renaming column
+        state_idx += 1
+        this_col = "X"+f"{state_idx:03d}"
         confirmed_df = pd.merge(confirmed_df,reduced_df[['FIPS','Confirmed']],on='FIPS', how='left', copy=True)
-        confirmed_col = "C"+f"{idx:03d}"
-        confirmed_df.rename(columns={'Confirmed': confirmed_col}, errors="raise", inplace=True)
+        confirmed_df.rename(columns={'Confirmed': this_col}, errors="raise", inplace=True)
 
         # Store Deaths by merging reduced list and renaming column
         deaths_df = pd.merge(deaths_df,reduced_df[['FIPS','Deaths']],on='FIPS', how='left', copy=True)
-        deaths_col = "D"+f"{idx:03d}"
-        deaths_df.rename(columns={'Deaths': deaths_col}, errors="raise", inplace=True)
+        deaths_df.rename(columns={'Deaths': this_col}, errors="raise", inplace=True)
 
         # Store Recovered by merging reduced list and renaming column
         recovered_df = pd.merge(recovered_df,reduced_df[['FIPS','Recovered']],on='FIPS', how='left', copy=True)
-        recovered_col = "R"+f"{idx:03d}"
-        recovered_df.rename(columns={'Recovered': recovered_col}, errors="raise", inplace=True)
+        recovered_df.rename(columns={'Recovered': this_col}, errors="raise", inplace=True)
 
         # Store Incident Rate by merging reduced list and renaming column
         incident_rate_df = pd.merge(incident_rate_df,reduced_df[['FIPS','Incident_Rate']],on='FIPS', how='left', copy=True)
-        incident_rate_col = "I"+f"{idx:03d}"
-        incident_rate_df.rename(columns={'Incident_Rate': incident_rate_col}, errors="raise", inplace=True)
+        incident_rate_df.rename(columns={'Incident_Rate': this_col}, errors="raise", inplace=True)
 
         # Store People Testing by merging reduced list and renaming column
         tested_df = pd.merge(tested_df,reduced_df[['FIPS','People_Tested']],on='FIPS', how='left', copy=True)
-        tested_col = "T"+f"{idx:03d}"
-        tested_df.rename(columns={'People_Tested': tested_col}, errors="raise", inplace=True)
+        tested_df.rename(columns={'People_Tested': this_col}, errors="raise", inplace=True)
 
         # Store People Hospitalized by merging reduced list and renaming column
         hospitalized_df = pd.merge(hospitalized_df,reduced_df[['FIPS','People_Hospitalized']],on='FIPS', how='left', copy=True)
-        hospitalized_col = "H"+f"{idx:03d}"
-        hospitalized_df.rename(columns={'People_Hospitalized': hospitalized_col}, errors="raise", inplace=True)
+        hospitalized_df.rename(columns={'People_Hospitalized': this_col}, errors="raise", inplace=True)
 
         # Store Mortality Rate by merging reduced list and renaming column
         mortality_df = pd.merge(mortality_df,reduced_df[['FIPS','Mortality_Rate']],on='FIPS', how='left', copy=True)
-        mortality_col = "M"+f"{idx:03d}"
-        mortality_df.rename(columns={'Mortality_Rate': mortality_col}, errors="raise", inplace=True)
+        mortality_df.rename(columns={'Mortality_Rate': this_col}, errors="raise", inplace=True)
 
         # Store Testing Rate by merging reduced list and renaming column
         testing_rate_df = pd.merge(testing_rate_df,reduced_df[['FIPS','Testing_Rate']],on='FIPS', how='left', copy=True)
-        testing_rate_col = "T"+f"{idx:03d}"
-        testing_rate_df.rename(columns={'Testing_Rate': testing_rate_col}, errors="raise", inplace=True)
+        testing_rate_df.rename(columns={'Testing_Rate': this_col}, errors="raise", inplace=True)
 
         # Store Hospitalization Rate by merging reduced list and renaming column
         hospitalization_rate_df = pd.merge(hospitalization_rate_df,reduced_df[['FIPS','Hospitalization_Rate']],on='FIPS', how='left', copy=True)
-        hospitalization_rate_col = "H"+f"{idx:03d}"
-        hospitalization_rate_df.rename(columns={'Hospitalization_Rate': hospitalization_rate_col}, errors="raise", inplace=True)
+        hospitalization_rate_df.rename(columns={'Hospitalization_Rate': this_col}, errors="raise", inplace=True)
 
     # Final cleanup (convert values that are integers to to integers)
     confirmed_df = confirmed_df.replace(np.nan,0).astype('int')
