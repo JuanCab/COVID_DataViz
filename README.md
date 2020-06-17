@@ -16,6 +16,7 @@ Right now, you need to install the following python extensions
 - gitpython 
 - pandas
 - requests
+- folium    (This is needed if you want to create interactive maps)
 
 If you installed Jupyter using the Anaconda (or miniconda) python distribution
 then you can install all these using the following command on the command
@@ -32,6 +33,6 @@ that would be quick).
 
 As of June 7, the `COVIDlib.collectors` library automatically handles creation
 of local github repos as necessary.  **All you need to do to initialize the
-data directories is to make sure to run the Collect_Data notebook
-before trying to generate vizualizations so all the necessary COVID data is up
-to date.**
+data directories is to make sure to run the Collect_Data notebook or
+corresponding python script before trying to generate vizualizations so all
+the necessary COVID data is up to date.**
