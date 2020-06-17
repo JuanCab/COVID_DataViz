@@ -284,10 +284,6 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
         'WI': 'Wisconsin',
         'WY': 'Wyoming'
     }
-    # Define dictionaries for storing state level confirmed/death/recovered
-    state_confirmed_cnt = dict.fromkeys(code2name, 0)
-    state_deaths_cnt = dict.fromkeys(code2name, 0)
-    state_recovered_cnt = dict.fromkeys(code2name, 0)
 
     # Check if the local git repository directory exists, if not, create it and clone the repo to it
     JH_repo = "https://github.com/CSSEGISandData/COVID-19.git"
