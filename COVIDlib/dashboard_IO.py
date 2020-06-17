@@ -186,9 +186,9 @@ def cleanJHdata(JH_dataframe):
     JH_dataframe['ConfirmedRate'] = np.round_(((confirmed_arr/pop_arr[:, None])*100000),2).tolist()
     JH_dataframe['DeathRate'] = np.round_(((deaths_arr/pop_arr[:, None])*100000),2).tolist()
     JH_dataframe['dConfirmedRate'] = np.round_(((daily_confirmed_arr/pop_arr[:, None])*100000),2).tolist()
-    JH_dataframe['dDeathRate'] = np.round_(((daily_deaths_arr/pop_arr[:, None])*100000),2).tolist()
+    JH_dataframe['dDeathsRate'] = np.round_(((daily_deaths_arr/pop_arr[:, None])*100000),2).tolist()
     JH_dataframe['d2ConfirmedRate'] = np.round_(((daily_delta_confirmed_arr/pop_arr[:, None])*100000),2).tolist()
-    JH_dataframe['d2DeathRate'] = np.round_(((daily_delta_deaths_arr/pop_arr[:, None])*100000),2).tolist()
+    JH_dataframe['d2DeathsRate'] = np.round_(((daily_delta_deaths_arr/pop_arr[:, None])*100000),2).tolist()
     JH_dataframe['Active'] = (confirmed_arr - deaths_arr - recovered_arr).tolist()
 
     # Computed confirmed new cases and deaths as fraction of population
@@ -263,6 +263,10 @@ def html_status(dataframe, fips, hospital_summary_df=None):
         last_death_change = local_df['dDeaths'].to_list()[0][-1]
         last_infect_change2 = local_df['d2Confirmed'].to_list()[0][-1]
         last_death_change2 = local_df['d2Deaths'].to_list()[0][-1]
+        last_infect_change_rate = local_df['dConfirmedRate'].to_list()[0][-1]
+        last_death_change_rate = local_df['dDeathsRate'].to_list()[0][-1]
+        last_infect_change2_rate = local_df['d2ConfirmedRate'].to_list()[0][-1]
+        last_death_change2_rate = local_df['d2DeathsRate'].to_list()[0][-1]
 
         # Build HTML report
         html_out = f"<h3>Status of {namestr} as of {last_day}</h3>"
@@ -274,8 +278,8 @@ def html_status(dataframe, fips, hospital_summary_df=None):
             html_out += f"<b><span style='color:#ff0000;font-size: 120%;'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</span> / <span style='color:rgb(0,128,20);font-size: 120%;'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</span> / <span style='font-size: 120%;'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
         else:
             html_out += f"<b><span style='font-size: 120%;'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
-        html_out += f"<ul><li><b>{last_infect_change:,.0f} new infections</b> in last day which is a change of {last_infect_change2:+.0f} from previous day.</li>"
-        html_out += f"<li><b>{last_death_change:,.0f} new deaths</b> in last day which is a change of {last_death_change2:+.0f} from previous day..</li></ul>"
+        html_out += f"<ul><li><b>{last_infect_change:,.0f} new infections</b> ({last_infect_change_rate:,.2f} per 100,000 people) in last day which is a change of {last_infect_change2:+,.0f} ({last_infect_change2_rate:+,.2f} per 100,000 people) from previous day.</li>"
+        html_out += f"<li><b>{last_death_change:,.0f} new deaths</b> ({last_death_change_rate:,.2f} per 100,000 people) in last day which is a change of {last_death_change2:+,.0f} ({last_death_change2_rate:+,.2f} per 100,000 people) from previous day..</li></ul>"
         # If a hospitalization summary dataframe is provided, process it and produce HTML report
         if ((FIPS>0)&(FIPS < 100)&(hospital_summary_df is not None)):
             html_out += str(html_status_beds(hospital_summary_df, FIPS, display=False))
