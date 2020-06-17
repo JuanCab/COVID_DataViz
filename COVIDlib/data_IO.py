@@ -234,29 +234,29 @@ def GetNumICUBeds(fipsNum, summaryDataFrame):
     # These functions are for the "at a glance" values for bed availability and usage
     # Initial author: Luke
 
-    mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_capacity']
-    return mn_icu_beds.values[0] # make a return
+    icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_capacity']
+    return icu_beds.values[0] # make a return
 
 
 def GetNumAllBeds(fipsNum, summaryDataFrame):
     # Initial author: Luke
-    
-    mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_capacity']
-    return mn_icu_beds.values[0] # make a return
+
+    icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_capacity']
+    return icu_beds.values[0] # make a return
 
 
 def GetICUBedUsage(fipsNum, summaryDataFrame):
     # Initial author: Luke
 
-    mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_usage']
-    return mn_icu_beds.values[0] # make a return
+    icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['icu_bed_usage']
+    return icu_beds.values[0] # make a return
 
 
 def GetAllBedUsage(fipsNum, summaryDataFrame):
     # Initial author: Luke
 
-    mn_icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_usage']
-    return mn_icu_beds.values[0]
+    icu_beds = summaryDataFrame[summaryDataFrame['FIPS'] == fipsNum]['all_bed_usage']
+    return icu_beds.values[0]
 
 
 def GetHospitalizationData(fipsNum, hospitalizationsDF): # This one's having issues
