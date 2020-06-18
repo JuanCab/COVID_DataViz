@@ -24,24 +24,24 @@ var_descript = {'FIPS' : 'Federal Information Processing Standards State/County 
                 'Lat': 'Latitude',
                 'Long_' : 'Longitude',
                 'dates' : 'Dates',
-                'Confirmed' : 'Confirmed COVID Infections',
-                'Deaths' : 'Confirmed and Probable COVID Deaths',
-                'Recovered' : 'Confirmed and Probable COVID Recoveries',
-                'Active' : 'Confirmed and Probable Active COVID Cases',
+                'Confirmed' : 'Total Confirmed COVID Infections',
+                'Deaths' : 'Total Confirmed and Probable COVID Deaths',
+                'Recovered' : 'Total Confirmed and Probable COVID Recoveries',
+                'Active' : 'Total Confirmed and Probable Active COVID Cases',
                 'Incident_Rate' : 'Confirmed COVID Cases',  # As provided by John Hopkins
-                'People_Tested' : 'Total tested for COVID',
-                'People_Hospitalized' : 'Total hospitalized for COVID',
+                'People_Tested' : 'Total People tested for COVID',
+                'People_Hospitalized' : 'Total People Hospitalized for COVID',
                 'Mortality_Rate' : 'Mortality Rate',
-                'Testing_Rate' : 'Total Tested for COVID',
-                'Hospitalization_Rate' : 'Hospitalization Rate',
-                'dConfirmed' : 'COVID Infection Rate',
-                'd2Confirmed' : 'Change in COVID Infection Rate',
-                'dDeaths' : 'COVID Death Rate',
-                'd2Deaths' : 'Change in COVID Death Rate',
+                'Testing_Rate' : 'Total Tested for COVID (per 100,000 persons)',
+                'Hospitalization_Rate' : 'Hospitalization Rate (per 100,000 persons)',
+                'dConfirmed' : 'New COVID Infections (#/day)',
+                'd2Confirmed' : 'Change in New COVID Infections',
+                'dDeaths' : 'New COVID Deaths (#/day)',
+                'd2Deaths' : 'Change in New COVID Deaths',
                 'PopEst2019' : 'Estimated Population (July 1, 2019)',
                 'PopChg2019' : 'Estimated Population Increase (2018-19)',
-                'ConfirmedRate' : 'Confirmed COVID Infections (per 100,000 persons)', # As computed by us
-                'DeathRate' : 'Confirmed COVID Deaths (per 100,000 people)', # As computed by us
+                'ConfirmedRate' : 'Total Confirmed COVID Infections (per 100,000 persons)', # As computed by us
+                'DeathRate' : 'Total Confirmed COVID Deaths (per 100,000 people)', # As computed by us
                 'driving_mobility' : 'Apple Maps Directions Requests',
                 'driving_mobility_Percent' : 'Apple Maps Directions Requests',
                 'retail_recreation_Percent': 'Google-tracked Retail & Recreation Activity',
@@ -310,6 +310,42 @@ def BuildCountiesList(dataframe, AllStates):
     return CountiesDict
 
 
+def BuildJHVarDict():
+    # Load the John Hopkins time series variables information into memory
+    var_dict = {
+        'Confirmed' : {'descript': 'Total Confirmed COVID Infections', 'stateonly': False},
+        'ConfirmedRate' : {'descript': 'Total Confirmed COVID Infections (per 100,000 persons)', 'stateonly': False},
+        'dConfirmed' : {'descript': 'New COVID Infections (#/day)', 'stateonly': False},
+        'd2Confirmed' : {'descript': 'Change in New COVID Infections', 'stateonly': False},
+        'Deaths' : {'descript': 'Total Confirmed and Probable COVID Deaths', 'stateonly': False},
+        'DeathRate' : {'descript': 'Total Confirmed COVID Deaths (per 100,000 people)', 'stateonly': False},
+        'dDeaths' : {'descript': 'New COVID Deaths (#/day)', 'stateonly': False},
+        'd2Deaths' : {'descript': 'Change in New COVID Deaths', 'stateonly': False},
+        'Recovered' : {'descript': 'Total Confirmed and Probable COVID Recoveries', 'stateonly': True},
+        'Active' : {'descript': 'Tota; Confirmed and Probable Active COVID Cases', 'stateonly': True},
+        'People_Tested' : {'descript': 'Total People tested for COVID', 'stateonly': True},
+        'Testing_Rate' : {'descript': 'Total Tested for COVID (per 100,000 persons)', 'stateonly': True},
+        'Mortality_Rate' : {'descript': 'Mortality Rate', 'stateonly': True},
+        'People_Hospitalized' : {'descript': 'Total People Hospitalized for COVID', 'stateonly': True},
+        'Hospitalization_Rate' : {'descript': 'Hospitalization Rate (per 100,000 persons)', 'stateonly': True},
+        }
+    return var_dict
+
+
+def BuildMobilityVarDict():
+    # Load the Mobility time series variables information into memory
+    var_dict = {
+        'driving_mobility_Percent': {'descript': 'Apple Maps Directions Requests', 'apple': True},
+        'retail_recreation_Percent': {'descript': 'Google-tracked Retail & Recreation Activity', 'apple': False},
+        'grocery_pharm_Percent': {'descript': 'Google-tracked Grocery & Pharmacy Activity', 'apple': False},
+        'parks_Percent': {'descript': 'Google-tracked Park Activity', 'apple': False},
+        'transit_stations_Percent': {'descript': 'Google-tracked Transit Station Activity', 'apple': False},
+        'residential_Percent': {'descript': 'Google-tracked Residential Activity', 'apple': False},
+        'workplace_Percent': {'descript': 'Google-tracked Workplace Activity', 'apple': False}
+        }
+    return var_dict
+
+
 def cleanAAPLdata(aapl_dataframe):
     # This function takes Apple mobility dataframes and converts the mobility to percent change from baseline
     # to be consistent with Google Mobility dataframes.
@@ -321,7 +357,7 @@ def cleanAAPLdata(aapl_dataframe):
     return
 
 
-def html_status(dataframe, fips, hospital_summary_df=None):
+def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Display=True):
     ## Print an HTML statement of current status (Confirmed, Deaths, Recovered)
     ## based on Johns Hopkins dataframes (county or State)
 
@@ -332,7 +368,13 @@ def html_status(dataframe, fips, hospital_summary_df=None):
         raise ValueError('Input fips must be integer or list of integers')
 
     # Loop through the FIPS values
+    html_out = "" # Start with no HTML
     for FIPS in fips:
+        # If this is DC county FIPS, skip is (you should use the state one)
+        if (FIPS == 11001):
+            continue
+
+        # Retrieve local data
         local_df = COVID_IO.getLocalDataFrame(FIPS, dataframe)
 
         # Determine name to use
@@ -364,29 +406,38 @@ def html_status(dataframe, fips, hospital_summary_df=None):
         last_death_change2_rate = local_df['d2DeathsRate'].to_list()[0][-1]
 
         # Build HTML report
-        html_out = f"<h3>Status of {namestr} as of {last_day}</h3>"
-        html_out += f"<table style='padding: 5px;'>"
-        html_out += f"<tr><td style='text-align: right;vertical-align: top;'><b style='font-size: 140%;'>{last_infect_tot:,.0f} Total Cases</b><br/>({last_infectrate} per 100,000 people)</td>"
-        html_out += f"<td style='text-align: left;vertical-align: top;'>"
+        scale_title= "140%" # Scale for title text
+        scale_enhance = "120%" # Scale for important text
+        scale_enhance2 = "105%" # Scale for important but less important text
 
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<b style='font-size: {scale_title};'>{namestr} as of {last_day}</b><br/>"
+        html_out += f"<b style='font-size: {scale_enhance};'>{last_infect_tot:,.0f} Total Cases</b> ({last_infectrate} per 100,000 people)<br/>"
         if (FIPS < 100): # Only list active and recovered for states
-            html_out += f"<b><span style='color:#ff0000;font-size: 120%;'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</span> / <span style='color:rgb(0,128,20);font-size: 120%;'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</span> / <span style='font-size: 120%;'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
+            html_out += f"<b><span style='color:#ff0000;font-size: {scale_enhance2}'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</span> / <span style='color:rgb(0,128,20);font-size: {scale_enhance2};'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</span> / <span style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
         else:
-            html_out += f"<b><span style='font-size: 120%;'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
-        html_out += f"<ul><li><b>{last_infect_change:,.0f} new infections</b> ({last_infect_change_rate:,.2f} per 100,000 people) in last day which is a change of {last_infect_change2:+,.0f} ({last_infect_change2_rate:+,.2f} per 100,000 people) from previous day.</li>"
-        html_out += f"<li><b>{last_death_change:,.0f} new deaths</b> ({last_death_change_rate:,.2f} per 100,000 people) in last day which is a change of {last_death_change2:+,.0f} ({last_death_change2_rate:+,.2f} per 100,000 people) from previous day..</li></ul>"
+            html_out += f"<b><span style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
+        # Present last day stats
+        html_out += "<div style='text-indent: 1em;'>"
+        html_out += "<b>New Cases [change from previous day]:</b><br/>"
+        html_out += f"<li><b>{last_infect_change:,.0f} [{last_infect_change2:+,.0f}] new infections</b> ({last_infect_change_rate:,.2f} [{last_infect_change2_rate:+,.2f}] per 100,000 people).</li>"
+        html_out += f"<li><b>{last_death_change:,.0f} [{last_death_change2:+,.0f}] new deaths</b> ({last_death_change_rate:,.2f} [{last_death_change2_rate:+,.2f}] per 100,000 people).</li>"
         # If a hospitalization summary dataframe is provided, process it and produce HTML report
-        if ((FIPS>0)&(FIPS < 100)&(hospital_summary_df is not None)):
-            html_out += str(html_status_beds(hospital_summary_df, FIPS, display=False))
-        html_out += f"</td></tr></table>"
+        if ((FIPS>0)&(FIPS < 100)&(hospital_summary_df is not None)&(BedsStatus)):
+            html_out += str(html_status_beds(hospital_summary_df, FIPS, Display=False))
+        html_out += "</div></p>"
 
+    if (Display):
         # Display HTML to screen
         display(HTML(html_out))
+        return
+    else:
+        return html_out
 
     return
 
 
-def html_status_beds(dataframe, fips, display=True):
+def html_status_beds(dataframe, fips, Display=True):
     ## Print an HTML statement of current status (Confirmed, Deaths, Recovered)
     ## based on Johns Hopkins dataframes (county or State)
 
@@ -397,6 +448,7 @@ def html_status_beds(dataframe, fips, display=True):
         raise ValueError('Input fips must be integer or list of integers')
 
     # Loop through the FIPS values for states
+    html_out = ""  # Start with blank string for HTML
     # Deal with accidentally passing in US or county FIPS values to list
     fips = [FIPS for FIPS in fips if (FIPS >0)&(FIPS<100)]
     for FIPS in fips:
@@ -415,29 +467,38 @@ def html_status_beds(dataframe, fips, display=True):
         percent_reg_used = float(num_reg_beds_used / num_reg_beds_total) * 100
 
         # Print HTML report
-        if (display):
-            html_out = f"<h3>Status of Hospital Beds in {namestr}</h3>"
+        if (Display):
+            html_out += f"<b>Status of Hospital Beds in {namestr}</b>"
             html_out += f"<table style='padding: 5px;'>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>{num_icu_beds_used} of {num_icu_beds_total} ICU Beds ({percent_icu_used:,.2f}%) Being Used.</b><br/></td>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>{num_reg_beds_used} of {num_reg_beds_total} Regular Beds ({percent_reg_used:,.2f}%) Being Used.</b><br/></td>"
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>{num_reg_beds_used} of {num_reg_beds_total} Hospital Beds ({percent_reg_used:,.2f}%) Being Used.</b></td>"
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>{num_icu_beds_used} of {num_icu_beds_total} ICU Beds ({percent_icu_used:,.2f}%) Being Used.</b></td>"
             html_out += "</td></tr></table>"
             display(HTML(html_out))
             return
         else:
             # Build HTML to returm for inclusion in other report
-            html_out = f"<b style='font-size: 120%;'>Status of Hospital Beds in {namestr}</b>"
-            html_out += f"<ul><li>{num_icu_beds_used} of {num_icu_beds_total} ICU Beds ({percent_icu_used:,.2f}%) in use.</li>"
-            html_out += f"<li>{num_reg_beds_used} of {num_reg_beds_total} Regular Beds ({percent_reg_used:,.2f}%) in use.</li></ul>"
+            html_out += "<div style='text-indent: 1em;'>"
+            html_out += f"<b>Status of Hospital Beds in {namestr}</b>"
+            html_out += f"<li>{num_reg_beds_used} of {num_reg_beds_total} Hospital Beds ({percent_reg_used:,.2f}%) in use.</li>"
+            html_out += f"<li>{num_icu_beds_used} of {num_icu_beds_total} ICU Beds ({percent_icu_used:,.2f}%) in use.</li>"
+            html_out += str(html_IHME_Predictions(dataframe, FIPS, Display=False))
+            html_out += "</div>"
             return html_out
-def html_IHME_Predictions(dataframe, fips,Display = True):
-    #function prints out IHME predictions & returns list of Html_out
+
+
+def html_IHME_Predictions(dataframe, fips, Display = True):
+    # function prints out IHME predictions or if called from html_status_beds using display=False 
+    # it just returns HTML.
+
     ## Check if FIPS input is reasonable
     if (type(fips) == int):
         fips = [fips]
     elif (type(fips) != list):
         raise ValueError('Input fips must be integer or list of integers')
+
     empList = []
     # Loop through the FIPS values for states
+    html_out = ""  # Start with blank string for HTML
     # Deal with accidentally passing in US or county FIPS values to list
     fips = [FIPS for FIPS in fips if (FIPS >0)&(FIPS<100)]
     for FIPS in fips:
@@ -453,27 +514,20 @@ def html_IHME_Predictions(dataframe, fips,Display = True):
 
         # Print HTML report
         if (Display):
-            html_out = f"<h3>Covid Predictions for the state of {namestr}</h3>"
+            html_out += f"<h3>COVID Predictions for the state of {namestr}</h3>"
             html_out += f"<table style='padding: 5px;'>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Mean Day that ICU beds will reach its peak {PeakIcuDay} in the state of {namestr}</b><br/></td>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Mean Day that beds will reach its peak {peakBedDay} in the state of {namestr}</b><br/></td>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Mean Day that Vents will reach its peak {peakventDay} in the state of {namestr}</b><br/></td>"
-
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Hospital bed use predicted to peak {peakBedDay} by IMHE</b><br/></td>"
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>ICU bed use predicted to peak {PeakIcuDay} by IMHE</b><br/></td>"
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Ventilator use predicted to peak {peakventDay} by IMHE</b><br/></td>"
             html_out += "</td></tr></table>"
             display(HTML(html_out))
-            
         else:
-            # Build HTML and addes to list
-            html_out = f"<b style='font-size: 120%;'>Status of Hospital Beds in {namestr}</b>"
-            html_out += f"<ul><li>Mean Day that ICU beds will reach its peak {PeakIcuDay} in the state of {namestr}.</li>"
-            html_out += f"<li>Mean Day that beds will reach its peak {peakBedDay} in the state of {namestr}</li>"
-            html_out += f"<li>Mean Day that Vents will reach its peak {peakventDay} in the state of {namestr}</li></ul>"
-            empList.append(html_out)
-    #returns the List if it has a length higher then 0
-    if (len(empList) <= 0):
-        pass 
-    else:
-        return empList
+            # Build HTML to add to list from html_bed_status()
+            html_out += f"<li>Hospital bed use predicted to peak {peakBedDay} by IMHE.</li>"
+            html_out += f"<li>ICU bed use predicted to peak {PeakIcuDay} by IMHE.</li>"
+            html_out += f"<li>Ventilator use predicted to peak {peakventDay} by IMHE.</li>"
+            return html_out
+
 
 def running_average(ts_array, n_days):
     # Compute the running average of the last n_days for ts_array (assumed to be

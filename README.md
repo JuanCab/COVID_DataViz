@@ -16,11 +16,14 @@ Right now, you need to install the following python extensions
 - gitpython 
 - pandas
 - requests
-- folium    (This is needed if you want to create interactive maps)
+- folium     (This is needed if you want to create interactive maps)
+- ipyleaflet (needed for widget based maps [replaces folium probably])
+- ipywidgets (required to render widget controls in Jupyter)
+- ipympl     (This is required to render matplotlib plots as widgets)
 
 If you installed Jupyter using the Anaconda (or miniconda) python distribution
 then you can install all these using the following command on the command
-line: `conda install gitpython pandas requests`
+line: `conda install gitpython pandas requests folium ipyleaflet ipywidgets ipympl`
 
 ## Initialize Data collection by Running Collect_Data Notebook
 
