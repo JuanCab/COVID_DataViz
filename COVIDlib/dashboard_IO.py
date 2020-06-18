@@ -612,7 +612,7 @@ def ts_plot(dataframe, colname, fips, connectdots=False, ylog=False, running_avg
         ax.set_yscale('log')
 
     # Add legend
-    legend = ax.legend()
+    legend = ax.legend(prop={'size': 8})
 
 
 def ts_barplot(dataframe, colname, fips, ylog=False, running_avg=0, fig=None, ax=None):
