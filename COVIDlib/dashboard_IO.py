@@ -393,15 +393,13 @@ def html_status_beds(dataframe, fips, display=True):
             html_out += f"<li>{num_reg_beds_used} of {num_reg_beds_total} Regular Beds ({percent_reg_used:,.2f}%) in use.</li></ul>"
             return html_out
 def html_IHME_Predictions(dataframe, fips,Display = True):
-    ## Print an HTML statement of current status (Confirmed, Deaths, Recovered)
-    ## based on Johns Hopkins dataframes (county or State)
-
+    #function prints out IHME predictions & returns list of Html_out
     ## Check if FIPS input is reasonable
     if (type(fips) == int):
         fips = [fips]
     elif (type(fips) != list):
         raise ValueError('Input fips must be integer or list of integers')
-
+    empList = []
     # Loop through the FIPS values for states
     # Deal with accidentally passing in US or county FIPS values to list
     fips = [FIPS for FIPS in fips if (FIPS >0)&(FIPS<100)]
@@ -410,10 +408,11 @@ def html_IHME_Predictions(dataframe, fips,Display = True):
         local_df = COVID_IO.getLocalDataFrame(FIPS, dataframe)
         namestr = local_df['state'].values[0]
 
-        # Getting total of beds and number of beds used
+        # gets peak mean day  predictions for icu,beds and vents
         PeakIcuDay = local_df['peak_icu_bed_day_mean'].to_list()[0].strftime("%B %d, %Y")
         peakBedDay = local_df['peak_bed_day_mean'].to_list()[0].strftime("%B %d, %Y")
         peakventDay = local_df['peak_vent_day_mean'].to_list()[0].strftime("%B %d, %Y")
+        # Will have to add more if needed
 
         # Print HTML report
         if (Display):
@@ -425,13 +424,19 @@ def html_IHME_Predictions(dataframe, fips,Display = True):
 
             html_out += "</td></tr></table>"
             display(HTML(html_out))
-            return
-        else:# Build HTML to returm for inclusion in other report
+            
+        else:
+            # Build HTML and addes to list
             html_out = f"<b style='font-size: 120%;'>Status of Hospital Beds in {namestr}</b>"
             html_out += f"<ul><li>Mean Day that ICU beds will reach its peak {PeakIcuDay} in the state of {namestr}.</li>"
             html_out += f"<li>Mean Day that beds will reach its peak {peakBedDay} in the state of {namestr}</li>"
             html_out += f"<li>Mean Day that Vents will reach its peak {peakventDay} in the state of {namestr}</li></ul>"
-            return html_out
+            empList.append(html_out)
+    #returns the List if it has a length higher then 0
+    if (len(empList) <= 0):
+        pass 
+    else:
+        return empList
 
 def running_average(ts_array, n_days):
     # Compute the running average of the last n_days for ts_array (assumed to be
