@@ -152,7 +152,6 @@ def cleanJHdata(JH_dataframe):
         'Oklahoma': 'OK',
         'Oregon': 'OR',
         'Pennsylvania': 'PA',
-        'Puerto Rico': 'PR',
         'Rhode Island': 'RI',
         'South Carolina': 'SC',
         'South Dakota': 'SD',
@@ -271,6 +270,44 @@ def build_fipsdict(county_df, state_df):
     FIPSdict.update(FIPSdf.set_index('placename').T.to_dict('records')[0])
 
     return FIPSdict
+
+
+def GetFIPS(FIPSdict, state, county=None):
+    # Return the FIPS for this county/state combination automatically from FIPSdict
+    if (county == None):
+        return FIPSdict[state]
+    else:
+        placename = f'{county} ({state})'
+        return FIPSdict[placename]
+
+
+def BuildStatesList():
+    #
+    # This is a dopey way to just define this list in the library instead of the main block of
+    # code.
+    #
+    AllStates = [ 'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+                'Colorado', 'Connecticut', 'Delaware', 'District of Columbia', 'Florida',
+                'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas',
+                'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+                'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 
+                'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 
+                'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 
+                'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 
+                'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 
+                'Wyoming' ]
+    return AllStates
+
+
+def BuildCountiesList(dataframe, AllStates):
+    #
+    # Construct list of counties in each state from a stateframe containing the full list
+    #
+    CountiesDict = {}
+    for state in AllStates:
+        CountiesDict[state] =  sorted(dataframe[dataframe['state'] == state]['county'].tolist())
+
+    return CountiesDict
 
 
 def cleanAAPLdata(aapl_dataframe):
