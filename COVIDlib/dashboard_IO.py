@@ -2,6 +2,7 @@
 ## This is a set of functions for presenting COVID data to the user via a Dashboard
 ##
 
+import math 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,6 +39,10 @@ var_descript = {'FIPS' : 'Federal Information Processing Standards State/County 
                 'd2Confirmed' : 'Change in New COVID Infections',
                 'dDeaths' : 'New COVID Deaths (#/day)',
                 'd2Deaths' : 'Change in New COVID Deaths',
+                'dConfirmedRate' : 'New COVID Infections (#/day) (per 100,000 persons)',
+                'dDeathsRate': 'New COVID Deaths (#/day) (per 100,000 persons)',
+                'd2ConfirmedRate' : 'Change in New COVID Infections (per 100,000 persons)',
+                'd2DeathsRate' : 'Change in New COVID Deaths (per 100,000 persons)',
                 'PopEst2019' : 'Estimated Population (July 1, 2019)',
                 'PopChg2019' : 'Estimated Population Increase (2018-19)',
                 'ConfirmedRate' : 'Total Confirmed COVID Infections (per 100,000 persons)', # As computed by us
@@ -67,10 +72,14 @@ var_ylabel = {'FIPS' : 'FIPS Number',
                 'Mortality_Rate' : 'Percent',
                 'Testing_Rate' : 'Tested (per 100,000 people)',
                 'Hospitalization_Rate' : 'Percent',
-                'dConfirmed' : 'Infection Rate (Infections per day)',
-                'd2Confirmed' : 'Change in Infection Rate (Infections/day per day)',
+                'dConfirmed' : 'New Infections per day',
+                'd2Confirmed' : 'Change in New Infections (Infections/day per day)',
                 'dDeaths' : 'New Deaths per day',
-                'd2Deaths' : 'Change in Death Rate (Deaths/day per day)',
+                'd2Deaths' : 'Change in New Deaths (Deaths/day per day)',
+                'dConfirmedRate' : 'New Infections per day per 100,000 persons',
+                'dDeathsRate': 'New Deaths per day per 100,000 persons',
+                'd2ConfirmedRate' : 'Change in New Infections (Infections/day per day per 100,000 persons)',
+                'd2DeathsRate' : 'Change in New Deaths (Deaths/day per day per 100,000 persons)',
                 'PopEst2019' : 'Estimated Population',
                 'PopChg2019' : 'Estimated Population Increase',
                 'ConfirmedRate' : 'COVID Infections (per 100,000 persons)', # As computed by us
@@ -391,11 +400,15 @@ def BuildJHVarDict():
         'Confirmed' : {'descript': 'Total Confirmed COVID Infections', 'stateonly': False},
         'ConfirmedRate' : {'descript': 'Total Confirmed COVID Infections (per 100,000 persons)', 'stateonly': False},
         'dConfirmed' : {'descript': 'New COVID Infections (#/day)', 'stateonly': False},
+        'dConfirmedRate' : {'descript': 'New COVID Infections (#/day per 100,000 people)', 'stateonly': False},
         'd2Confirmed' : {'descript': 'Change in New COVID Infections', 'stateonly': False},
+        'd2ConfirmedRate' : {'descript': 'Change in New COVID Infections (per 100,000 people)', 'stateonly': False},
         'Deaths' : {'descript': 'Total Confirmed and Probable COVID Deaths', 'stateonly': False},
         'DeathRate' : {'descript': 'Total Confirmed COVID Deaths (per 100,000 people)', 'stateonly': False},
         'dDeaths' : {'descript': 'New COVID Deaths (#/day)', 'stateonly': False},
+        'dDeathsRate' : {'descript': 'New COVID Deaths (#/day per 100,000 people)', 'stateonly': False},
         'd2Deaths' : {'descript': 'Change in New COVID Deaths', 'stateonly': False},
+        'd2DeathsRate' : {'descript': 'Change in New COVID Deaths (per 100,000 people)', 'stateonly': False},
         'Recovered' : {'descript': 'Total Confirmed and Probable COVID Recoveries', 'stateonly': True},
         'Active' : {'descript': 'Tota; Confirmed and Probable Active COVID Cases', 'stateonly': True},
         'People_Tested' : {'descript': 'Total People tested for COVID', 'stateonly': True},
@@ -487,13 +500,16 @@ def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Disp
 
         html_out += "<p style='margin: 1em 0 0 0;'>"
         html_out += f"<b style='font-size: {scale_title};'>{namestr} as of {last_day}</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
         html_out += f"<b style='font-size: {scale_enhance};'>{last_infect_tot:,.0f} Total Cases</b> ({last_infectrate} per 100,000 people)<br/>"
-        if (FIPS < 100): # Only list active and recovered for states
-            html_out += f"<b><span style='color:#ff0000;font-size: {scale_enhance2}'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</span> / <span style='color:rgb(0,128,20);font-size: {scale_enhance2};'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</span> / <span style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
+
+        # Don't try to print recovered/active stats if they are bogus
+        if ((last_recovered_tot == 0)|(math.isnan(last_recovered_tot))):
+            html_out += f"<b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
         else:
-            html_out += f"<b><span style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</span></b><br/>"
+            html_out += f"<b style='color:#ff0000;font-size: {scale_enhance2}'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</b> <b>/</b> <b style='color:rgb(0,128,20);font-size: {scale_enhance2};'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</b> <b>/</b> <b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
+        
         # Present last day stats
-        html_out += "<div style='text-indent: 1em;'>"
         html_out += "<b>New Cases [change from previous day]:</b><br/>"
         html_out += f"<li><b>{last_infect_change:,.0f} [{last_infect_change2:+,.0f}] new infections</b> ({last_infect_change_rate:,.2f} [{last_infect_change2_rate:+,.2f}] per 100,000 people).</li>"
         html_out += f"<li><b>{last_death_change:,.0f} [{last_death_change2:+,.0f}] new deaths</b> ({last_death_change_rate:,.2f} [{last_death_change2_rate:+,.2f}] per 100,000 people).</li>"
