@@ -83,7 +83,82 @@ var_ylabel = {'FIPS' : 'FIPS Number',
                 'transit_stations_Percent' : 'Percent Change (vs Jan 3 - Feb 6, 2020)',
                 'residential_Percent' : 'Percent Change (vs Jan 3 - Feb 6, 2020)',
                 'workplace_Percent' : 'Percent Change (vs Jan 3 - Feb 6, 2020)' }
-
+#PLot names for hosital Data
+var_descript_Hosp = {'FIPS' : 'Federal Information Processing Standards State/County Number',
+                'county' : 'County Name',
+                'state' : 'State Name',
+                'dates' : 'Dates',
+                'allbed_mean': 'Total Number of Beds Mean',
+                'allbed_lower' : 'Total Number of Beds Lower',
+                'allbed_upper' : 'Total Number of Beds Upper',
+                'ICUbed_mean' : 'Total Number of ICU beds Mean',
+                'ICUbed_lower' : 'Total Number of ICU beds Lower',  
+                'ICUbed_upper' : 'Total Number of ICU beds Upper',
+                'InvVen_mean' : 'Total Number of Vents Mean',
+                'InvVen_lower' : 'Total Number of Vents Lower',
+                'InvVen_upper' : 'Total Number of Vents Upper',
+                'deaths_mean' : 'Number of Deaths Mean',
+                'deaths_lower' : 'Number of Deaths Lower',
+                'deaths_upper' : 'Number of Deaths Upper',
+                'admis_mean' : 'Mean hospital admissions by day ',
+                'admis_lower' : 'Lower bound of hospital admissions by day ',
+                'admis_upper' : 'Upper bound of hospital admissions by day',
+                'newICU_mean' : 'Mean number of new people going to the ICU by day',
+                'newICU_lower' : 'Lower bound number of new people going to the ICU by day', 
+                'newICU_upper' : 'Upper bound number of new people going to the ICU by day', 
+                'totdea_mean' : 'Mean cumulative covid deaths ',
+                'totdea_lower' : 'Lower bound of cumulative covid deaths',
+                'totdea_upper': 'Upper bound of cumulative covid deaths ',
+                'deaths_mean_smoothed': 'Mean daily covid deaths (smoothed)',
+                'deaths_lower_smoothed': 'Lower bound of daily covid deaths (smoothed)',
+                'deaths_upper_smoothed' : 'Upper bound of daily covid deaths (smoothed)',
+                'totdea_mean_smoothed' : 'Mean cumulative covid deaths (smoothed)',
+                'totdea_lower_smoothed' : 'Lower bound of cumulative covid deaths (smoothed)',
+                'totdea_upper_smoothed' : 'Upper bound of cumulative covid deaths (smoothed)',
+                'total_tests_data_type' : 'Indicator of whether total tests composite is observed or projected',
+                'total_tests' : 'Total tests', 
+                'confirmed_infections' : 'Observed data only (confirmed infections)',
+                'est_infections_mean' : 'Mean estimated infections',
+                'est_infections_lower': 'Lower bound of estimated infections',
+                'est_infections_upper': 'Upper bound estimated infections'}
+#Y label for plots in Hospital Data
+var_ylabel_Hosp ={'FIPS' : 'Federal Information Processing Standards State/County Number',
+                'county' : 'County Name',
+                'state' : 'State Name',
+                'dates' : 'Dates',
+                'allbed_mean': 'Number of Beds',
+                'allbed_lower' : 'Number of Beds',
+                'allbed_upper' : ' Number of Beds',
+                'ICUbed_mean' : 'Number of ICU beds',
+                'ICUbed_lower' : 'Number of ICU beds',  
+                'ICUbed_upper' : 'Number of ICU beds',
+                'InvVen_mean' : 'Number of Vents',
+                'InvVen_lower' : 'Number of Vents',
+                'InvVen_upper' : 'Number of Vents',
+                'deaths_mean' : 'Number of Deaths',
+                'deaths_lower' : 'Number of Deaths',
+                'deaths_upper' : 'Number of Deaths',
+                'admis_mean' : 'Number of hospital admissions by day ',
+                'admis_lower' : 'Number of hospital admissions by day ',
+                'admis_upper' : 'Number of hospital admissions by day',
+                'newICU_mean' : 'number of new people going to the ICU by day',
+                'newICU_lower' : 'number of new people going to the ICU by day', 
+                'newICU_upper' : 'number of new people going to the ICU by day', 
+                'totdea_mean' : 'number of cumulative covid deaths ',
+                'totdea_lower' : 'number of cumulative covid deaths',
+                'totdea_upper': 'number of cumulative covid deaths ',
+                'deaths_mean_smoothed': 'number of daily covid deaths (smoothed)',
+                'deaths_lower_smoothed': 'number of daily covid deaths (smoothed)',
+                'deaths_upper_smoothed' : 'number of daily covid deaths (smoothed)',
+                'totdea_mean_smoothed' : 'number of cumulative covid deaths (smoothed)',
+                'totdea_lower_smoothed' : 'number of cumulative covid deaths (smoothed)',
+                'totdea_upper_smoothed' : 'number of cumulative covid deaths (smoothed)',
+                'total_tests_data_type' : 'Indicator of whether total tests composite is observed or projected', # As computed by us
+                'total_tests' : 'Total tests', 
+                'confirmed_infections' : 'Observed data only (confirmed infections)',
+                'est_infections_mean' : 'number estimated infections',
+                'est_infections_lower': 'number of estimated infections',
+                'est_infections_upper': 'number of estimated infections'}
 
 # Define functions to be used below
 def derivative1D(x, y):
@@ -613,7 +688,64 @@ def ts_plot(dataframe, colname, fips, connectdots=False, ylog=False, running_avg
 
     # Add legend
     legend = ax.legend(prop={'size': 8})
+#ts_plot_Hos is literally the same as ts_plot that juan wrote it just has different variables for y label & description
+def ts_plot_Hos(dataframe, colname, fips, connectdots=False, ylog=False, running_avg=0, fig=None, ax=None):
+    ## Plot up a time series of colname data from dataframe, plotting each fips provided in the list.
 
+    ## Start by defaulting to a single figure and plotting it if no fig, ax values
+    ## are provided
+    if (fig is None and ax is not None) or (fig is not None and ax is None):
+        raise ValueError('Must provide both "fig" and "ax" if you provide one of them')
+    elif fig is None and ax is None:
+        fig, ax = plt.subplots(1, 1)
+
+    ## Check if FIPS input is reasonable
+    if (type(fips) == int):
+        fips = [fips]
+    elif (type(fips) != list):
+        raise ValueError('Input fips must be integer or list of integers')
+
+    # Label the plot
+    ax.tick_params(axis='x', rotation=30) # Rotate date labels
+    xlabel = ax.set_xlabel("Date")
+    ylabel = ax.set_ylabel(var_ylabel_Hosp[colname])
+    title = ax.set_title(var_descript_Hosp[colname])
+
+    # Loop through the FIPS values
+    for FIPS in fips:
+        # Get dataframe
+        this_frame = COVID_IO.getLocalDataFrame(FIPS, dataframe)
+
+        # Determine legend label to use
+        if (FIPS > 100):
+            labelstr = f"{this_frame['county'].values[0]} ({this_frame['state'].values[0]})"
+        else:
+            # This is a state
+            labelstr = this_frame['state'].values[0]
+
+        # retrieve the data (nan values are automatically excluded)
+        dates = np.array(this_frame['dates'].to_list()[0])
+        var = np.array(this_frame[colname].to_list()[0])
+        # If the running average is set to a value greater than zero, compute and plot the
+        # running average instead of raw data
+        if (running_avg > 0):
+            var = running_average(var, running_avg)
+            labelstr = labelstr+f" [{running_avg:d} day running avg]"
+
+        if (connectdots):
+            ls='-'
+        else:
+            ls ='None'
+
+        # Plot the data for this FIPS record
+        ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
+
+    # Adjust y axis to be logarithmic if requested
+    if (ylog):
+        ax.set_yscale('log')
+
+    # Add legend
+    legend = ax.legend(prop={'size': 8})
 
 def ts_barplot(dataframe, colname, fips, ylog=False, running_avg=0, fig=None, ax=None):
     ## Plot up bar graph of a time series of colname data from dataframe and a SINGLE fips
