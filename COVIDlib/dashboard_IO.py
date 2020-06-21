@@ -101,7 +101,7 @@ var_descript_Hosp = {'FIPS' : 'Federal Information Processing Standards State/Co
                 'county' : 'County Name',
                 'state' : 'State Name',
                 'dates' : 'Dates',
-                'allbed_mean': 'Total Number of Beds',
+                'allbed_mean': 'IMHE Predicted Number of Hospital Beds in Use',
                 'ICUbed_mean' : 'IMHE Predicted Number of ICU beds in Use',
                 'InvVen_mean' : 'IMHE Predicted  Number of Ventilators in Use',
                 'deaths_mean' : 'IMHE Predicted Number of Deaths',
@@ -422,6 +422,13 @@ def BuildMobilityVarDict():
 def BuildIMHEHospitalizationVarDict():
     # Load the IMHE Hospitalizations time series variables information into memory
     var_dict = var_descript_Hosp.copy()
+
+    # Delete unneeded keys
+    del var_dict['FIPS']
+    del var_dict['county']
+    del var_dict['state']
+    del var_dict['dates']
+    del var_dict['total_tests_data_type']
     return var_dict
 
 
