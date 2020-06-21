@@ -2,7 +2,7 @@
 ## This is a set of functions for presenting COVID data to the user via a Dashboard
 ##
 
-import math 
+import math
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,6 +17,9 @@ import COVIDlib.data_IO as COVID_IO
 ##
 ## Define variables to be accessed within Dashboard functions
 ##
+
+# Define size of legend text
+legendsize = 10
 
 # Define titles/labels in English for John Hopkins and Mobility Data
 var_descript = {'FIPS' : 'Federal Information Processing Standards State/County Number',
@@ -92,82 +95,64 @@ var_ylabel = {'FIPS' : 'FIPS Number',
                 'transit_stations_Percent' : 'Percent Change (vs Jan 3 - Feb 6, 2020)',
                 'residential_Percent' : 'Percent Change (vs Jan 3 - Feb 6, 2020)',
                 'workplace_Percent' : 'Percent Change (vs Jan 3 - Feb 6, 2020)' }
-#PLot names for hosital Data
+
+# Titles for plots of IMHE Hospital Data 
 var_descript_Hosp = {'FIPS' : 'Federal Information Processing Standards State/County Number',
                 'county' : 'County Name',
                 'state' : 'State Name',
                 'dates' : 'Dates',
-                'allbed_mean': 'Total Number of Beds Mean',
-                'allbed_lower' : 'Total Number of Beds Lower',
-                'allbed_upper' : 'Total Number of Beds Upper',
-                'ICUbed_mean' : 'Total Number of ICU beds Mean',
-                'ICUbed_lower' : 'Total Number of ICU beds Lower',  
-                'ICUbed_upper' : 'Total Number of ICU beds Upper',
-                'InvVen_mean' : 'Total Number of Vents Mean',
-                'InvVen_lower' : 'Total Number of Vents Lower',
-                'InvVen_upper' : 'Total Number of Vents Upper',
-                'deaths_mean' : 'Number of Deaths Mean',
-                'deaths_lower' : 'Number of Deaths Lower',
-                'deaths_upper' : 'Number of Deaths Upper',
-                'admis_mean' : 'Mean hospital admissions by day ',
-                'admis_lower' : 'Lower bound of hospital admissions by day ',
-                'admis_upper' : 'Upper bound of hospital admissions by day',
-                'newICU_mean' : 'Mean number of new people going to the ICU by day',
-                'newICU_lower' : 'Lower bound number of new people going to the ICU by day', 
-                'newICU_upper' : 'Upper bound number of new people going to the ICU by day', 
-                'totdea_mean' : 'Mean cumulative covid deaths ',
-                'totdea_lower' : 'Lower bound of cumulative covid deaths',
-                'totdea_upper': 'Upper bound of cumulative covid deaths ',
-                'deaths_mean_smoothed': 'Mean daily covid deaths (smoothed)',
-                'deaths_lower_smoothed': 'Lower bound of daily covid deaths (smoothed)',
-                'deaths_upper_smoothed' : 'Upper bound of daily covid deaths (smoothed)',
-                'totdea_mean_smoothed' : 'Mean cumulative covid deaths (smoothed)',
-                'totdea_lower_smoothed' : 'Lower bound of cumulative covid deaths (smoothed)',
-                'totdea_upper_smoothed' : 'Upper bound of cumulative covid deaths (smoothed)',
-                'total_tests_data_type' : 'Indicator of whether total tests composite is observed or projected',
-                'total_tests' : 'Total tests', 
-                'confirmed_infections' : 'Observed data only (confirmed infections)',
-                'est_infections_mean' : 'Mean estimated infections',
-                'est_infections_lower': 'Lower bound of estimated infections',
-                'est_infections_upper': 'Upper bound estimated infections'}
+                'allbed_mean': 'Total Number of Beds',
+                'ICUbed_mean' : 'IMHE Predicted Number of ICU beds in Use',
+                'InvVen_mean' : 'IMHE Predicted  Number of Ventilators in Use',
+                'deaths_mean' : 'IMHE Predicted Number of Deaths',
+                'admis_mean' : 'IMHE Predicted New Hospital Admissions per Day',
+                'newICU_mean' : 'IMHE Predicted New ICE Patients per Day',
+                'totdea_mean' : 'IMHE Predicted Cumilative COVID Deaths',
+                'deaths_mean_smoothed': 'IMHE Predicted Daily COVID Deaths (Smoothed)',
+                'totdea_mean_smoothed' : 'IMHE Predicted Cumilative COVID Deaths (Smoothed)',
+                'total_tests_data_type' : 'Test Type',
+                'total_tests' : 'Total Tests',
+                'confirmed_infections' : 'Observed Confirmed COVID Infections',
+                'est_infections_mean' : 'IMHE Predicted COVID Infections' }
+
+# dictionary tracking variables with ranges and those without
+var_ranges_Hosp = {'FIPS' : False,
+                'county' : False,
+                'state' : False,
+                'dates' : False,
+                'allbed_mean': True,
+                'ICUbed_mean' : True,
+                'InvVen_mean' : True,
+                'deaths_mean' : True,
+                'admis_mean' : True,
+                'newICU_mean' : True,
+                'totdea_mean': True,
+                'deaths_mean_smoothed': True,
+                'totdea_mean_smoothed' : True,
+                'total_tests_data_type' : False,
+                'total_tests' : False,
+                'confirmed_infections' : False,
+                'est_infections_mean' : True,}
+
 #Y label for plots in Hospital Data
 var_ylabel_Hosp ={'FIPS' : 'Federal Information Processing Standards State/County Number',
                 'county' : 'County Name',
                 'state' : 'State Name',
                 'dates' : 'Dates',
                 'allbed_mean': 'Number of Beds',
-                'allbed_lower' : 'Number of Beds',
-                'allbed_upper' : ' Number of Beds',
                 'ICUbed_mean' : 'Number of ICU beds',
-                'ICUbed_lower' : 'Number of ICU beds',  
-                'ICUbed_upper' : 'Number of ICU beds',
-                'InvVen_mean' : 'Number of Vents',
-                'InvVen_lower' : 'Number of Vents',
-                'InvVen_upper' : 'Number of Vents',
+                'InvVen_mean' : 'Number of Venitlators',
                 'deaths_mean' : 'Number of Deaths',
-                'deaths_lower' : 'Number of Deaths',
-                'deaths_upper' : 'Number of Deaths',
-                'admis_mean' : 'Number of hospital admissions by day ',
-                'admis_lower' : 'Number of hospital admissions by day ',
-                'admis_upper' : 'Number of hospital admissions by day',
-                'newICU_mean' : 'number of new people going to the ICU by day',
-                'newICU_lower' : 'number of new people going to the ICU by day', 
-                'newICU_upper' : 'number of new people going to the ICU by day', 
-                'totdea_mean' : 'number of cumulative covid deaths ',
-                'totdea_lower' : 'number of cumulative covid deaths',
-                'totdea_upper': 'number of cumulative covid deaths ',
-                'deaths_mean_smoothed': 'number of daily covid deaths (smoothed)',
-                'deaths_lower_smoothed': 'number of daily covid deaths (smoothed)',
-                'deaths_upper_smoothed' : 'number of daily covid deaths (smoothed)',
-                'totdea_mean_smoothed' : 'number of cumulative covid deaths (smoothed)',
-                'totdea_lower_smoothed' : 'number of cumulative covid deaths (smoothed)',
-                'totdea_upper_smoothed' : 'number of cumulative covid deaths (smoothed)',
-                'total_tests_data_type' : 'Indicator of whether total tests composite is observed or projected', # As computed by us
-                'total_tests' : 'Total tests', 
-                'confirmed_infections' : 'Observed data only (confirmed infections)',
-                'est_infections_mean' : 'number estimated infections',
-                'est_infections_lower': 'number of estimated infections',
-                'est_infections_upper': 'number of estimated infections'}
+                'admis_mean' : 'Number of Hospital Admissions',
+                'newICU_mean' : 'Number of New ICU Patients',
+                'totdea_mean' : 'Cumilative COVID Deaths',
+                'deaths_mean_smoothed': 'Daily COVID Deaths',
+                'totdea_mean_smoothed' : 'Cumilative COVID Deaths',
+                'total_tests_data_type' : 'Test Type',
+                'total_tests' : 'Total Tests', 
+                'confirmed_infections' : 'Confirmed COVID Infections',
+                'est_infections_mean' : 'Predicted COVID Infections' }
+
 
 # Define functions to be used below
 def derivative1D(x, y):
@@ -434,6 +419,12 @@ def BuildMobilityVarDict():
     return var_dict
 
 
+def BuildIMHEHospitalizationVarDict():
+    # Load the IMHE Hospitalizations time series variables information into memory
+    var_dict = var_descript_Hosp.copy()
+    return var_dict
+
+
 def cleanAAPLdata(aapl_dataframe):
     # This function takes Apple mobility dataframes and converts the mobility to percent change from baseline
     # to be consistent with Google Mobility dataframes.
@@ -508,7 +499,7 @@ def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Disp
             html_out += f"<b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
         else:
             html_out += f"<b style='color:#ff0000;font-size: {scale_enhance2}'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</b> <b>/</b> <b style='color:rgb(0,128,20);font-size: {scale_enhance2};'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</b> <b>/</b> <b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
-        
+
         # Present last day stats
         html_out += "<b>New Cases [change from previous day]:</b><br/>"
         html_out += f"<li><b>{last_infect_change:,.0f} [{last_infect_change2:+,.0f}] new infections</b> ({last_infect_change_rate:,.2f} [{last_infect_change2_rate:+,.2f}] per 100,000 people).</li>"
@@ -696,17 +687,21 @@ def ts_plot(dataframe, colname, fips, connectdots=False, ylog=False, running_avg
             ls ='None'
 
         # Plot the data for this FIPS record
-        ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
+        p = ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
 
     # Adjust y axis to be logarithmic if requested
     if (ylog):
         ax.set_yscale('log')
 
     # Add legend
-    legend = ax.legend(prop={'size': 8})
-#ts_plot_Hos is literally the same as ts_plot that juan wrote it just has different variables for y label & description
-def ts_plot_Hos(dataframe, colname, fips, connectdots=False, ylog=False, running_avg=0, fig=None, ax=None):
+    legend = ax.legend(prop={'size': legendsize})
+
+
+def ts_plot_Hos(dataframe, colname, fips, connectdots=False, ylog=False, fig=None, ax=None):
     ## Plot up a time series of colname data from dataframe, plotting each fips provided in the list.
+
+    # Started off as a copy of ts_plot that Juan wrote it just has different variables for y label & description
+    # Then removed running averages and added error bars.
 
     ## Start by defaulting to a single figure and plotting it if no fig, ax values
     ## are provided
@@ -742,11 +737,6 @@ def ts_plot_Hos(dataframe, colname, fips, connectdots=False, ylog=False, running
         # retrieve the data (nan values are automatically excluded)
         dates = np.array(this_frame['dates'].to_list()[0])
         var = np.array(this_frame[colname].to_list()[0])
-        # If the running average is set to a value greater than zero, compute and plot the
-        # running average instead of raw data
-        if (running_avg > 0):
-            var = running_average(var, running_avg)
-            labelstr = labelstr+f" [{running_avg:d} day running avg]"
 
         if (connectdots):
             ls='-'
@@ -754,14 +744,30 @@ def ts_plot_Hos(dataframe, colname, fips, connectdots=False, ylog=False, running
             ls ='None'
 
         # Plot the data for this FIPS record
-        ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
+        p = ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
+
+        # Track the color just used so error range matches
+        colour = p[0].get_color()
+
+        # Add error bars (in continuous form) if appropriate
+        #print(f"Checking {colname} for ranges {var_ranges_Hosp[colname]}")
+        if (var_ranges_Hosp[colname]):
+            lower_colname = colname.replace("mean", "lower")
+            upper_colname = colname.replace("mean", "upper")
+            #print(f"Looking at {lower_colname} and {upper_colname}")
+            var_lower = np.array(this_frame[lower_colname].to_list()[0])
+            var_upper = np.array(this_frame[upper_colname].to_list()[0])
+            #print(var_lower)
+            prange = ax.fill_between(dates, var_lower, var_upper, color=colour, alpha=0.2)
+
 
     # Adjust y axis to be logarithmic if requested
     if (ylog):
         ax.set_yscale('log')
 
     # Add legend
-    legend = ax.legend(prop={'size': 8})
+    legend = ax.legend(prop={'size': legendsize})
+
 
 def ts_barplot(dataframe, colname, fips, ylog=False, running_avg=0, fig=None, ax=None):
     ## Plot up bar graph of a time series of colname data from dataframe and a SINGLE fips
