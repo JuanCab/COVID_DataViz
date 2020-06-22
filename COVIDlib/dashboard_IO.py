@@ -101,9 +101,9 @@ var_descript_Hosp = {'FIPS' : 'Federal Information Processing Standards State/Co
                 'county' : 'County Name',
                 'state' : 'State Name',
                 'dates' : 'Dates',
-                'allbed_mean': 'IMHE Predicted Number of Hospital Beds in Use',
-                'ICUbed_mean' : 'IMHE Predicted Number of ICU beds in Use',
-                'InvVen_mean' : 'IMHE Predicted  Number of Ventilators in Use',
+                'allbed_mean': 'IMHE Predicted Number of Hospital Beds Needed',
+                'ICUbed_mean' : 'IMHE Predicted Number of ICU beds Needed',
+                'InvVen_mean' : 'IMHE Predicted  Number of Ventilators Needed',
                 'deaths_mean' : 'IMHE Predicted Number of Deaths',
                 'admis_mean' : 'IMHE Predicted New Hospital Admissions per Day',
                 'newICU_mean' : 'IMHE Predicted New ICE Patients per Day',
@@ -111,8 +111,8 @@ var_descript_Hosp = {'FIPS' : 'Federal Information Processing Standards State/Co
                 'deaths_mean_smoothed': 'IMHE Predicted Daily COVID Deaths (Smoothed)',
                 'totdea_mean_smoothed' : 'IMHE Predicted Cumilative COVID Deaths (Smoothed)',
                 'total_tests_data_type' : 'Test Type',
-                'total_tests' : 'Total Tests',
-                'confirmed_infections' : 'Observed Confirmed COVID Infections',
+                'total_tests' : 'IMHE Predicted Total Tests',
+                # 'confirmed_infections' : 'Observed Confirmed COVID Infections', # Removed as redundant data
                 'est_infections_mean' : 'IMHE Predicted COVID Infections' }
 
 # dictionary tracking variables with ranges and those without
@@ -704,7 +704,7 @@ def ts_plot(dataframe, colname, fips, connectdots=False, ylog=False, running_avg
     legend = ax.legend(prop={'size': legendsize})
 
 
-def ts_plot_Hos(dataframe, colname, fips, connectdots=False, ylog=False, fig=None, ax=None):
+def ts_plot_Hos(dataframe, colname, fips, sum_dataframe=None, connectdots=False, ylog=False, fig=None, ax=None):
     ## Plot up a time series of colname data from dataframe, plotting each fips provided in the list.
 
     # Started off as a copy of ts_plot that Juan wrote it just has different variables for y label & description
@@ -734,12 +734,15 @@ def ts_plot_Hos(dataframe, colname, fips, connectdots=False, ylog=False, fig=Non
         # Get dataframe
         this_frame = COVID_IO.getLocalDataFrame(FIPS, dataframe)
 
-        # Determine legend label to use
-        if (FIPS > 100):
-            labelstr = f"{this_frame['county'].values[0]} ({this_frame['state'].values[0]})"
-        else:
-            # This is a state
-            labelstr = this_frame['state'].values[0]
+        # Determine legend label to use (add bed numbers if appropriate and summary_df available)
+        labelstr = this_frame['state'].values[0]
+        if ((colname == 'allbed_mean')|(colname == 'ICUbed_mean')):
+            if sum_dataframe is not None:
+                this_summary_frame = COVID_IO.getLocalDataFrame(FIPS, sum_dataframe)
+                if (colname == 'allbed_mean'):
+                    labelstr = labelstr + f" ({int(this_summary_frame['all_bed_capacity'].to_list()[0])} total beds)"
+                else: # ICU beds
+                    labelstr = labelstr + f" ({int(this_summary_frame['icu_bed_capacity'].to_list()[0])} total ICU beds)"
 
         # retrieve the data (nan values are automatically excluded)
         dates = np.array(this_frame['dates'].to_list()[0])
