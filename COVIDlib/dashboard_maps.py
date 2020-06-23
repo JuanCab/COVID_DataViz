@@ -159,6 +159,7 @@ def scrub(datadict):
     else:
         return datadict
 
+
 def set_cm_limits(datadict):
     # Determine maximum and minimum values for the color map, starting at enclosing 90% of the data
     # but working out as needed.
@@ -325,6 +326,7 @@ def update_us_statesmap(dataframe, colname, thismap, thislegend, thisoverlay):
 
     # Update column name used by state overlay to look up values
     this_state_colname = colname
+    thisoverlay.value = "Hover over States for Details"
     state_overlay = thisoverlay
     state_layer_update.on_hover(update_state_overlay)
 
@@ -448,6 +450,7 @@ def update_us_cntymap(dataframe, colname, thismap, thislegend, thisoverlay):
 
     # Update column name used by state overlay to look up values
     this_cnty_colname = colname
+    thisoverlay.value = "Hover over Location for Details"
     cnty_overlay = thisoverlay
     cnty_layer_update.on_hover(update_cnty_overlay)
 

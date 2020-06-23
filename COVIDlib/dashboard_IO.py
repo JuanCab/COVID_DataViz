@@ -401,13 +401,13 @@ def BuildJHVarDict():
         'dDeathsRate': {'descript': 'New COVID Deaths (#/day per 100,000 people)', 'valdescript': 'New COVID Deaths/Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
         'd2Deaths': {'descript': 'Change in New COVID Deaths', 'valdescript': 'New COVID Deaths/Day vs. Previous Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
         'd2DeathsRate': {'descript': 'Change in New COVID Deaths (per 100,000 people)', 'valdescript': 'New COVID Deaths/Day vs. Previous Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
-        'Recovered': {'descript': 'Total Confirmed and Probable COVID Recoveries', 'valdescript': 'COVID Recoveries', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
-        'Active': {'descript': 'Total Confirmed and Probable Active COVID Cases', 'valdescript': 'Active COVID Cases', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
-        'People_Tested': {'descript': 'Total People tested for COVID', 'valdescript': 'People tested for COVID', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
-        'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons)', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
-        'Mortality_Rate': {'descript': 'Mortality Rate', 'valdescript': '% Deaths per Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
-        'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID', 'valdescript': 'People Hospitalized', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
-        'Hospitalization_Rate': {'descript': 'Hospitalization Rate (per 100,000 persons)', 'valdescript': 'People Hospitalized (per 100,000)', 'format' : '.2f', 'stateonly': True, 'df': 'JH'}
+        'Recovered': {'descript': 'Total Confirmed and Probable COVID Recoveries [State only]', 'valdescript': 'COVID Recoveries', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
+        'Active': {'descript': 'Total Confirmed and Probable Active COVID Cases [State only]', 'valdescript': 'Active COVID Cases', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
+        'People_Tested': {'descript': 'Total People tested for COVID [State only]', 'valdescript': 'People tested for COVID', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
+        'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons) [State only]', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'Mortality_Rate': {'descript': 'Mortality Rate [State only]', 'valdescript': '% Deaths per Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
+        'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID [State only]', 'valdescript': 'People Hospitalized', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
+        'Hospitalization_Rate': {'descript': 'Hospitalization Rate (per 100,000 persons) [State only]', 'valdescript': 'People Hospitalized (per 100,000)', 'format' : '.2f', 'stateonly': True, 'df': 'JH'}
         }
     return var_dict
 
