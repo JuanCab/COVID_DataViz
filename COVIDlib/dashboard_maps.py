@@ -85,18 +85,22 @@ def get_cnty_dict(dataframe, colname):
 
 
 def update_state_overlay(feature, **kwargs):
-    global this_state_colname, state_data_dict, overlay, JHVarDict, state_overlay
+    global this_state_colname, state_data_dict, JHVarDict, state_overlay
 
     # Get data value for this state and set the overlay to indicate it
-    val = state_data_dict[feature['id']]
-    units = JHVarDict[this_state_colname]['valdescript']
     state = feature['properties']['name']
+    units = JHVarDict[this_state_colname]['valdescript']
+    form = JHVarDict[this_state_colname]['format']
+    val = state_data_dict[feature['id']]
+    if (form == 'd'):
+        val = int(val)
 
-    state_overlay.value = f"<div style='text-align: center;'><b>{state}</b><br/>{val:.2f} {units}</div>"
-
+    struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
+    state_overlay.value = struct.format(state, val, units)
 
 def build_us_statesmap(dataframe, colname):
     global geojson_states, this_state_colname, state_overlay, state_data_dict
+    global state_layer, state_legend, state_control
 
     # This function builds a US Choropleth Map (but doesn't display it) for the state-level
     # data provided.
@@ -132,7 +136,7 @@ def build_us_statesmap(dataframe, colname):
     states_map = lf.Map(center = center, zoom = zoom)
 
     # Draw a functional states layer
-    states_layer = lf.Choropleth(geo_data=geojson_states,
+    state_layer = lf.Choropleth(geo_data=geojson_states,
                                  choro_data=state_data_dict,
                                  key_on='id',
                                  # Below here is some formatting/coloring from the documentation
@@ -142,24 +146,25 @@ def build_us_statesmap(dataframe, colname):
                                  border_color='black',
                                  hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
                                  style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
-    states_map.add_layer(states_layer)
+    states_map.add_layer(state_layer)
 
     # Display a legend
-    legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
-    states_map.add_control(legend)
+    state_legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
+    states_map.add_control(state_legend)
 
     # Display data in overlay
     this_state_colname = colname
     state_overlay = widgets.HTML("Hover over States for Details")
     state_control = lf.WidgetControl(widget=state_overlay, position='topright')
     states_map.add_control(state_control)
-    states_layer.on_hover(update_state_overlay)
+    state_layer.on_hover(update_state_overlay)
 
     return(states_map)
 
 
 def update_us_statesmap(dataframe, colname, statemap):
-    global geojson_states, this_state_colname, state_data_dict
+    global geojson_states, this_state_colname, state_data_dict, state_legend
+    global state_control, state_layer
 
     # This function updates an existing US State-level Choropleth map
 
@@ -178,29 +183,28 @@ def update_us_statesmap(dataframe, colname, statemap):
         valstr = f"{val:,.1f}"
         legendDict[valstr] = cmap(val)
 
-    # Remove old legent and add new legend
-    legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
-    statemap.clear_controls()
-    statemap.add_control(legend)
+    # Assign updated legend dictionary
+    state_legend.legends = legendDict
 
     # Draw a functional states layer
-    states_layer = lf.Choropleth(geo_data=geojson_states,
-                                 choro_data=state_data_dict,
-                                 key_on='id',
-                                 # Below here is some formatting/coloring from the documentation
-                                 colormap=cmap,
-                                 value_min=minval,
-                                 value_max=maxval,
-                                 border_color='black',
-                                 hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                 style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
+    state_layer_update = lf.Choropleth(geo_data=geojson_states,
+                                       choro_data=state_data_dict,
+                                       key_on='id',
+                                       # Below here is some formatting/coloring from the documentation
+                                       colormap=cmap,
+                                       value_min=minval,
+                                       value_max=maxval,
+                                       border_color='black',
+                                       hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
+                                       style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
 
-    # Clear existing layers and add new one
-    statemap.clear_layers()
-    statemap.add_layer(states_layer)
+    # Replace existing Choropleth layer with new layer
+    statemap.substitute_layer(state_layer, state_layer_update)
+    state_layer = state_layer_update
 
     # Update column name used by state overlay to look up values
     this_state_colname = colname
+    state_layer_update.on_hover(update_state_overlay)
 
     return
 
@@ -209,16 +213,20 @@ def update_cnty_overlay(feature, **kwargs):
     global this_cnty_colname, county_data_dict, loc_dict, JHVarDict, cnty_overlay
 
     # Get data value for this county and set the overlay to indicate it
-    val = county_data_dict[feature['id']]
-    units = JHVarDict[this_cnty_colname]['valdescript']
     FIPS = int(feature['id'])
     location = loc_dict[FIPS]
+    units = JHVarDict[this_cnty_colname]['valdescript']
+    form = JHVarDict[this_cnty_colname]['format']
+    val = county_data_dict[feature['id']]
+    if (form == 'd'):
+        val = int(val)
 
-    cnty_overlay.value = f"<div style='text-align: center;'><b>{location}</b><br/>{val:.2f} {units}</div>"
-
+    struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
+    cnty_overlay.value = struct.format(location, val, units)
 
 def build_us_cntymap(dataframe, colname):
-    global geojson_cnty, this_cnty_colname, cnty_overlay, county_data_dict, loc_dict, cnty_layer, legend, cnty_control
+    global geojson_cnty, this_cnty_colname, cnty_overlay, county_data_dict, loc_dict
+    global cnty_layer, cnty_legend, cnty_control
 
     # This function builds a US Choropleth Map (but doesn't display it) for the county-level
     # data provided.
@@ -274,8 +282,8 @@ def build_us_cntymap(dataframe, colname):
     cnty_map.add_layer(cnty_layer)
 
     # Display a legend
-    legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
-    cnty_map.add_control(legend)
+    cnty_legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
+    cnty_map.add_control(cnty_legend)
 
     # Display data in overlay
     this_cnty_colname = colname
@@ -288,7 +296,8 @@ def build_us_cntymap(dataframe, colname):
 
 
 def update_us_cntymap(dataframe, colname, cntymap):
-    global geojson_cnty, this_cnty_colname, county_data_dict, legend
+    global geojson_cnty, this_cnty_colname, county_data_dict, cnty_legend
+    global cnty_control, cnty_layer
 
     # This function updates an existing US County-level Choropleth map
 
@@ -308,41 +317,27 @@ def update_us_cntymap(dataframe, colname, cntymap):
         valstr = f"{val:,.1f}"
         legendDict[valstr] = cmap(val)
 
-    # Remove old legent and add new legend
-#     legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
-#     cntymap.clear_controls()
-#     cntymap.add_control(legend)
-    legend.legends = legendDict # <-- Assigns the updated legend dictionary rather than having to entirely remove all controls
-    
+    # Assign updated legend dictionary
+    cnty_legend.legends = legendDict
 
     # Draw a functional counties layer
     cnty_layer_update = lf.Choropleth(geo_data=geojson_cnty,
-                                 choro_data=county_data_dict,
-                                 key_on='id',
-                                 # Below here is some formatting/coloring from the documentation
-                                 colormap=cmap,
-                                 value_min=minval,
-                                 value_max=maxval,
-                                 border_color='black',
-                                 hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                 style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
+                                      choro_data=county_data_dict,
+                                      key_on='id',
+                                      # Below here is some formatting/coloring from the documentation
+                                      colormap=cmap,
+                                      value_min=minval,
+                                      value_max=maxval,
+                                      border_color='black',
+                                      hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
+                                      style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
 
-    # Clear existing layers and add new one
-#     cntymap.clear_layers()
-#     cntymap.add_layer(cnty_layer)
-    cntymap.substitute_layer(cnty_layer, cnty_layer_update) # <-- Substitutes a new value for the layer rather than deleting it
-    
+    # Replace existing Choropleth layer with new layer
+    cntymap.substitute_layer(cnty_layer, cnty_layer_update)
+    cnty_layer = cnty_layer_update
 
     # Update column name used by state overlay to look up values
     this_cnty_colname = colname
-        
-
-#     cntymap.remove_control(cnty_control)
-    
-#     this_cnty_colname = colname
-#     cnty_overlay = widgets.HTML("Hover over Location for Details")
-#     cnty_control = lf.WidgetControl(widget=cnty_overlay, position='topright')
-#     cntymap.add_control(cnty_control)
-#     cnty_layer.on_hover(update_cnty_overlay)
+    cnty_layer_update.on_hover(update_cnty_overlay)
 
     return
