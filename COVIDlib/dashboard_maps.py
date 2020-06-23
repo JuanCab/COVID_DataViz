@@ -22,6 +22,47 @@ import COVIDlib.dashboard_IO as COVID_Dash
 # Load variable descriptions
 JHVarDict = COVID_Dash.BuildJHVarDict()
 
+# Example of contents of state GEOJSON data structure (WHICH DOES WORK)
+# {'type': 'FeatureCollection',
+#  'features': [{'type': 'Feature',
+#    'id': 'AL',
+#    'properties': {'name': 'Alabama'},
+#    'geometry': {'type': 'Polygon',
+#     'coordinates': [[[-87.359296, 35.00118],
+#       [-85.606675, 34.984749],
+#       [-85.431413, 34.124869],
+#       [-85.184951, 32.859696],
+#       [-85.069935, 32.580372],
+#       [-84.960397, 32.421541],
+
+# Example of the 2018 US Census Bureau derived county boundaries (WHICH DOESN'T WORK WITHOUT MODIFICATION)
+# {'type': 'FeatureCollection',
+#  'name': 'cb_2018_us_county_20m',
+#  'crs': {'type': 'name', 'properties': {'name': 'urn:ogc:def:crs:EPSG::4269'}},
+#  'features': [{'type': 'Feature',
+#    'properties': {'STATEFP': '37',
+#     'COUNTYFP': '017',
+#     'COUNTYNS': '01026336',
+#     'AFFGEOID': '0500000US37017',
+#     'GEOID': '37017',
+#     'NAME': 'Bladen',
+#     'LSAD': '06',
+#     'ALAND': 2265887723,
+#     'AWATER': 33010866},
+#    'geometry': {'type': 'Polygon',
+#     'coordinates': [[[-78.901998, 34.835268],
+#       [-78.799597, 34.850857],
+#       [-78.516123, 34.845919],
+#       [-78.494705, 34.856182],
+#       [-78.390748, 34.749463],
+#       [-78.391978, 34.741265],
+#       [-78.374363, 34.700722],
+#       [-78.254441, 34.553595],
+#       [-78.255468, 34.508614],
+
+# If we just loop through the list of dictionaries in 'features' and create an 'id' entry equal to the
+# 'GEOID' of that entry's 'properties' we can get plotting to work.  This is now handled by load_county_geojson().
+
 def load_state_geojson(filename = './ipyleaflet_json/us-states.json'):
     # Define this function for loading the state boundaries JSON (grabbed from the GitHub repo for iPyLeaflet)
     with open(filename, 'r') as f:
