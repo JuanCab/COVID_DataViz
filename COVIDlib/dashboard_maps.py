@@ -63,6 +63,11 @@ JHVarDict = COVID_Dash.BuildJHVarDict()
 # If we just loop through the list of dictionaries in 'features' and create an 'id' entry equal to the
 # 'GEOID' of that entry's 'properties' we can get plotting to work.  This is now handled by load_county_geojson().
 
+##
+## This first block of code is basically are geared around reformatting data or listing the
+## variables we will consider plotting.
+##
+
 def load_state_geojson(filename = './ipyleaflet_json/us-states.json'):
     # Define this function for loading the state boundaries JSON (grabbed from the GitHub repo for iPyLeaflet)
     with open(filename, 'r') as f:
@@ -125,13 +130,47 @@ def get_cnty_dict(dataframe, colname):
     return format_cnty_dict(county_data[colname])
 
 
+def BuildMapVarDict():
+    # Construct this dictionary from the John Hopkins and Mobility Data dictionaries
+    JHDict = COVID_Dash.BuildJHVarDict()
+    MobileDict = COVID_Dash.BuildMobilityVarDict()
+    var_dict = JHDict.copy()
+    var_dict.update(MobileDict)  
+
+    return var_dict
+
+
+##
+## The Code below are the routines that really do the map making and control
+##
+
+
+def set_cm_limits(datadict):
+    # Determine maximum and minimum values for the color map, starting at enclosing 90% of the data
+    # but working out as needed.
+    vals=np.array(list(datadict.values()))
+    minval = np.percentile(vals, 5) # Min at 5th Percentile
+    maxval = np.percentile(vals, 95) # Max out at 95th percentile
+    # Move out boundaries if needed
+    if (minval == maxval):
+        # Move out the boundaries
+        minval = np.percentile(vals, 1) # Min at 1st Percentile (avoid wierd outliers like corrections to death counts)
+        maxval = np.percentile(vals, 99) # Max out at 99th Percentile (avoids returning zero for daily death counts for counties)
+        if (minval == maxval):
+            # Move out the boundaries if still not far enough
+            minval = np.percentile(vals, 0) # Min
+            maxval = np.percentile(vals, 100) # Max
+
+    return (minval, maxval)
+
+
 def update_state_overlay(feature, **kwargs):
-    global this_state_colname, state_data_dict, JHVarDict, state_overlay
+    global this_state_colname, state_data_dict, MapsVDict, state_overlay
 
     # Get data value for this state and set the overlay to indicate it
     state = feature['properties']['name']
-    units = JHVarDict[this_state_colname]['valdescript']
-    form = JHVarDict[this_state_colname]['format']
+    units = MapsVDict[this_state_colname]['valdescript']
+    form = MapsVDict[this_state_colname]['format']
     val = state_data_dict[feature['id']]
     if (form == 'd'):
         val = int(val)
@@ -139,12 +178,19 @@ def update_state_overlay(feature, **kwargs):
     struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
     state_overlay.value = struct.format(state, val, units)
 
+
 def build_us_statesmap(dataframe, colname):
     global geojson_states, this_state_colname, state_overlay, state_data_dict
-    global state_layer, state_legend, state_control
+    global state_layer, state_legend, state_control, MapsVDict
 
     # This function builds a US Choropleth Map (but doesn't display it) for the state-level
     # data provided.
+
+    # Load Maps Variable Descriptions for use in overlays if it doesn't exist
+    try:
+        MapsVDict
+    except NameError:
+        MapsVDict = BuildMapVarDict()
 
     # Load state boundary data
     geojson_states = load_state_geojson()
@@ -160,8 +206,8 @@ def build_us_statesmap(dataframe, colname):
 
     # Determine range of values for colormap, then define colormap (need to also pass
     # max/min values to Choropleth builder or they are ignored)
-    minval = state_data_dict[min(state_data_dict, key=state_data_dict.get)]
-    maxval = state_data_dict[max(state_data_dict, key=state_data_dict.get)]
+    state_data_dict = get_state_dict(dataframe, colname)
+    (minval, maxval) = set_cm_limits(state_data_dict)
     cmap=linear.YlOrRd_04.scale(minval, maxval)
 
     # Break range into steps to build colormap legend dictionary
@@ -210,9 +256,7 @@ def update_us_statesmap(dataframe, colname, statemap):
     # This function updates an existing US State-level Choropleth map
 
     # Load the new data and determine the new colormap limits
-    state_data_dict = get_state_dict(dataframe, colname)
-    minval = state_data_dict[min(state_data_dict, key=state_data_dict.get)]
-    maxval = state_data_dict[max(state_data_dict, key=state_data_dict.get)]
+    (minval, maxval) = set_cm_limits(state_data_dict)
     cmap=linear.YlOrRd_04.scale(minval, maxval)
 
     # Break range into steps to build colormap legend dictionary
@@ -251,13 +295,13 @@ def update_us_statesmap(dataframe, colname, statemap):
 
 
 def update_cnty_overlay(feature, **kwargs):
-    global this_cnty_colname, county_data_dict, loc_dict, JHVarDict, cnty_overlay
+    global this_cnty_colname, county_data_dict, loc_dict, MapsVDict, cnty_overlay
 
     # Get data value for this county and set the overlay to indicate it
     FIPS = int(feature['id'])
     location = loc_dict[FIPS]
-    units = JHVarDict[this_cnty_colname]['valdescript']
-    form = JHVarDict[this_cnty_colname]['format']
+    units = MapsVDict[this_cnty_colname]['valdescript']
+    form = MapsVDict[this_cnty_colname]['format']
     val = county_data_dict[feature['id']]
     if (form == 'd'):
         val = int(val)
@@ -265,12 +309,19 @@ def update_cnty_overlay(feature, **kwargs):
     struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
     cnty_overlay.value = struct.format(location, val, units)
 
+
 def build_us_cntymap(dataframe, colname):
     global geojson_cnty, this_cnty_colname, cnty_overlay, county_data_dict, loc_dict
-    global cnty_layer, cnty_legend, cnty_control
+    global cnty_layer, cnty_legend, cnty_control, MapsVDict
 
     # This function builds a US Choropleth Map (but doesn't display it) for the county-level
     # data provided.
+
+    # Load Maps Variable Descriptions for use in overlays if it doesn't exist
+    try:
+        MapsVDict
+    except NameError:
+        MapsVDict = BuildMapVarDict()
 
     # Construct dictionary of placenames by FIPS number for use by overlay
     loc_df = dataframe[['FIPS', 'county', 'state']].set_index('FIPS').copy()
@@ -292,9 +343,7 @@ def build_us_cntymap(dataframe, colname):
 
     # Determine range of values for colormap, then define colormap (need to also pass
     # max/min values to Choropleth builder or they are ignored)
-    vals=np.array(list(county_data_dict.values()))
-    minval = np.percentile(vals, 5) # Min at 5th Percentile
-    maxval = np.percentile(vals, 95) # Max out at 95th percentile
+    (minval, maxval) = set_cm_limits(county_data_dict)
     cmap=linear.YlOrRd_04.scale(minval, maxval)
 
     # Break range into steps to build colormap legend dictionary
@@ -344,9 +393,7 @@ def update_us_cntymap(dataframe, colname, cntymap):
 
     # Load the new data and determine the new colormap limits
     county_data_dict = get_cnty_dict(dataframe, colname)
-    vals=np.array(list(county_data_dict.values()))
-    minval = np.percentile(vals, 5) # Min at 5th Percentile
-    maxval = np.percentile(vals, 95) # Max out at 95th percentile
+    (minval, maxval) = set_cm_limits(county_data_dict)
     cmap=linear.YlOrRd_04.scale(minval, maxval)
 
     # Break range into steps to build colormap legend dictionary

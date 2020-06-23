@@ -380,41 +380,51 @@ def BuildCountiesList(dataframe, AllStates):
 
 
 def BuildJHVarDict():
-    # Load the John Hopkins time series variables information into memory
+    # Load the John Hopkins time series variables information dictionary into memory
+    #  descript is dropmenuworthy description of variable
+    #  valdescript is used when printing actual values after the variable
+    #  format is the formatting string to use when displaying variable
+    #  stateonly notes if the variable is avaiable only for states
+    #  df is an indicator of which dataframe to pull the data from ('JH' for John Hopkins)
     var_dict = {
-        'Confirmed': {'descript': 'Total Confirmed COVID Infections', 'valdescript': 'COVID Infections', 'format' : 'd', 'stateonly': False},
-        'ConfirmedRate': {'descript': 'Total Confirmed COVID Infections (per 100,000 persons)', 'valdescript': 'COVID Infections (per 100,000)', 'format' : '.2f', 'stateonly': False},
-        'dConfirmed': {'descript': 'New COVID Infections (#/day)', 'valdescript': 'New COVID Infections/Day', 'format' : 'd', 'stateonly': False},
-        'dConfirmedRate': {'descript': 'New COVID Infections (#/day per 100,000 people)', 'valdescript': 'New COVID Infections/Day (per 100,000)', 'format' : '.2f', 'stateonly': False},
-        'd2Confirmed': {'descript': 'Change in New COVID Infections', 'valdescript': 'New COVID Infections/Day vs. Previous Day', 'format' : '+d', 'stateonly': False},
-        'd2ConfirmedRate': {'descript': 'Change in New COVID Infections (per 100,000 people)', 'valdescript': 'New COVID Infections/Day vs. Previous Day (per 100,000)', 'format' : '+.2f', 'stateonly': False},
-        'Deaths': {'descript': 'Total Confirmed and Probable COVID Deaths', 'valdescript': 'COVID Deaths', 'format' : 'd', 'stateonly': False},
-        'DeathRate': {'descript': 'Total Confirmed COVID Deaths (per 100,000 people)', 'valdescript': 'COVID Deaths (per 100,000)', 'format' : '.2f', 'stateonly': False},
-        'dDeaths': {'descript': 'New COVID Deaths (#/day)', 'valdescript': 'New COVID Deaths/Day', 'format' : 'd', 'stateonly': False},
-        'dDeathsRate': {'descript': 'New COVID Deaths (#/day per 100,000 people)', 'valdescript': 'New COVID Deaths/Day (per 100,000)', 'format' : '.2f', 'stateonly': False},
-        'd2Deaths': {'descript': 'Change in New COVID Deaths', 'valdescript': 'New COVID Deaths/Day vs. Previous Day', 'format' : 'd', 'stateonly': False},
-        'd2DeathsRate': {'descript': 'Change in New COVID Deaths (per 100,000 people)', 'valdescript': 'New COVID Deaths/Day vs. Previous Day (per 100,000)', 'format' : '.2f', 'stateonly': False},
-        'Recovered': {'descript': 'Total Confirmed and Probable COVID Recoveries', 'valdescript': 'COVID Recoveries', 'format' : 'd', 'stateonly': True},
-        'Active': {'descript': 'Tota; Confirmed and Probable Active COVID Cases', 'valdescript': 'Active COVID Cases', 'format' : 'd', 'stateonly': True},
-        'People_Tested': {'descript': 'Total People tested for COVID', 'valdescript': 'People tested for COVID', 'format' : 'd', 'stateonly': True},
-        'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons)', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True},
-        'Mortality_Rate': {'descript': 'Mortality Rate', 'valdescript': '% Deaths per Infection', 'format' : '.1f', 'stateonly': True},
-        'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID', 'valdescript': 'People Hospitalized', 'format' : 'd', 'stateonly': True},
-        'Hospitalization_Rate': {'descript': 'Hospitalization Rate (per 100,000 persons)', 'valdescript': 'People Hospitalized (per 100,000)', 'format' : '.2f', 'stateonly': True},
+        'Confirmed': {'descript': 'Total Confirmed COVID Infections', 'valdescript': 'COVID Infections', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'ConfirmedRate': {'descript': 'Total Confirmed COVID Infections (per 100,000 persons)', 'valdescript': 'COVID Infections (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
+        'dConfirmed': {'descript': 'New COVID Infections (#/day)', 'valdescript': 'New COVID Infections/Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'dConfirmedRate': {'descript': 'New COVID Infections (#/day per 100,000 people)', 'valdescript': 'New COVID Infections/Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
+        'd2Confirmed': {'descript': 'Change in New COVID Infections', 'valdescript': 'New COVID Infections/Day vs. Previous Day', 'format' : '+d', 'stateonly': False, 'df': 'JH'},
+        'd2ConfirmedRate': {'descript': 'Change in New COVID Infections (per 100,000 people)', 'valdescript': 'New COVID Infections/Day vs. Previous Day (per 100,000)', 'format' : '+.2f', 'stateonly': False, 'df': 'JH'},
+        'Deaths': {'descript': 'Total Confirmed and Probable COVID Deaths', 'valdescript': 'COVID Deaths', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'DeathRate': {'descript': 'Total Confirmed COVID Deaths (per 100,000 people)', 'valdescript': 'COVID Deaths (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
+        'dDeaths': {'descript': 'New COVID Deaths (#/day)', 'valdescript': 'New COVID Deaths/Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'dDeathsRate': {'descript': 'New COVID Deaths (#/day per 100,000 people)', 'valdescript': 'New COVID Deaths/Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
+        'd2Deaths': {'descript': 'Change in New COVID Deaths', 'valdescript': 'New COVID Deaths/Day vs. Previous Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'd2DeathsRate': {'descript': 'Change in New COVID Deaths (per 100,000 people)', 'valdescript': 'New COVID Deaths/Day vs. Previous Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
+        'Recovered': {'descript': 'Total Confirmed and Probable COVID Recoveries', 'valdescript': 'COVID Recoveries', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'Active': {'descript': 'Tota; Confirmed and Probable Active COVID Cases', 'valdescript': 'Active COVID Cases', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'People_Tested': {'descript': 'Total People tested for COVID', 'valdescript': 'People tested for COVID', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons)', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'Mortality_Rate': {'descript': 'Mortality Rate', 'valdescript': '% Deaths per Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
+        'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID', 'valdescript': 'People Hospitalized', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'Hospitalization_Rate': {'descript': 'Hospitalization Rate (per 100,000 persons)', 'valdescript': 'People Hospitalized (per 100,000)', 'format' : '.2f', 'stateonly': True, 'df': 'JH'}
         }
     return var_dict
 
 
 def BuildMobilityVarDict():
-    # Load the Mobility time series variables information into memory
+    # Load the Mobility time series variables information dictionary into memory
+    #  descript is dropmenuworthy description of variable
+    #  valdescript is used when printing actual values after the variable
+    #  format is the formatting string to use when displaying variable
+    #  stateonly notes if the variable is avaiable only for states
+    #  df is an indicator of which dataframe to pull the data from ('apple' for Apple Mobility, 'google' for Google Mobility)
     var_dict = {
-        'driving_mobility_Percent': {'descript': 'Apple Maps Directions Requests', 'apple': True},
-        'retail_recreation_Percent': {'descript': 'Google-tracked Retail & Recreation Activity', 'apple': False},
-        'grocery_pharm_Percent': {'descript': 'Google-tracked Grocery & Pharmacy Activity', 'apple': False},
-        'parks_Percent': {'descript': 'Google-tracked Park Activity', 'apple': False},
-        'transit_stations_Percent': {'descript': 'Google-tracked Transit Station Activity', 'apple': False},
-        'residential_Percent': {'descript': 'Google-tracked Residential Activity', 'apple': False},
-        'workplace_Percent': {'descript': 'Google-tracked Workplace Activity', 'apple': False}
+        'driving_mobility_Percent': {'descript': 'Apple Maps Directions Requests', 'valdescript': '% Directions Requests', 'format': '.1f', 'stateonly': False, 'df': 'apple'},
+        'retail_recreation_Percent': {'descript': 'Google-tracked Retail & Recreation Activity', 'valdescript': '% Retail & Recreation Activity', 'format': '.1f', 'stateonly': False, 'df': 'google'},
+        'grocery_pharm_Percent': {'descript': 'Google-tracked Grocery & Pharmacy Activity', 'valdescript': '% Grocery & Pharmacy Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'parks_Percent': {'descript': 'Google-tracked Park Activity', 'valdescript': '% Park Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'transit_stations_Percent': {'descript': 'Google-tracked Transit Station Activity', 'valdescript': '% Transit Station Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'residential_Percent': {'descript': 'Google-tracked Residential Activity', 'valdescript': '% Residential Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'workplace_Percent': {'descript': 'Google-tracked Workplace Activity', 'valdescript': '% Workplace Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'}
         }
     return var_dict
 
