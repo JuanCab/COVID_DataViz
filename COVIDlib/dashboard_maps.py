@@ -135,7 +135,7 @@ def BuildMapVarDict():
     JHDict = COVID_Dash.BuildJHVarDict()
     MobileDict = COVID_Dash.BuildMobilityVarDict()
     var_dict = JHDict.copy()
-    var_dict.update(MobileDict)  
+    var_dict.update(MobileDict)
 
     return var_dict
 
@@ -145,21 +145,35 @@ def BuildMapVarDict():
 ##
 
 
+def scrub(datadict):
+    # Purge nan values from dictionary, replacing them with minmaximumimum value for plotting purposes
+    if (any(np.isnan(val) for val in datadict.values())):
+        maxval = np.nanmax(np.array(list(datadict.values())))
+
+        # Loop throught and purge the nan values
+        clean_dict = datadict.copy()
+        for k in datadict:
+            if np.isnan(datadict[k]):
+                clean_dict[k] = maxval
+        return clean_dict
+    else:
+        return datadict
+
 def set_cm_limits(datadict):
     # Determine maximum and minimum values for the color map, starting at enclosing 90% of the data
     # but working out as needed.
     vals=np.array(list(datadict.values()))
-    minval = np.percentile(vals, 5) # Min at 5th Percentile
-    maxval = np.percentile(vals, 95) # Max out at 95th percentile
+    minval = np.nanpercentile(vals, 5) # Min at 5th Percentile (ignoring nan values)
+    maxval = np.nanpercentile(vals, 95) # Max out at 95th percentile
     # Move out boundaries if needed
     if (minval == maxval):
         # Move out the boundaries
-        minval = np.percentile(vals, 1) # Min at 1st Percentile (avoid wierd outliers like corrections to death counts)
-        maxval = np.percentile(vals, 99) # Max out at 99th Percentile (avoids returning zero for daily death counts for counties)
+        minval = np.nanpercentile(vals, 1) # Min at 1st Percentile (avoid wierd outliers like corrections to death counts)
+        maxval = np.nanpercentile(vals, 99) # Max out at 99th Percentile (avoids returning zero for daily death counts for counties)
         if (minval == maxval):
             # Move out the boundaries if still not far enough
-            minval = np.percentile(vals, 0) # Min
-            maxval = np.percentile(vals, 100) # Max
+            minval = np.nanpercentile(vals, 0) # Min
+            maxval = np.nanpercentile(vals, 100) # Max
 
     return (minval, maxval)
 
@@ -172,19 +186,20 @@ def update_state_overlay(feature, **kwargs):
     units = MapsVDict[this_state_colname]['valdescript']
     form = MapsVDict[this_state_colname]['format']
     val = state_data_dict[feature['id']]
-    if (form == 'd'):
-        val = int(val)
+    if not np.isnan(val):
+        if ('d' in form):
+            val = int(val)
+        struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
+        state_overlay.value = struct.format(state, val, units)
+    else: # Handle nan values
+        struct = "<div style='text-align: center;'><b>{0}</b><br/><em>(unknown)</em> {1}</div>"
+        state_overlay.value = struct.format(state, units)
 
-    struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
-    state_overlay.value = struct.format(state, val, units)
 
-
-def build_us_statesmap(dataframe, colname):
-    global geojson_states, this_state_colname, state_overlay, state_data_dict
-    global state_layer, state_legend, state_control, MapsVDict
-
-    # This function builds a US Choropleth Map (but doesn't display it) for the state-level
-    # data provided.
+def build_us_genericmap():
+    # This function is called by either the county/state map building functions and
+    # loads all the data needed for either as global variables
+    global MapsVDict, geojson_states, geojson_cnty, mapcenter, mapzoom
 
     # Load Maps Variable Descriptions for use in overlays if it doesn't exist
     try:
@@ -192,25 +207,28 @@ def build_us_statesmap(dataframe, colname):
     except NameError:
         MapsVDict = BuildMapVarDict()
 
-    # Load state boundary data
+    # Load county/state boundary data geojsons
+    geojson_cnty = load_county_geojson()
     geojson_states = load_state_geojson()
 
-    # ipyleaflet requires a dictionary for the choro_data field/the variable to be visualized,
-    # so convert the Pandas data series into the appropriate dictionary setting keys to postal
-    # codes used in geojson_states
-    state_data_dict = get_state_dict(dataframe, colname)
-
     # Define map center and zoom
-    center = [38.0, -93.0]
-    zoom = 3.9
+    mapcenter = [38.0, -93.0]
+    mapzoom = 3.9
 
-    # Determine range of values for colormap, then define colormap (need to also pass
-    # max/min values to Choropleth builder or they are ignored)
-    state_data_dict = get_state_dict(dataframe, colname)
-    (minval, maxval) = set_cm_limits(state_data_dict)
-    cmap=linear.YlOrRd_04.scale(minval, maxval)
+    return
 
-    # Break range into steps to build colormap legend dictionary
+
+def BuildLocationDict(dataframe):
+    # Construct dictionary of placenames by FIPS number for use by county overlay
+    loc_df = dataframe[['FIPS', 'county', 'state']].set_index('FIPS').copy()
+    loc_df['Location'] = loc_df['county'].map('{:} ('.format)+loc_df['state'].map('{:})'.format)
+    loc_df.drop(columns=['county', 'state'], inplace=True) 
+    loc_dict = loc_df['Location'].to_dict()
+    return loc_dict
+
+
+def BuildLegendDict(minval, maxval, cmap):
+    # Construct Legend Dictionary
     nsteps = 5
     step = (maxval-minval)/(nsteps-1)
     legendDict = {}
@@ -218,13 +236,38 @@ def build_us_statesmap(dataframe, colname):
         val = minval+i*step
         valstr = f"{val:,.1f}"
         legendDict[valstr] = cmap(val)
+    return legendDict
+
+
+def build_us_statesmap(dataframe, colname):
+    global geojson_states, this_state_colname, state_overlay, state_data_dict
+    global state_layer
+    global MapsVDict, geojson_states, mapcenter, mapzoom, loc_dict
+
+    # This function builds a US Choropleth Map (but doesn't display it) for the state-level
+    # data provided.
+
+    # Load data needed to build either kind of map
+    build_us_genericmap()
+
+    # ipyleaflet requires a dictionary for the choro_data field/the variable to be visualized,
+    # so convert the Pandas data series into the appropriate dictionary setting keys to postal
+    # codes used in geojson_states
+    state_data_dict = get_state_dict(dataframe, colname)
+
+    # Determine range of values for colormap, then define colormap (need to also pass
+    # max/min values to Choropleth builder or they are ignored). Set up legend dictionary
+    # to show this range.
+    (minval, maxval) = set_cm_limits(state_data_dict)
+    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    legendDict = BuildLegendDict(minval, maxval, cmap)
 
     # Creating the map
-    states_map = lf.Map(center = center, zoom = zoom)
+    states_map = lf.Map(center = mapcenter, zoom = mapzoom)
 
     # Draw a functional states layer
     state_layer = lf.Choropleth(geo_data=geojson_states,
-                                 choro_data=state_data_dict,
+                                 choro_data=scrub(state_data_dict),
                                  key_on='id',
                                  # Below here is some formatting/coloring from the documentation
                                  colormap=cmap,
@@ -246,34 +289,27 @@ def build_us_statesmap(dataframe, colname):
     states_map.add_control(state_control)
     state_layer.on_hover(update_state_overlay)
 
-    return(states_map)
+    return(states_map, state_legend, state_overlay)
 
 
-def update_us_statesmap(dataframe, colname, statemap):
-    global geojson_states, this_state_colname, state_data_dict, state_legend
-    global state_control, state_layer
+def update_us_statesmap(dataframe, colname, thismap, thislegend, thisoverlay):
+    global geojson_states, this_state_colname, state_data_dict, state_overlay
 
     # This function updates an existing US State-level Choropleth map
 
-    # Load the new data and determine the new colormap limits
+    # Load the new data and determine the new colormap limits and set up legend dictionary
+    # to show this range.
+    state_data_dict = get_state_dict(dataframe, colname)
     (minval, maxval) = set_cm_limits(state_data_dict)
-    cmap=linear.YlOrRd_04.scale(minval, maxval)
-
-    # Break range into steps to build colormap legend dictionary
-    nsteps = 5
-    step = (maxval-minval)/(nsteps-1)
-    legendDict = {}
-    for i in range(nsteps):
-        val = minval+i*step
-        valstr = f"{val:,.1f}"
-        legendDict[valstr] = cmap(val)
+    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    legendDict = BuildLegendDict(minval, maxval, cmap)
 
     # Assign updated legend dictionary
-    state_legend.legends = legendDict
+    thislegend.legends = legendDict
 
     # Draw a functional states layer
     state_layer_update = lf.Choropleth(geo_data=geojson_states,
-                                       choro_data=state_data_dict,
+                                       choro_data=scrub(state_data_dict),
                                        key_on='id',
                                        # Below here is some formatting/coloring from the documentation
                                        colormap=cmap,
@@ -283,12 +319,13 @@ def update_us_statesmap(dataframe, colname, statemap):
                                        hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
                                        style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
 
-    # Replace existing Choropleth layer with new layer
-    statemap.substitute_layer(state_layer, state_layer_update)
-    state_layer = state_layer_update
+    # Replace existing Choropleth layer (which is always the second layer with new layer
+    state_layer = thismap.layers[1]
+    thismap.substitute_layer(state_layer, state_layer_update)
 
     # Update column name used by state overlay to look up values
     this_state_colname = colname
+    state_overlay = thisoverlay
     state_layer_update.on_hover(update_state_overlay)
 
     return
@@ -303,64 +340,51 @@ def update_cnty_overlay(feature, **kwargs):
     units = MapsVDict[this_cnty_colname]['valdescript']
     form = MapsVDict[this_cnty_colname]['format']
     val = county_data_dict[feature['id']]
-    if (form == 'd'):
-        val = int(val)
-
-    struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
-    cnty_overlay.value = struct.format(location, val, units)
+    if not np.isnan(val):
+        if ('d' in form):
+            val = int(val)
+        struct = "<div style='text-align: center;'><b>{0}</b><br/>{1:"+form+"} {2}</div>"
+        cnty_overlay.value = struct.format(location, val, units)
+    else: # Handle nan values
+        struct = "<div style='text-align: center;'><b>{0}</b><br/><em>(unknown)</em> {1}</div>"
+        cnty_overlay.value = struct.format(location, units)
 
 
 def build_us_cntymap(dataframe, colname):
-    global geojson_cnty, this_cnty_colname, cnty_overlay, county_data_dict, loc_dict
-    global cnty_layer, cnty_legend, cnty_control, MapsVDict
+    global geojson_cnty, this_cnty_colname, cnty_overlay, county_data_dict
+    global cnty_layer, cnty_legend, cnty_control
+    global MapsVDict, geojson_cnty, mapcenter, mapzoom, loc_dict
 
     # This function builds a US Choropleth Map (but doesn't display it) for the county-level
     # data provided.
 
-    # Load Maps Variable Descriptions for use in overlays if it doesn't exist
+    # Load data needed to build either kind of map
+    build_us_genericmap()
+
+    # Build location dictionary if doesn't yet exist
     try:
-        MapsVDict
+        loc_dict
     except NameError:
-        MapsVDict = BuildMapVarDict()
-
-    # Construct dictionary of placenames by FIPS number for use by overlay
-    loc_df = dataframe[['FIPS', 'county', 'state']].set_index('FIPS').copy()
-    loc_df['Location'] = loc_df['county'].map('{:} ('.format)+loc_df['state'].map('{:})'.format)
-    loc_df.drop(columns=['county', 'state'], inplace=True) 
-    loc_dict = loc_df['Location'].to_dict()
-
-    # Load the 2018 county bounary data
-    geojson_cnty = load_county_geojson()
+        loc_dict = BuildLocationDict(dataframe)
 
     # ipyleaflet requires a dictionary for the choro_data field/the variable to be visualized,
     # so convert the Pandas data series into the appropriate dictionary setting keys to postal
     # codes used in geojson_states
     county_data_dict = get_cnty_dict(dataframe, colname)
 
-    # Define map center and zoom
-    center = [38.0, -93.0]
-    zoom = 3.9
-
     # Determine range of values for colormap, then define colormap (need to also pass
-    # max/min values to Choropleth builder or they are ignored)
+    # max/min values to Choropleth builder or they are ignored). Set up legend dictionary
+    # to show this range.
     (minval, maxval) = set_cm_limits(county_data_dict)
-    cmap=linear.YlOrRd_04.scale(minval, maxval)
-
-    # Break range into steps to build colormap legend dictionary
-    nsteps = 5
-    step = (maxval-minval)/(nsteps-1)
-    legendDict = {}
-    for i in range(nsteps):
-        val = minval+i*step
-        valstr = f"{val:,.1f}"
-        legendDict[valstr] = cmap(val)
+    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    legendDict = BuildLegendDict(minval, maxval, cmap)
 
     # Creating the map
-    cnty_map = lf.Map(center = center, zoom = zoom)
+    cnty_map = lf.Map(center = mapcenter, zoom = mapzoom)
 
     # Draw a functional counties layer
     cnty_layer = lf.Choropleth(geo_data=geojson_cnty,
-                                 choro_data=county_data_dict,
+                                 choro_data=scrub(county_data_dict),
                                  key_on='id',
                                  # Below here is some formatting/coloring from the documentation
                                  colormap=cmap,
@@ -382,35 +406,32 @@ def build_us_cntymap(dataframe, colname):
     cnty_map.add_control(cnty_control)
     cnty_layer.on_hover(update_cnty_overlay)
 
-    return(cnty_map)
+    return(cnty_map, cnty_legend, cnty_overlay)
 
 
-def update_us_cntymap(dataframe, colname, cntymap):
-    global geojson_cnty, this_cnty_colname, county_data_dict, cnty_legend
-    global cnty_control, cnty_layer
+def update_us_cntymap(dataframe, colname, thismap, thislegend, thisoverlay):
+    global geojson_cnty, this_cnty_colname, county_data_dict, cnty_overlay, loc_dict
 
     # This function updates an existing US County-level Choropleth map
+
+    # Build location dictionary if doesn't yet exist
+    try:
+        loc_dict
+    except NameError:
+        loc_dict = BuildLocationDict(dataframe)
 
     # Load the new data and determine the new colormap limits
     county_data_dict = get_cnty_dict(dataframe, colname)
     (minval, maxval) = set_cm_limits(county_data_dict)
-    cmap=linear.YlOrRd_04.scale(minval, maxval)
-
-    # Break range into steps to build colormap legend dictionary
-    nsteps = 5
-    step = (maxval-minval)/(nsteps-1)
-    legendDict = {}
-    for i in range(nsteps):
-        val = minval+i*step
-        valstr = f"{val:,.1f}"
-        legendDict[valstr] = cmap(val)
+    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    legendDict = BuildLegendDict(minval, maxval, cmap)
 
     # Assign updated legend dictionary
-    cnty_legend.legends = legendDict
+    thislegend.legends = legendDict
 
     # Draw a functional counties layer
     cnty_layer_update = lf.Choropleth(geo_data=geojson_cnty,
-                                      choro_data=county_data_dict,
+                                      choro_data=scrub(county_data_dict),
                                       key_on='id',
                                       # Below here is some formatting/coloring from the documentation
                                       colormap=cmap,
@@ -420,12 +441,14 @@ def update_us_cntymap(dataframe, colname, cntymap):
                                       hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
                                       style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
 
-    # Replace existing Choropleth layer with new layer
-    cntymap.substitute_layer(cnty_layer, cnty_layer_update)
+    # Replace existing Choropleth layer (which is always the second layer with new layer
+    cnty_layer = thismap.layers[1]
+    thismap.substitute_layer(cnty_layer, cnty_layer_update)
     cnty_layer = cnty_layer_update
 
     # Update column name used by state overlay to look up values
     this_cnty_colname = colname
+    cnty_overlay = thisoverlay
     cnty_layer_update.on_hover(update_cnty_overlay)
 
     return

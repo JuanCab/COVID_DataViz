@@ -153,6 +153,61 @@ var_ylabel_Hosp ={'FIPS' : 'Federal Information Processing Standards State/Count
                 'confirmed_infections' : 'Confirmed COVID Infections',
                 'est_infections_mean' : 'Predicted COVID Infections' }
 
+# Define postal codes from state names
+name2code = {
+    'Alabama': 'AL',
+    'Alaska': 'AK',
+    'Arizona': 'AZ',
+    'Arkansas': 'AR',
+    'California': 'CA',
+    'Colorado': 'CO',
+    'Connecticut': 'CT',
+    'Delaware': 'DE',
+    'District of Columbia': 'DC',
+    'Florida': 'FL',
+    'Georgia': 'GA',
+    'Hawaii': 'HI',
+    'Idaho': 'ID',
+    'Illinois': 'IL',
+    'Indiana': 'IN',
+    'Iowa': 'IA',
+    'Kansas': 'KS',
+    'Kentucky': 'KY',
+    'Louisiana': 'LA',
+    'Maine': 'ME',
+    'Maryland': 'MD',
+    'Massachusetts': 'MA',
+    'Michigan': 'MI',
+    'Minnesota': 'MN',
+    'Mississippi': 'MS',
+    'Missouri': 'MO',
+    'Montana': 'MT',
+    'Nebraska': 'NE',
+    'Nevada': 'NV',
+    'New Hampshire': 'NH',
+    'New Jersey': 'NJ',
+    'New Mexico': 'NM',
+    'New York': 'NY',
+    'North Carolina': 'NC',
+    'North Dakota': 'ND',
+    'Ohio': 'OH',
+    'Oklahoma': 'OK',
+    'Oregon': 'OR',
+    'Pennsylvania': 'PA',
+    'Rhode Island': 'RI',
+    'South Carolina': 'SC',
+    'South Dakota': 'SD',
+    'Tennessee': 'TN',
+    'Texas': 'TX',
+    'Utah': 'UT',
+    'Vermont': 'VT',
+    'Virginia': 'VA',
+    'Washington': 'WA',
+    'West Virginia': 'WV',
+    'Wisconsin': 'WI',
+    'Wyoming': 'WY'
+}
+
 
 # Define functions to be used below
 def derivative1D(x, y):
@@ -181,59 +236,6 @@ def cleanJHdata(JH_dataframe):
     JH_dataframe.rename(columns={ 'Dates': 'dates', 'State' : 'state', 'County': 'county'}, inplace = True)
 
     # Add a state postal codes column
-    name2code = {
-        'Alabama': 'AL',
-        'Alaska': 'AK',
-        'Arizona': 'AZ',
-        'Arkansas': 'AR',
-        'California': 'CA',
-        'Colorado': 'CO',
-        'Connecticut': 'CT',
-        'Delaware': 'DE',
-        'District of Columbia': 'DC',
-        'Florida': 'FL',
-        'Georgia': 'GA',
-        'Hawaii': 'HI',
-        'Idaho': 'ID',
-        'Illinois': 'IL',
-        'Indiana': 'IN',
-        'Iowa': 'IA',
-        'Kansas': 'KS',
-        'Kentucky': 'KY',
-        'Louisiana': 'LA',
-        'Maine': 'ME',
-        'Maryland': 'MD',
-        'Massachusetts': 'MA',
-        'Michigan': 'MI',
-        'Minnesota': 'MN',
-        'Mississippi': 'MS',
-        'Missouri': 'MO',
-        'Montana': 'MT',
-        'Nebraska': 'NE',
-        'Nevada': 'NV',
-        'New Hampshire': 'NH',
-        'New Jersey': 'NJ',
-        'New Mexico': 'NM',
-        'New York': 'NY',
-        'North Carolina': 'NC',
-        'North Dakota': 'ND',
-        'Ohio': 'OH',
-        'Oklahoma': 'OK',
-        'Oregon': 'OR',
-        'Pennsylvania': 'PA',
-        'Rhode Island': 'RI',
-        'South Carolina': 'SC',
-        'South Dakota': 'SD',
-        'Tennessee': 'TN',
-        'Texas': 'TX',
-        'Utah': 'UT',
-        'Vermont': 'VT',
-        'Virginia': 'VA',
-        'Washington': 'WA',
-        'West Virginia': 'WV',
-        'Wisconsin': 'WI',
-        'Wyoming': 'WY'
-    }
     JH_dataframe['postal'] = JH_dataframe['state'].map(name2code)
 
     # If the maximum FIPS number is <100, this is state data, spend the extra time to process it to
@@ -387,24 +389,24 @@ def BuildJHVarDict():
     #  stateonly notes if the variable is avaiable only for states
     #  df is an indicator of which dataframe to pull the data from ('JH' for John Hopkins)
     var_dict = {
-        'Confirmed': {'descript': 'Total Confirmed COVID Infections', 'valdescript': 'COVID Infections', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'Confirmed': {'descript': 'Total Confirmed COVID Infections', 'valdescript': 'COVID Infections', 'format' : ',d', 'stateonly': False, 'df': 'JH'},
         'ConfirmedRate': {'descript': 'Total Confirmed COVID Infections (per 100,000 persons)', 'valdescript': 'COVID Infections (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
         'dConfirmed': {'descript': 'New COVID Infections (#/day)', 'valdescript': 'New COVID Infections/Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
         'dConfirmedRate': {'descript': 'New COVID Infections (#/day per 100,000 people)', 'valdescript': 'New COVID Infections/Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
         'd2Confirmed': {'descript': 'Change in New COVID Infections', 'valdescript': 'New COVID Infections/Day vs. Previous Day', 'format' : '+d', 'stateonly': False, 'df': 'JH'},
         'd2ConfirmedRate': {'descript': 'Change in New COVID Infections (per 100,000 people)', 'valdescript': 'New COVID Infections/Day vs. Previous Day (per 100,000)', 'format' : '+.2f', 'stateonly': False, 'df': 'JH'},
-        'Deaths': {'descript': 'Total Confirmed and Probable COVID Deaths', 'valdescript': 'COVID Deaths', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'Deaths': {'descript': 'Total Confirmed and Probable COVID Deaths', 'valdescript': 'COVID Deaths', 'format' : ',d', 'stateonly': False, 'df': 'JH'},
         'DeathRate': {'descript': 'Total Confirmed COVID Deaths (per 100,000 people)', 'valdescript': 'COVID Deaths (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
         'dDeaths': {'descript': 'New COVID Deaths (#/day)', 'valdescript': 'New COVID Deaths/Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
         'dDeathsRate': {'descript': 'New COVID Deaths (#/day per 100,000 people)', 'valdescript': 'New COVID Deaths/Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
         'd2Deaths': {'descript': 'Change in New COVID Deaths', 'valdescript': 'New COVID Deaths/Day vs. Previous Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
         'd2DeathsRate': {'descript': 'Change in New COVID Deaths (per 100,000 people)', 'valdescript': 'New COVID Deaths/Day vs. Previous Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
-        'Recovered': {'descript': 'Total Confirmed and Probable COVID Recoveries', 'valdescript': 'COVID Recoveries', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
-        'Active': {'descript': 'Tota; Confirmed and Probable Active COVID Cases', 'valdescript': 'Active COVID Cases', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
-        'People_Tested': {'descript': 'Total People tested for COVID', 'valdescript': 'People tested for COVID', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'Recovered': {'descript': 'Total Confirmed and Probable COVID Recoveries', 'valdescript': 'COVID Recoveries', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
+        'Active': {'descript': 'Total Confirmed and Probable Active COVID Cases', 'valdescript': 'Active COVID Cases', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
+        'People_Tested': {'descript': 'Total People tested for COVID', 'valdescript': 'People tested for COVID', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons)', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
         'Mortality_Rate': {'descript': 'Mortality Rate', 'valdescript': '% Deaths per Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
-        'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID', 'valdescript': 'People Hospitalized', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
+        'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID', 'valdescript': 'People Hospitalized', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'Hospitalization_Rate': {'descript': 'Hospitalization Rate (per 100,000 persons)', 'valdescript': 'People Hospitalized (per 100,000)', 'format' : '.2f', 'stateonly': True, 'df': 'JH'}
         }
     return var_dict
@@ -418,13 +420,13 @@ def BuildMobilityVarDict():
     #  stateonly notes if the variable is avaiable only for states
     #  df is an indicator of which dataframe to pull the data from ('apple' for Apple Mobility, 'google' for Google Mobility)
     var_dict = {
-        'driving_mobility_Percent': {'descript': 'Apple Maps Directions Requests', 'valdescript': '% Directions Requests', 'format': '.1f', 'stateonly': False, 'df': 'apple'},
-        'retail_recreation_Percent': {'descript': 'Google-tracked Retail & Recreation Activity', 'valdescript': '% Retail & Recreation Activity', 'format': '.1f', 'stateonly': False, 'df': 'google'},
-        'grocery_pharm_Percent': {'descript': 'Google-tracked Grocery & Pharmacy Activity', 'valdescript': '% Grocery & Pharmacy Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
-        'parks_Percent': {'descript': 'Google-tracked Park Activity', 'valdescript': '% Park Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
-        'transit_stations_Percent': {'descript': 'Google-tracked Transit Station Activity', 'valdescript': '% Transit Station Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
-        'residential_Percent': {'descript': 'Google-tracked Residential Activity', 'valdescript': '% Residential Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
-        'workplace_Percent': {'descript': 'Google-tracked Workplace Activity', 'valdescript': '% Workplace Activity', 'format': '.1f', 'stateonly': False, 'apple': False, 'df': 'google'}
+        'driving_mobility_Percent': {'descript': 'Apple Maps Directions Requests', 'valdescript': '% Directions Requests (vs Jan 13, 2020)', 'format': '+.1f', 'stateonly': False, 'df': 'apple'},
+        'retail_recreation_Percent': {'descript': 'Google-tracked Retail & Recreation Activity', 'valdescript': '% Retail & Recreation Activity (vs Jan 3 - Feb 6, 2020)', 'format': '+.1f', 'stateonly': False, 'df': 'google'},
+        'grocery_pharm_Percent': {'descript': 'Google-tracked Grocery & Pharmacy Activity', 'valdescript': '% Grocery & Pharmacy Activity (vs Jan 3 - Feb 6, 2020)', 'format': '+.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'parks_Percent': {'descript': 'Google-tracked Park Activity', 'valdescript': '% Park Activity (vs Jan 3 - Feb 6, 2020)', 'format': '+.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'transit_stations_Percent': {'descript': 'Google-tracked Transit Station Activity', 'valdescript': '% Transit Station Activity (vs Jan 3 - Feb 6, 2020)', 'format': '+.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'residential_Percent': {'descript': 'Google-tracked Residential Activity', 'valdescript': '% Residential Activity (vs Jan 3 - Feb 6, 2020)', 'format': '+.1f', 'stateonly': False, 'apple': False, 'df': 'google'},
+        'workplace_Percent': {'descript': 'Google-tracked Workplace Activity', 'valdescript': '% Workplace Activity (vs Jan 3 - Feb 6, 2020)', 'format': '+.1f', 'stateonly': False, 'apple': False, 'df': 'google'}
         }
     return var_dict
 
@@ -444,11 +446,23 @@ def BuildIMHEHospitalizationVarDict():
 
 def cleanAAPLdata(aapl_dataframe):
     # This function takes Apple mobility dataframes and converts the mobility to percent change from baseline
-    # to be consistent with Google Mobility dataframes.
+    # to be consistent with Google Mobility dataframes.  It also adds postal codes for easy cross-identification
+    # on maps
 
     mobility_arr = np.array(aapl_dataframe['driving_mobility'].to_list())
     mobility_percent = mobility_arr - 100
     aapl_dataframe['driving_mobility_Percent'] = np.round_(mobility_percent,2).tolist()
+
+    aapl_dataframe['postal'] = aapl_dataframe['state'].map(name2code)
+
+    return
+
+
+def cleanGOOGdata(goog_dataframe):
+    # This function takes Google mobility dataframes and adds postal codes for easy cross-identification
+    # on maps.
+
+    goog_dataframe['postal'] = goog_dataframe['state'].map(name2code)
 
     return
 
