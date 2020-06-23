@@ -11,7 +11,7 @@ to sticking with Pandas, we could just store the data in numpy arrays or
 something simple like that.
 
 ## Requirements
-Right now, you need to install the following python extensions for these notebooks to run.
+Right now, you need to be running Python 3.7+ with the following python extensions for these notebooks to run.
 
 - gitpython 
 - pandas
