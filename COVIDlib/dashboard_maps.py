@@ -148,13 +148,13 @@ def BuildMapVarDict():
 def scrub(datadict):
     # Purge nan values from dictionary, replacing them with minmaximumimum value for plotting purposes
     if (any(np.isnan(val) for val in datadict.values())):
-        maxval = np.nanmax(np.array(list(datadict.values())))
+        minval = np.nanmin(np.array(list(datadict.values())))
 
         # Loop throught and purge the nan values
         clean_dict = datadict.copy()
         for k in datadict:
             if np.isnan(datadict[k]):
-                clean_dict[k] = maxval
+                clean_dict[k] = minval
         return clean_dict
     else:
         return datadict
@@ -213,7 +213,7 @@ def build_us_genericmap():
 
     # Define map center and zoom
     mapcenter = [38.0, -93.0]
-    mapzoom = 3.9
+    mapzoom = 4.2
 
     return
 
