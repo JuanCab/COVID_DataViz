@@ -218,7 +218,7 @@ def update_cnty_overlay(feature, **kwargs):
 
 
 def build_us_cntymap(dataframe, colname):
-    global geojson_cnty, this_cnty_colname, cnty_overlay, county_data_dict, loc_dict
+    global geojson_cnty, this_cnty_colname, cnty_overlay, county_data_dict, loc_dict, cnty_layer, legend, cnty_control
 
     # This function builds a US Choropleth Map (but doesn't display it) for the county-level
     # data provided.
@@ -288,7 +288,7 @@ def build_us_cntymap(dataframe, colname):
 
 
 def update_us_cntymap(dataframe, colname, cntymap):
-    global geojson_cnty, this_cnty_colname, county_data_dict
+    global geojson_cnty, this_cnty_colname, county_data_dict, legend
 
     # This function updates an existing US County-level Choropleth map
 
@@ -309,12 +309,14 @@ def update_us_cntymap(dataframe, colname, cntymap):
         legendDict[valstr] = cmap(val)
 
     # Remove old legent and add new legend
-    legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
-    cntymap.clear_controls()
-    cntymap.add_control(legend)
+#     legend = lf.LegendControl(legendDict, name="Legend", position="bottomleft")
+#     cntymap.clear_controls()
+#     cntymap.add_control(legend)
+    legend.legends = legendDict # <-- Assigns the updated legend dictionary rather than having to entirely remove all controls
+    
 
     # Draw a functional counties layer
-    cnty_layer = lf.Choropleth(geo_data=geojson_cnty,
+    cnty_layer_update = lf.Choropleth(geo_data=geojson_cnty,
                                  choro_data=county_data_dict,
                                  key_on='id',
                                  # Below here is some formatting/coloring from the documentation
@@ -326,10 +328,21 @@ def update_us_cntymap(dataframe, colname, cntymap):
                                  style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
 
     # Clear existing layers and add new one
-    cntymap.clear_layers()
-    cntymap.add_layer(cnty_layer)
+#     cntymap.clear_layers()
+#     cntymap.add_layer(cnty_layer)
+    cntymap.substitute_layer(cnty_layer, cnty_layer_update) # <-- Substitutes a new value for the layer rather than deleting it
+    
 
     # Update column name used by state overlay to look up values
     this_cnty_colname = colname
+        
+
+#     cntymap.remove_control(cnty_control)
+    
+#     this_cnty_colname = colname
+#     cnty_overlay = widgets.HTML("Hover over Location for Details")
+#     cnty_control = lf.WidgetControl(widget=cnty_overlay, position='topright')
+#     cntymap.add_control(cnty_control)
+#     cnty_layer.on_hover(update_cnty_overlay)
 
     return
