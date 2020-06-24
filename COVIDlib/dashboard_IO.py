@@ -106,7 +106,7 @@ var_descript_Hosp = {'FIPS' : 'Federal Information Processing Standards State/Co
                 'InvVen_mean' : 'IMHE Predicted  Number of Ventilators Needed',
                 'deaths_mean' : 'IMHE Predicted Number of Deaths',
                 'admis_mean' : 'IMHE Predicted New Hospital Admissions per Day',
-                'newICU_mean' : 'IMHE Predicted New ICE Patients per Day',
+                'newICU_mean' : 'IMHE Predicted New ICU Patients per Day',
                 'totdea_mean' : 'IMHE Predicted Cumilative COVID Deaths',
                 'deaths_mean_smoothed': 'IMHE Predicted Daily COVID Deaths (Smoothed)',
                 'totdea_mean_smoothed' : 'IMHE Predicted Cumilative COVID Deaths (Smoothed)',
