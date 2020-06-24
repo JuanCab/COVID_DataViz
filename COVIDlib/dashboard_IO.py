@@ -850,3 +850,64 @@ def ts_barplot(dataframe, colname, fips, ylog=False, running_avg=0, fig=None, ax
     # Adjust y axis to be logarithmic if requested
     if (ylog):
         ax.set_yscale('log')
+def creditForApplMob(Display = True):
+    html_out = ""
+    if(Display):
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<I style='font-size:10px ;'>www.apple.com/covid19/mobility (the “Site”) (collectively, the “Terms of Use”). The Site is the property of Apple Inc. (“Apple”) and its licensors.</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'> https://www.google.com/covid19/mobility/ </b><br/>"
+        display(HTML(html_out))
+        return 
+    else:
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<I style='font-size:10px ;'>www.apple.com/covid19/mobility (the “Site”) (collectively, the “Terms of Use”). The Site is the property of Apple Inc. (“Apple”) and its licensors.</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'> https://www.google.com/covid19/mobility/ </b><br/>"
+        return html_out
+def creditForIHME(Display = True):
+    html_out = ""
+    if(Display):
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<I style='font-size:10px ;'>Institute for Health Metrics and Evaluation (IHME). COVID-19 Hospital Needs and Death Projections. Seattle, United States of America: Institute for Health Metrics and Evaluation (IHME), University of Washington, 2020.</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'> http://www.healthdata.org/covid/data-downloads</b><br/>"
+        display(HTML(html_out))
+        return 
+    else:
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<I style='font-size:10px ;'>Institute for Health Metrics and Evaluation (IHME). COVID-19 Hospital Needs and Death Projections. Seattle, United States of America: Institute for Health Metrics and Evaluation (IHME), University of Washington, 2020.</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'> http://www.healthdata.org/covid/data-downloads</b><br/>"
+        return html_out
+def creditForGoogMob(Display = True):
+    html_out = ""
+    if(Display):
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<I style='font-size:10px ;'>Google LLC "'Google COVID-19 Community Mobility Reports'". https://www.google.com/covid19/mobility/</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'> https://www.google.com/covid19/mobility/ </b><br/>"
+        display(HTML(html_out))
+        return 
+    else:
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<I style='font-size:10px ;'>Google LLC "'Google COVID-19 Community Mobility Reports'". https://www.google.com/covid19/mobility/</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'> https://www.google.com/covid19/mobility/ </b><br/>"
+        return html_out
+def creditForJH(Display = True):
+    html_out = ""
+    if(Display):
+        html_out += "<p style='margin: 1em 0 0 0;'>"
+        html_out += f"<I style='font-size:10px ;'>the COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University. Population data from U.S. Census Bureau, Population Division (Release Date: March 2020)</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'>https://data.humdata.org/dataset/novel-coronavirus-2019-ncov-cases</b><br/>"
+        html_out += f"<I style='font-size:10px ;'>https://github.com/CSSEGISandData/COVID-19</b><br/>"
+        display(HTML(html_out))
+        return 
+    else:
+        html_out += f"<I style='font-size:10px ;'>the COVID-19 Data Repository by the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University. Population data from U.S. Census Bureau, Population Division (Release Date: March 2020)</b><br/>"
+        html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
+        html_out += f"<I style='font-size:10px ;'>https://data.humdata.org/dataset/novel-coronavirus-2019-ncov-cases</b><br/>"
+        html_out += f"<I style='font-size:10px ;'>https://github.com/CSSEGISandData/COVID-19</b><br/>"
+        return html_out
