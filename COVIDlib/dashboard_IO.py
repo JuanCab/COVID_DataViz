@@ -35,7 +35,7 @@ var_descript = {'FIPS' : 'Federal Information Processing Standards State/County 
                 'Incident_Rate' : 'Confirmed COVID Cases',  # As provided by John Hopkins
                 'People_Tested' : 'Total People tested for COVID',
                 'People_Hospitalized' : 'Total People Hospitalized for COVID',
-                'Mortality_Rate' : 'Mortality Rate',
+                'Mortality_Rate' : 'Mortality Rate (Deaths/Confirmed Infections)',
                 'Testing_Rate' : 'Total Tested for COVID (per 100,000 persons)',
                 'Hospitalization_Rate' : 'Hospitalization Rate (per 100,000 persons)',
                 'dConfirmed' : 'New COVID Infections (#/day)',
@@ -405,7 +405,7 @@ def BuildJHVarDict():
         'Active': {'descript': 'Total Confirmed and Probable Active COVID Cases [State only]', 'valdescript': 'Active COVID Cases', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'People_Tested': {'descript': 'Total People tested for COVID [State only]', 'valdescript': 'People tested for COVID', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons) [State only]', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
-        'Mortality_Rate': {'descript': 'Mortality Rate [State only]', 'valdescript': '% Deaths per Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
+        'Mortality_Rate': {'descript': 'Mortality Rate [State only]', 'valdescript': '% Deaths per Confirmed Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
         'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID [State only]', 'valdescript': 'People Hospitalized', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'Hospitalization_Rate': {'descript': 'Hospitalization Rate (per 100,000 persons) [State only]', 'valdescript': 'People Hospitalized (per 100,000)', 'format' : '.2f', 'stateonly': True, 'df': 'JH'}
         }
