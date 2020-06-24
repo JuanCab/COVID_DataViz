@@ -850,6 +850,13 @@ def ts_barplot(dataframe, colname, fips, ylog=False, running_avg=0, fig=None, ax
     # Adjust y axis to be logarithmic if requested
     if (ylog):
         ax.set_yscale('log')
+
+
+##
+## Functions for providing credit to data sources
+##
+
+
 def creditForApplMob(Display = True):
     html_out = ""
     if(Display):
@@ -865,6 +872,8 @@ def creditForApplMob(Display = True):
         html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
         html_out += f"<I style='font-size:10px ;'> https://www.google.com/covid19/mobility/ </b><br/>"
         return html_out
+
+
 def creditForIHME(Display = True):
     html_out = ""
     if(Display):
@@ -880,6 +889,8 @@ def creditForIHME(Display = True):
         html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
         html_out += f"<I style='font-size:10px ;'> http://www.healthdata.org/covid/data-downloads</b><br/>"
         return html_out
+
+
 def creditForGoogMob(Display = True):
     html_out = ""
     if(Display):
@@ -895,6 +906,8 @@ def creditForGoogMob(Display = True):
         html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
         html_out += f"<I style='font-size:10px ;'> https://www.google.com/covid19/mobility/ </b><br/>"
         return html_out
+
+
 def creditForJH(Display = True):
     html_out = ""
     if(Display):
