@@ -63,6 +63,15 @@ def dates2strings(this_list):
         return this_list
 
 
+def datetime_range(start=None, end=None):
+    # Returns a list of dates between two dates INCLUSIVE
+    # Grabbed this from https://stackoverflow.com/questions/7274267/print-all-day-dates-between-two-dates/7274316
+    # and modified it for my needs
+    span = end - start
+    for i in range(span.days + 1):
+        yield start + timedelta(days=i)
+
+
 def derivative(x, y):
     """
     Compute forward difference estimate for the derivative of y with respect
@@ -794,7 +803,6 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
     goog_mobility_df=pd.read_csv(goog_mobility_csv_url, low_memory=False)
 
     ## Separate data into national-level, state-level, and county-level data deep copies
-    goog_mobility_national = goog_mobility_df[(goog_mobility_df['country_region_code'] == 'US') & (goog_mobility_df['sub_region_1'].isna()) & (goog_mobility_df['sub_region_2'].isna())].copy()
     goog_mobility_states = goog_mobility_df[(goog_mobility_df['country_region_code'] == 'US') & (goog_mobility_df['sub_region_1'].notna()) & (goog_mobility_df['sub_region_2'].isna())].copy()
     goog_mobility_cnty = goog_mobility_df[(goog_mobility_df['country_region_code'] == 'US') & (goog_mobility_df['sub_region_1'].notna()) & (goog_mobility_df['sub_region_2'].notna())].copy()
 
@@ -805,6 +813,16 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
 
     # Undefine the clay county subframe
     del goog_mobility_df
+
+    ##
+    ## Determine range of dates of entire dataset to allow filling of unknown dates of data with NaN
+    ##
+    goog_mobility_cnty['date'].to_list()
+    DATEs = [datetime.strptime(x, '%Y-%m-%d').date() for x in goog_mobility_cnty['date'].to_list()]
+    first_day = min(DATEs)
+    last_day = max(DATEs)
+    all_dates_list = list(datetime_range(first_day, last_day))
+    all_dates_str = dates2strings(all_dates_list)
 
     ##
     ## Cross match known US Bureau Census FIPS entries with Google Mobility Data here to allow easier cross-matching later.
@@ -922,7 +940,8 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
         raise ValueError("Something went wrong with cross-ID of Google mobility county-level data to FIPS records.")
 
     ##
-    ## Conversion of separate dataframe rows as dates into a single row per location with time series stored as lists
+    ## Conversion of separate dataframe rows as dates into a single row per location with time series stored as lists.
+    ## NOTE: These time serires have DIFFERENT LENGTHS for different FIPS as certain counties in particular as missing data.
     ## For the state data
     ##
     goog_mobility_states_reduced = state_fips_df.copy()
@@ -947,18 +966,45 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
 
         # Convert the time series into lists in memory
         dates_str_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
-        # Convert dates list to datetime.dates list
-        dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
 
-        retail_list = trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()
-        grocery_list = trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()
-        parks_list = trans.loc['parks_percent_change_from_baseline'].values.tolist()
-        transit_list = trans.loc['transit_stations_percent_change_from_baseline'].values.tolist()
-        workplaces_list = trans.loc['workplaces_percent_change_from_baseline'].values.tolist()
-        residential_list = trans.loc['residential_percent_change_from_baseline'].values.tolist()
+        # Convert the lists corresponding to each column into dictionaries for indexing
+        retail_dict = dict(zip(dates_str_list, trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()))
+        grocery_dict = dict(zip(dates_str_list, trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()))
+        parks_dict = dict(zip(dates_str_list, trans.loc['parks_percent_change_from_baseline'].values.tolist()))
+        transit_dict = dict(zip(dates_str_list, trans.loc['transit_stations_percent_change_from_baseline'].values.tolist()))
+        workplaces_dict = dict(zip(dates_str_list, trans.loc['workplaces_percent_change_from_baseline'].values.tolist()))
+        residential_dict = dict(zip(dates_str_list, trans.loc['residential_percent_change_from_baseline'].values.tolist()))
+
+        #
+        # Now brute force through all dates from first to last day and look for matches in each date,
+        # filling the voids with NaN
+        #
+        # Start with blank lists for this FIPS
+        retail_list = []
+        grocery_list = []
+        parks_list = []
+        transit_list = []
+        workplaces_list = []
+        residential_list = []
+
+        for key in all_dates_str:
+            try:
+                retail_list.append(retail_dict[key])
+                grocery_list.append(grocery_dict[key])
+                parks_list.append(parks_dict[key])
+                transit_list.append(transit_dict[key])
+                workplaces_list.append(workplaces_dict[key])
+                residential_list.append(residential_dict[key])
+            except:
+                retail_list.append(np.nan)
+                grocery_list.append(np.nan)
+                parks_list.append(np.nan)
+                transit_list.append(np.nan)
+                workplaces_list.append(np.nan)
+                residential_list.append(np.nan)
 
         # Add lists to lists
-        dates_listOlists.append(dates_list)
+        dates_listOlists.append(all_dates_list) # Add all dates
         retail_listOlists.append(retail_list)
         grocery_listOlists.append(grocery_list)
         parks_listOlists.append(parks_list)
@@ -1010,24 +1056,47 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
         timeseries = timeseries.set_index('date')
         trans = timeseries.T
 
-        retail_list = trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()
-        grocery_list = trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()
-        parks_list = trans.loc['parks_percent_change_from_baseline'].values.tolist()
-        transit_list = trans.loc['transit_stations_percent_change_from_baseline'].values.tolist()
-        workplaces_list = trans.loc['workplaces_percent_change_from_baseline'].values.tolist()
-        residential_list = trans.loc['residential_percent_change_from_baseline'].values.tolist()
-
         # Convert the time series into lists in memory
         dates_str_list = trans[ trans.columns[(trans.columns!='date')]].columns.tolist()
-        # Convert dates list to datetime.dates list (this approach handles blank counties, returning empty list)
-        try:
-            dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
-        except:
-            # This line is triggered when the text is nan
-            dates_list = retail_list  # Copy "NaN" list from other column
+
+        # Convert the lists corresponding to each column into dictionaries for indexing
+        retail_dict = dict(zip(dates_str_list, trans.loc['retail_and_recreation_percent_change_from_baseline'].values.tolist()))
+        grocery_dict = dict(zip(dates_str_list, trans.loc['grocery_and_pharmacy_percent_change_from_baseline'].values.tolist()))
+        parks_dict = dict(zip(dates_str_list, trans.loc['parks_percent_change_from_baseline'].values.tolist()))
+        transit_dict = dict(zip(dates_str_list, trans.loc['transit_stations_percent_change_from_baseline'].values.tolist()))
+        workplaces_dict = dict(zip(dates_str_list, trans.loc['workplaces_percent_change_from_baseline'].values.tolist()))
+        residential_dict = dict(zip(dates_str_list, trans.loc['residential_percent_change_from_baseline'].values.tolist()))
+
+        #
+        # Now brute force through all dates from first to last day and look for matches in each date,
+        # filling the voids with NaN
+        #
+        # Start with blank lists for this FIPS
+        retail_list = []
+        grocery_list = []
+        parks_list = []
+        transit_list = []
+        workplaces_list = []
+        residential_list = []
+
+        for key in all_dates_str:
+            try:
+                retail_list.append(retail_dict[key])
+                grocery_list.append(grocery_dict[key])
+                parks_list.append(parks_dict[key])
+                transit_list.append(transit_dict[key])
+                workplaces_list.append(workplaces_dict[key])
+                residential_list.append(residential_dict[key])
+            except:
+                retail_list.append(np.nan)
+                grocery_list.append(np.nan)
+                parks_list.append(np.nan)
+                transit_list.append(np.nan)
+                workplaces_list.append(np.nan)
+                residential_list.append(np.nan)
 
         # Add lists to lists
-        dates_listOlists.append(dates_list)
+        dates_listOlists.append(all_dates_list) # Add all dates
         retail_listOlists.append(retail_list)
         grocery_listOlists.append(grocery_list)
         parks_listOlists.append(parks_list)
