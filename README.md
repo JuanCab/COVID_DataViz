@@ -9,9 +9,9 @@ In addition to Jupyter Notebooks or Jupyter Lab, you need to be running Python 3
 - gitpython 
 - pandas
 - requests
-- ipyleaflet (needed for widget based maps [replaces folium probably])
-- ipywidgets (required to render widget controls in Jupyter)
-- ipympl     (This is required to render matplotlib plots as widgets)
+- ipyleaflet
+- ipywidgets
+- ipympl
 
 If you installed Jupyter using the Anaconda (or miniconda) python distribution
 then you can install all these using the following command on the command
