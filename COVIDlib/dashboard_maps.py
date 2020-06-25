@@ -276,7 +276,7 @@ def build_us_statesmap(dataframe, colname):
                                  value_max=maxval,
                                  border_color='black',
                                  hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                 style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
+                                 style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
     states_map.add_layer(state_layer)
 
     # Display a legend
@@ -318,7 +318,7 @@ def update_us_statesmap(dataframe, colname, thismap, thislegend, thisoverlay):
                                        value_max=maxval,
                                        border_color='black',
                                        hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                       style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
+                                       style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
 
     # Replace existing Choropleth layer (which is always the second layer with new layer
     state_layer = thismap.layers[1]
@@ -394,7 +394,7 @@ def build_us_cntymap(dataframe, colname):
                                  value_max=maxval,
                                  border_color='black',
                                  hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                 style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
+                                 style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
     cnty_map.add_layer(cnty_layer)
 
     # Display a legend
@@ -441,7 +441,7 @@ def update_us_cntymap(dataframe, colname, thismap, thislegend, thisoverlay):
                                       value_max=maxval,
                                       border_color='black',
                                       hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                      style={'fillOpacity': 0.6, 'dashArray': '5, 5'} )
+                                      style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
 
     # Replace existing Choropleth layer (which is always the second layer with new layer
     cnty_layer = thismap.layers[1]
