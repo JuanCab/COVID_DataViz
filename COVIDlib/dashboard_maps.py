@@ -10,7 +10,7 @@ import ipywidgets as widgets
 # imports for ipyleaflet
 import ipyleaflet as lf
 import json
-from branca.colormap import linear
+import branca.colormap as cm
 
 # Grab some Dashboard functions
 import COVIDlib.dashboard_IO as COVID_Dash
@@ -20,6 +20,8 @@ import COVIDlib.dashboard_IO as COVID_Dash
 ##
 
 # Define map style
+cmapcolors_linear= ["#fee5d9","#fcbba1","#fc9272","#fb6a4a","#de2d26","#a50f15"]  # Colormap colors for emphasizing value
+cmapcolors_sym= ["blue", "white", "red"]  # Colormap colors for emphasizing +/-
 map_border_color= 'black'
 map_hover_style= {'opacity': 1.0, 'weight': 2.0, 'fillOpacity': 1.0, 'dashArray': '0'}
 map_style= {'opacity': 0.50, 'fillOpacity': 0.50, 'dashArray': '0'}
@@ -233,6 +235,15 @@ def BuildLocationDict(dataframe):
     return loc_dict
 
 
+def BuildColormap(minval, maxval):
+    # Construct a colormap (if value brackets 0, try to set scale to be asymetric around 0)
+    if (minval <0)&(maxval>0):
+        cmap = cm.LinearColormap(colors=cmapcolors_sym, index=[minval, 0, maxval], vmin=minval, vmax=maxval)
+    else:
+        cmap = cm.LinearColormap(colors=cmapcolors_linear, vmin=minval, vmax=maxval)
+    return cmap
+
+
 def BuildLegendDict(minval, maxval, cmap):
     # Construct Legend Dictionary
     nsteps = 5
@@ -265,7 +276,7 @@ def build_us_statesmap(dataframe, colname):
     # max/min values to Choropleth builder or they are ignored). Set up legend dictionary
     # to show this range.
     (minval, maxval) = set_cm_limits(state_data_dict)
-    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    cmap = BuildColormap(minval, maxval)
     legendDict = BuildLegendDict(minval, maxval, cmap)
 
     # Creating the map
@@ -307,8 +318,9 @@ def update_us_statesmap(dataframe, colname, thismap, thislegend, thisoverlay):
     # to show this range.
     state_data_dict = get_state_dict(dataframe, colname)
     (minval, maxval) = set_cm_limits(state_data_dict)
-    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    cmap = BuildColormap(minval, maxval)
     legendDict = BuildLegendDict(minval, maxval, cmap)
+
 
     # Assign updated legend dictionary
     thislegend.legends = legendDict
@@ -383,7 +395,7 @@ def build_us_cntymap(dataframe, colname):
     # max/min values to Choropleth builder or they are ignored). Set up legend dictionary
     # to show this range.
     (minval, maxval) = set_cm_limits(county_data_dict)
-    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    cmap = BuildColormap(minval, maxval)
     legendDict = BuildLegendDict(minval, maxval, cmap)
 
     # Creating the map
@@ -430,7 +442,7 @@ def update_us_cntymap(dataframe, colname, thismap, thislegend, thisoverlay):
     # Load the new data and determine the new colormap limits
     county_data_dict = get_cnty_dict(dataframe, colname)
     (minval, maxval) = set_cm_limits(county_data_dict)
-    cmap = linear.YlOrRd_06.scale(minval, maxval)
+    cmap = BuildColormap(minval, maxval)
     legendDict = BuildLegendDict(minval, maxval, cmap)
 
     # Assign updated legend dictionary
