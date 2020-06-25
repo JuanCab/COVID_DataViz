@@ -525,6 +525,12 @@ def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Disp
         html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
         html_out += f"<b style='font-size: {scale_enhance};'>{last_infect_tot:,.0f} Total Cases</b> ({last_infectrate} per 100,000 people)<br/>"
 
+        # Since entire US recovered value is not accurate (since it involves summing up
+        # known state values, and some states are not reporting this), force it to not
+        # display...
+        if (FIPS == 0):
+            last_recovered_tot = 0
+
         # Don't try to print recovered/active stats if they are bogus
         if ((last_recovered_tot == 0)|(math.isnan(last_recovered_tot))):
             html_out += f"<b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
