@@ -862,47 +862,32 @@ def ts_barplot(dataframe, colname, fips, ylog=False, running_avg=0, fig=None, ax
 ## Functions for providing credit to data sources
 ##
 def creditForApplMob(Display = True):
-    html_out = ""
-    html_out += "<p style='margin: 1em 0 0 0;'>"
-    html_out += f"<I style='font-size:10px ;'>Mobility Data provided by Apple Inc. (“Apple”) and its licensors.</I><br/>"
-    html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
-    html_out += f"<I style='font-size:10px ;'><a href ='url'>https://www.apple.com/covid19/mobilityy</a></I><br/>"
+    html_out = f"<a href=\"https://www.apple.com/covid19/mobility\">Apple Mobility Data</a> provided by Apple Inc. (“Apple”) and its licensors."
     if(Display):
-        display(HTML(html_out)) 
+        display(HTML("<em style='font-size:8; line-height: 1em; text-align: justify;'>"+html_out+"</em>"))
     else:
         return html_out
+
+
 def creditForIHME(Display = True):
-    html_out = ""
-    html_out += "<p style='margin: 1em 0 0 0;'>"
-    html_out += f"<I style='font-size:10px ;'>Current and Projected Epidemiological/Resource data provided by Institute for Health Metrics and Evaluation (IHME) at University of Washington, 2020.</I><br/>"
-    html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
-    html_out += f"<I style='font-size:10px ;'><a href = 'url'>http://www.healthdata.org/covid/data-downloads</a></I><br/>"
+    html_out = f"<a href=\"http://www.healthdata.org/covid/data-downloads\">Current and Projected Epidemiological/Resource data</a> provided by Institute for Health Metrics and Evaluation (IHME) at University of Washington, 2020."
     if(Display):
-        display(HTML(html_out)) 
+        display(HTML("<em style='font-size:8; line-height: 1em; text-align: justify;'>"+html_out+"</em>"))
     else:
         return html_out
 
 
 def creditForGoogMob(Display = True):
-    html_out = ""
-    html_out += "<p style='margin: 1em 0 0 0;'>"
-    html_out += f"<I style='font-size:10px ;'>Mobility Data provided by Google LLC "'Google COVID-19 Community Mobility Reports'"</I><br/>"
-    html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
-    html_out += f"<I style='font-size:10px ;'><a href='url'>https://www.google.com/covid19/mobility</a></I><br/>"
+    html_out = f"<a href=\"https://www.google.com/covid19/mobility\">Google Mobility Data</a> provided by Google LLC \"Google COVID-19 Community Mobility Reports\""
     if(Display):
-        display(HTML(html_out)) 
+        display(HTML("<em style='font-size:8; line-height: 1em; text-align: justify;'>"+html_out+"</em>"))
     else:
         return html_out
 
 
 def creditForJH(Display = True):
-    html_out = ""
-    html_out += "<p style='margin: 1em 0 0 0;'>"
-    html_out += f"<I style='font-size:10px ;'>Epidemiological data provided by the COVID-19 Data Repository [of] the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University.  Population data from U.S. Census Bureau, Population Division (Release Date: March 2020)</I><br/>"
-    html_out += "<div style='margin: 0 0 0 2em; line-height: 1.2em;'>"
-    html_out += f"<I style='font-size:10px ;'><a href='url'>https://data.humdata.org/dataset/novel-coronavirus-2019-ncov-cases</a></I><br/>"
-    html_out += f"<I style='font-size:10px ;'><a href='url'>https://github.com/CSSEGISandData/COVID-19</a></I><br/>"
+    html_out = f"<a href=\"https://data.humdata.org/dataset/novel-coronavirus-2019-ncov-cases\">Epidemiological data</a> provided by the <a href=\"https://github.com/CSSEGISandData/COVID-19\">COVID-19 Data Repository</a> of the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University.  Population data from <a href=\"https://www.census.gov/topics/population.html\">U.S. Census Bureau, Population Division</a> (Release Date: March 2020)"
     if(Display):
-        display(HTML(html_out)) 
+        display(HTML("<em style='font-size:8; line-height: 1em; text-align: justify;'>"+html_out+"</em>"))
     else:
         return html_out
