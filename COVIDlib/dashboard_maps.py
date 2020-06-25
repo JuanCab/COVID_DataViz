@@ -19,6 +19,11 @@ import COVIDlib.dashboard_IO as COVID_Dash
 ## Define useful functions for building Maps of Data
 ##
 
+# Define map style
+map_border_color= 'black'
+map_hover_style= {'opacity': 1.0, 'weight': 2.0, 'fillOpacity': 1.0, 'dashArray': '0'}
+map_style= {'opacity': 0.50, 'fillOpacity': 0.50, 'dashArray': '0'}
+
 # Load variable descriptions
 JHVarDict = COVID_Dash.BuildJHVarDict()
 
@@ -274,9 +279,9 @@ def build_us_statesmap(dataframe, colname):
                                  colormap=cmap,
                                  value_min=minval,
                                  value_max=maxval,
-                                 border_color='black',
-                                 hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                 style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
+                                 border_color=map_border_color,
+                                 hover_style=map_hover_style,
+                                 style=map_style )
     states_map.add_layer(state_layer)
 
     # Display a legend
@@ -316,9 +321,9 @@ def update_us_statesmap(dataframe, colname, thismap, thislegend, thisoverlay):
                                        colormap=cmap,
                                        value_min=minval,
                                        value_max=maxval,
-                                       border_color='black',
-                                       hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                       style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
+                                       border_color=map_border_color,
+                                       hover_style=map_hover_style,
+                                       style=map_style )
 
     # Replace existing Choropleth layer (which is always the second layer with new layer
     state_layer = thismap.layers[1]
@@ -392,9 +397,9 @@ def build_us_cntymap(dataframe, colname):
                                  colormap=cmap,
                                  value_min=minval,
                                  value_max=maxval,
-                                 border_color='black',
-                                 hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                 style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
+                                 border_color=map_border_color,
+                                 hover_style=map_hover_style,
+                                 style=map_style )
     cnty_map.add_layer(cnty_layer)
 
     # Display a legend
@@ -439,9 +444,9 @@ def update_us_cntymap(dataframe, colname, thismap, thislegend, thisoverlay):
                                       colormap=cmap,
                                       value_min=minval,
                                       value_max=maxval,
-                                      border_color='black',
-                                      hover_style={'fillOpacity': 1.0, 'dashArray': '0'},
-                                      style={'fillOpacity': 0.6, 'dashArray': '0, 10000'} )
+                                      border_color=map_border_color,
+                                      hover_style=map_hover_style,
+                                      style=map_style )
 
     # Replace existing Choropleth layer (which is always the second layer with new layer
     cnty_layer = thismap.layers[1]
