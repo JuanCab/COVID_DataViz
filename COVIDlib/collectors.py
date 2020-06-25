@@ -1364,7 +1364,7 @@ def retrieve_imhe_data(county_data_df, state_data_df):
 
     # The challenge is that the files in the ZIP file are placed in a date based directory, so perform a search for the proper strings in the filenames
     summary_csv = [name for name in filelist if "Summary_stats_all_locs" in name][0]
-    hospitalization_csv = [name for name in filelist if "Hospital" in name][0]
+    hospitalization_csv = [name for name in filelist if "Reference_hospitalization_all_locs" in name][0]
 
     # Get the CSV data into pandas dataframes
     imhe_summary_df=pd.read_csv(zipfile.open(summary_csv), low_memory=False)

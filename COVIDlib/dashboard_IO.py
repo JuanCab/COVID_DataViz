@@ -103,7 +103,7 @@ var_descript_Hosp = {'FIPS' : 'Federal Information Processing Standards State/Co
                 'dates' : 'Dates',
                 'allbed_mean': 'IMHE Predicted Number of Hospital Beds Needed',
                 'ICUbed_mean' : 'IMHE Predicted Number of ICU beds Needed',
-                'InvVen_mean' : 'IMHE Predicted  Number of Ventilators Needed',
+                'InvVen_mean' : 'IMHE Predicted Number of Ventilators Needed',
                 'deaths_mean' : 'IMHE Predicted Number of Deaths',
                 'admis_mean' : 'IMHE Predicted New Hospital Admissions per Day',
                 'newICU_mean' : 'IMHE Predicted New ICU Patients per Day',
