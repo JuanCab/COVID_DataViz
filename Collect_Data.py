@@ -400,3 +400,5 @@ imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
 end = time.perf_counter()
 
 print(f"\n\nEntire process of executing this script took {end-start:0.2f} sec.\n")
+
+# %%
