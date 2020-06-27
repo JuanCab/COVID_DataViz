@@ -35,9 +35,9 @@ var_descript = {'FIPS' : 'Federal Information Processing Standards State/County 
                 'Incident_Rate' : 'Confirmed COVID Cases',  # As provided by John Hopkins
                 'People_Tested' : 'Total People tested for COVID',
                 'People_Hospitalized' : 'Total People Hospitalized for COVID',
-                'Mortality_Rate' : 'Mortality Rate (Deaths/Confirmed Infections)',
+                'Mortality_Rate' : 'Mortality Rate',
                 'Testing_Rate' : 'Total Tested for COVID (per 100,000 persons)',
-                'Hospitalization_Rate' : 'Hospitalization Rate (Hospitalized/Confirmed Infected)',
+                'Hospitalization_Rate' : 'Hospitalization Rate',
                 'dConfirmed' : 'New COVID Infections (#/day)',
                 'd2Confirmed' : 'Change in New COVID Infections',
                 'dDeaths' : 'New COVID Deaths (#/day)',
