@@ -37,7 +37,7 @@ var_descript = {'FIPS' : 'Federal Information Processing Standards State/County 
                 'People_Hospitalized' : 'Total People Hospitalized for COVID',
                 'Mortality_Rate' : 'Mortality Rate (Deaths/Confirmed Infections)',
                 'Testing_Rate' : 'Total Tested for COVID (per 100,000 persons)',
-                'Hospitalization_Rate' : 'Hospitalization Rate (per 100,000 persons)',
+                'Hospitalization_Rate' : 'Hospitalization Rate (Hospitalized/Confirmed Infected)',
                 'dConfirmed' : 'New COVID Infections (#/day)',
                 'd2Confirmed' : 'Change in New COVID Infections',
                 'dDeaths' : 'New COVID Deaths (#/day)',
