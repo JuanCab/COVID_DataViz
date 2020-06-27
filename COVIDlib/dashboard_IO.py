@@ -407,7 +407,7 @@ def BuildJHVarDict():
         'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons) [State only]', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
         'Mortality_Rate': {'descript': 'Mortality Rate [State only]', 'valdescript': '% Deaths per Confirmed Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
         'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID [State only]', 'valdescript': 'People Hospitalized', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
-        'Hospitalization_Rate': {'descript': 'Hospitalization Rate (Hospitalized/Infected) [State only]', 'valdescript': 'People Hospitalized (per 100,000)', 'format' : '.2f', 'stateonly': True, 'df': 'JH'}
+        'Hospitalization_Rate': {'descript': 'Hospitalization Rate (Hospitalized/Infected) [State only]', 'valdescript': 'Percent Hospitalized', 'format' : '.2f', 'stateonly': True, 'df': 'JH'}
         }
     return var_dict
 
