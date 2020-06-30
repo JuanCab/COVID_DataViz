@@ -467,7 +467,7 @@ def cleanGOOGdata(goog_dataframe):
     return
 
 
-def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Display=True):
+def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Predictions=True, Display=True):
     ## Print an HTML statement of current status (Confirmed, Deaths, Recovered)
     ## based on Johns Hopkins dataframes (county or State)
 
@@ -544,6 +544,8 @@ def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Disp
         # If a hospitalization summary dataframe is provided, process it and produce HTML report
         if ((FIPS>0)&(FIPS < 100)&(hospital_summary_df is not None)&(BedsStatus)):
             html_out += str(html_status_beds(hospital_summary_df, FIPS, Display=False))
+        if ((FIPS>0)&(FIPS < 100)&(hospital_summary_df is not None)&(Predictions)):
+                html_out += str(html_IHME_Predictions(hospital_summary_df, FIPS, Display=False))
         html_out += "</div></p>"
 
     if (Display):
@@ -626,25 +628,41 @@ def html_IHME_Predictions(dataframe, fips, Display = True):
         namestr = local_df['state'].values[0]
 
         # gets peak mean day  predictions for icu,beds and vents
-        PeakIcuDay = local_df['peak_icu_bed_day_mean'].to_list()[0].strftime("%B %d, %Y")
         peakBedDay = local_df['peak_bed_day_mean'].to_list()[0].strftime("%B %d, %Y")
-        peakventDay = local_df['peak_vent_day_mean'].to_list()[0].strftime("%B %d, %Y")
+        PeakIcuDay = local_df['peak_icu_bed_day_mean'].to_list()[0].strftime("%B %d, %Y")
+        peakVentDay = local_df['peak_vent_day_mean'].to_list()[0].strftime("%B %d, %Y")
         # Will have to add more if needed
+
+        # Is this in the past or in the future
+        today = datetime.datetime.now().date()
+        if (local_df['peak_bed_day_mean'].to_list()[0].date() > today):
+            bed_verb = "to peak"
+        else:
+            bed_verb = "to have peaked"
+        if (local_df['peak_icu_bed_day_mean'].to_list()[0].date() > today):
+            icu_verb = "to peak"
+        else:
+            icu_verb = "to have peaked"
+        if (local_df['peak_vent_day_mean'].to_list()[0].date() > today):
+            vent_verb = "to peak"
+        else:
+            vent_verb = "to have peaked"
 
         # Print HTML report
         if (Display):
-            html_out += f"<h3>COVID Predictions for the state of {namestr}</h3>"
+            html_out += f"<h3>Resource Use Predictions for the state of {namestr} by IMHE</h3>"
             html_out += f"<table style='padding: 5px;'>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Hospital bed use predicted to peak {peakBedDay} by IMHE</b><br/></td>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>ICU bed use predicted to peak {PeakIcuDay} by IMHE</b><br/></td>"
-            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Ventilator use predicted to peak {peakventDay} by IMHE</b><br/></td>"
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Hospital bed use predicted {bed_verb} {peakBedDay}</b><br/></td>"
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>ICU bed use predicted {icu_verb} {PeakIcuDay}</b><br/></td>"
+            html_out += f"<tr><td style='text-align: left;vertical-align: top;'><b style='font-size: 140%;'>Ventilator use predicted {vent_verb} {peakVentDay}</b><br/></td>"
             html_out += "</td></tr></table>"
             display(HTML(html_out))
         else:
             # Build HTML to add to list from html_bed_status()
-            html_out += f"<li>Hospital bed use predicted to peak {peakBedDay} by IMHE.</li>"
-            html_out += f"<li>ICU bed use predicted to peak {PeakIcuDay} by IMHE.</li>"
-            html_out += f"<li>Ventilator use predicted to peak {peakventDay} by IMHE.</li>"
+            html_out += f"<b>Predicted Resource Use for {namestr} by IMHE</b>"
+            html_out += f"<li><b>Hospital bed use</b> predicted {bed_verb} <b>{peakBedDay}</b>.</li>"
+            html_out += f"<li><b>ICU bed use</b> predicted {icu_verb} <b>{PeakIcuDay}</b></li>"
+            html_out += f"<li><b>Ventilator use</b> predicted {vent_verb} <b>{peakVentDay}</b></li>"
             return html_out
 
 
