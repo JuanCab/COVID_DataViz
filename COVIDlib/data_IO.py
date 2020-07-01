@@ -72,7 +72,7 @@ def GetCountyDeaths(countyDF, countyFIPS):
     # Gets number of confirmed deaths (int)
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
-    
+
     deathsList = countyDF[countyDF['FIPS'] == countyFIPS]['Deaths'].values[0]
     numDeaths = deathsList[len(deathsList) - 1]
     return numDeaths
@@ -81,7 +81,7 @@ def GetCountyInfections(countyDF, countyFIPS):
     # Gets number of confirmed infections (int)
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
-    
+
     infectList = countyDF[countyDF['FIPS'] == countyFIPS]['Confirmed'].values[0]
     numInfect = infectList[len(infectList) - 1]
     return numInfect
@@ -90,7 +90,7 @@ def GetCountyRecoveries(countyDF, countyFIPS):
     # Gets number of confirmed recoveries (int)
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
-    
+
     recovList = countyDF[countyDF['FIPS'] == countyFIPS]['Recovered'].values[0]
     numRecov = recovList[len(recovList) - 1]
     return numRecov
@@ -99,7 +99,7 @@ def GetStateDeaths(stateDF, stateFIPS):
     # Gets number of confirmed deaths (int)
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
-    
+
     deathsList = stateDF[stateDF['FIPS'] == stateFIPS]['Deaths'].values[0]
     numDeaths = deathsList[len(deathsList) - 1]
     return numDeaths
@@ -108,7 +108,7 @@ def GetStateInfections(stateDF, stateFIPS):
     # Gets number of confirmed infections (int)
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
-    
+
     infectList = stateDF[stateDF['FIPS'] == stateFIPS]['Confirmed'].values[0]
     numInfect = infectList[len(infectList) - 1]
     return numInfect
@@ -117,7 +117,7 @@ def GetStateRecoveries(stateDF, stateFIPS):
     # Gets number of confirmed recoveries (int)
     # Note: This function requires calling the GetCDRDataFrames first; this uses the second data frame returned
     # Initial author: Luke
-    
+
     recovList = stateDF[stateDF['FIPS'] == stateFIPS]['Recovered'].values[0]
     numRecov = recovList[len(recovList) - 1]
     return numRecov

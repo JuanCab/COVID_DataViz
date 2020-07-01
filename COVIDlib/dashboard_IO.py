@@ -40,12 +40,20 @@ var_descript = {'FIPS' : 'Federal Information Processing Standards State/County 
                 'Hospitalization_Rate' : 'Hospitalization Rate',
                 'dConfirmed' : 'New COVID Infections (#/day)',
                 'd2Confirmed' : 'Change in New COVID Infections',
+                'dConfirmedWk' : 'New COVID Infections (#/week)',
+                'd2ConfirmedWk' : 'Change in New COVID Infections',
                 'dDeaths' : 'New COVID Deaths (#/day)',
                 'd2Deaths' : 'Change in New COVID Deaths',
+                'dDeathsWk' : 'New COVID Deaths (#/week)',
+                'd2DeathsWk' : 'Change in New COVID Deaths',
                 'dConfirmedRate' : 'New COVID Infections (#/day) (per 100,000 persons)',
-                'dDeathsRate': 'New COVID Deaths (#/day) (per 100,000 persons)',
                 'd2ConfirmedRate' : 'Change in New COVID Infections (per 100,000 persons)',
+                'dDeathsRate': 'New COVID Deaths (#/day) (per 100,000 persons)',
                 'd2DeathsRate' : 'Change in New COVID Deaths (per 100,000 persons)',
+                'dConfirmedWkRate' : 'New COVID Infections (#/week) (per 100,000 persons)',
+                'd2ConfirmedWkRate' : 'Change in New COVID Infections (per 100,000 persons)',
+                'dDeathsWkRate': 'New COVID Deaths (#/week) (per 100,000 persons)',
+                'd2DeathsWkRate' : 'Change in New COVID Deaths (per 100,000 persons)',
                 'PopEst2019' : 'Estimated Population (July 1, 2019)',
                 'PopChg2019' : 'Estimated Population Increase (2018-19)',
                 'ConfirmedRate' : 'Total Confirmed COVID Infections (per 100,000 persons)', # As computed by us
@@ -77,12 +85,20 @@ var_ylabel = {'FIPS' : 'FIPS Number',
                 'Hospitalization_Rate' : 'Hospitalized/Confirmed Infection (%)',
                 'dConfirmed' : 'New Infections per day',
                 'd2Confirmed' : 'New Infections/Day vs. Previous',
+                'dConfirmedWk' : 'New Infections in past week',
+                'd2ConfirmedWk' : 'New Infections/Week vs. Previous',
                 'dDeaths' : 'New Deaths per day',
                 'd2Deaths' : 'Change in New Deaths (Deaths/day per day)',
+                'dDeathsWk' : 'New Deaths in past week',
+                'd2DeathsWk' : 'Change in New Deaths (Deaths/week per week)',
                 'dConfirmedRate' : 'New Infections/Day (per 100,000 people)',
                 'dDeathsRate': 'New Deaths/Day (per 100,000 people)',
                 'd2ConfirmedRate' : 'New Infections/Day vs. Previous',
                 'd2DeathsRate' : 'New Deaths/Day vs. Previous',
+                'dConfirmedWkRate' : 'New Infections/Week (per 100,000 people)',
+                'dDeathsWkRate': 'New Deaths/Week (per 100,000 people)',
+                'd2ConfirmedWkRate' : 'New Infections/Week vs. Previous',
+                'd2DeathsWkRate' : 'New Deaths/Week vs. Previous',
                 'PopEst2019' : 'Estimated Population',
                 'PopChg2019' : 'Estimated Population Increase',
                 'ConfirmedRate' : 'COVID Infections (per 100,000 persons)', # As computed by us
@@ -217,8 +233,8 @@ def derivative1D(x, y):
 
     The input and must be the same size.
 
-    Note that we copy the first known derivative values into the zeroth column, since
-    the derivatve for the first point is not a known value.
+    Note that we set the first derivative in the series to NaN since we don't
+    know its value.
     """
     # Compute the numerator (y[i+1] - y[i]) for the entire row at once
     dy = y[1:] - y[0:-1]
@@ -228,7 +244,30 @@ def derivative1D(x, y):
     dydx = dy / dx
     # Get first column to horizontal stack with numpy array to pad the array
     first_col = dydx[0]
-    return np.hstack((first_col, dydx))
+    dydx = np.hstack((first_col, dydx))
+    dydx[0] = np.NaN
+    return dydx
+
+
+def derivative1D_ndays(x, y, ndays):
+    """
+    Compute forward difference estimate via the same method above, but use a ndays-day baseline
+    for computing the derivative at any point relative to a point ndays before. The x and y arrays
+    are vectors with a single row each.
+
+    Note that we set the first ndays of these derivative values to NaN.
+    """
+    # Compute the numerator (y[i+ndays] - y[i]) for all rows in the entire array at once
+    dy = y[ndays:] - y[0:-ndays]
+    # Compute the denominator (x[i+ndays] - x[i]) for all rows in the for entire array at once
+    dx = x[ndays:] - x[0:-ndays]
+    # Compute the derivatives for all points in the array at once
+    dydx = dy / dx
+    # Get first 7 columns to horizontal stack with numpy array and set them to NaN
+    first_cols = dydx[0:ndays]
+    dydx = np.hstack((first_cols, dydx))
+    dydx[0:ndays] = np.NaN
+    return dydx
 
 
 def cleanJHdata(JH_dataframe):
@@ -268,10 +307,13 @@ def cleanJHdata(JH_dataframe):
         # Compute the derivatives (using forward derivative approach)
         dconfirmed_us_arr = derivative1D(dates_arr, confirmed_us_arr)
         ddeaths_us_arr = derivative1D(dates_arr, deaths_us_arr)
+        dconfirmed7_us_arr = derivative1D_ndays(dates_arr, confirmed_us_arr, 7)
+        ddeaths7_us_arr = derivative1D_ndays(dates_arr, deaths_us_arr, 7)
         # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
         d2confirmed_us_arr = derivative1D(dates_arr, dconfirmed_us_arr)
         d2deaths_us_arr = derivative1D(dates_arr, ddeaths_us_arr)
-
+        d2confirmed7_us_arr = derivative1D_ndays(dates_arr, dconfirmed7_us_arr, 7)
+        d2deaths7_us_arr = derivative1D_ndays(dates_arr, ddeaths7_us_arr, 7)
 
         # Build a dataframe of US information
         us_df = pd.DataFrame({"FIPS" : 0,
@@ -293,6 +335,10 @@ def cleanJHdata(JH_dataframe):
                               'd2Confirmed' : [d2confirmed_us_arr.tolist()],
                               'dDeaths' : [ddeaths_us_arr.tolist()],
                               'd2Deaths' : [d2deaths_us_arr.tolist()],
+                              'dConfirmedWk' : [dconfirmed7_us_arr.tolist()],
+                              'd2ConfirmedWk': [d2confirmed7_us_arr.tolist()],
+                              'dDeathsWk' : [ddeaths7_us_arr.tolist()],
+                              'd2DeathsWk' : [d2deaths7_us_arr.tolist()],
                               'PopEst2019' : pop_us,
                               'PopChg2019' : JH_dataframe['PopChg2019'].sum() })
 
@@ -307,6 +353,10 @@ def cleanJHdata(JH_dataframe):
     daily_deaths_arr = np.array(JH_dataframe['dDeaths'].to_list())
     daily_delta_confirmed_arr = np.array(JH_dataframe['d2Confirmed'].to_list())
     daily_delta_deaths_arr = np.array(JH_dataframe['d2Deaths'].to_list())
+    weekly_confirmed_arr = np.array(JH_dataframe['dConfirmedWk'].to_list())
+    weekly_deaths_arr = np.array(JH_dataframe['dDeathsWk'].to_list())
+    weekly_delta_confirmed_arr = np.array(JH_dataframe['d2ConfirmedWk'].to_list())
+    weekly_delta_deaths_arr = np.array(JH_dataframe['d2DeathsWk'].to_list())
     recovered_arr = np.array(JH_dataframe['Recovered'].to_list())
     pop_arr = np.array(JH_dataframe['PopEst2019'].to_list())
 
@@ -317,6 +367,10 @@ def cleanJHdata(JH_dataframe):
     JH_dataframe['dDeathsRate'] = np.round_(((daily_deaths_arr/pop_arr[:, None])*100000),2).tolist()
     JH_dataframe['d2ConfirmedRate'] = np.round_(((daily_delta_confirmed_arr/pop_arr[:, None])*100000),2).tolist()
     JH_dataframe['d2DeathsRate'] = np.round_(((daily_delta_deaths_arr/pop_arr[:, None])*100000),2).tolist()
+    JH_dataframe['dConfirmedWkRate'] = np.round_(((weekly_confirmed_arr/pop_arr[:, None])*100000),2).tolist()
+    JH_dataframe['dDeathsWkRate'] = np.round_(((weekly_deaths_arr/pop_arr[:, None])*100000),2).tolist()
+    JH_dataframe['d2ConfirmedWkRate'] = np.round_(((weekly_delta_confirmed_arr/pop_arr[:, None])*100000),2).tolist()
+    JH_dataframe['d2DeathsWkRate'] = np.round_(((weekly_delta_deaths_arr/pop_arr[:, None])*100000),2).tolist()
     JH_dataframe['Active'] = (confirmed_arr - deaths_arr - recovered_arr).tolist()
 
     # Computed confirmed new cases and deaths as fraction of population
@@ -817,6 +871,67 @@ def ts_plot_Hos(dataframe, colname, fips, sum_dataframe=None, connectdots=False,
             var_upper = np.array(this_frame[upper_colname].to_list()[0])
             #print(var_lower)
             prange = ax.fill_between(dates, var_lower, var_upper, color=colour, alpha=0.2)
+
+
+    # Adjust y axis to be logarithmic if requested
+    if (ylog):
+        ax.set_yscale('log')
+
+    # Add legend
+    legend = ax.legend(prop={'size': legendsize})
+
+
+def ts_plot_Rt(dataframe, fips, sum_dataframe=None, connectdots=False, ylog=False, fig=None, ax=None):
+    ## Plot up a time series of Rt from dataframe, plotting each fips provided in the list.
+
+    ## Start by defaulting to a single figure and plotting it if no fig, ax values
+    ## are provided
+    if (fig is None and ax is not None) or (fig is not None and ax is None):
+        raise ValueError('Must provide both "fig" and "ax" if you provide one of them')
+    elif fig is None and ax is None:
+        fig, ax = plt.subplots(1, 1)
+
+    ## Check if FIPS input is reasonable
+    if (type(fips) == int):
+        fips = [fips]
+    elif (type(fips) != list):
+        raise ValueError('Input fips must be integer or list of integers')
+
+    # Label the plot
+    ax.tick_params(axis='x', rotation=30) # Rotate date labels
+    xlabel = ax.set_xlabel("Date")
+    ylabel = ax.set_ylabel("$R_t$")
+    title = ax.set_title("Effective Reproduction Rate")
+
+    # Loop through the FIPS values
+    for FIPS in fips:
+        # Get dataframe
+        this_frame = COVID_IO.getLocalDataFrame(FIPS, dataframe)
+
+        # Determine legend label to use (add bed numbers if appropriate and summary_df available)
+        labelstr = this_frame['state'].values[0]
+
+        # retrieve the data (nan values are automatically excluded)
+        dates = np.array(this_frame['dates'].to_list()[0])
+        var = np.array(this_frame['Rt_mean'].to_list()[0])
+
+        if (connectdots):
+            ls='-'
+        else:
+            ls ='None'
+
+        # Plot the data for this FIPS record
+        p = ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
+
+        # Track the color just used so error range matches
+        colour = p[0].get_color()
+
+        # Add error bars (in continuous form)
+        lower_colname = "Rt_lower_80"
+        upper_colname = "Rt_upper_80"
+        var_lower = np.array(this_frame[lower_colname].to_list()[0])
+        var_upper = np.array(this_frame[upper_colname].to_list()[0])
+        prange = ax.fill_between(dates, var_lower, var_upper, color=colour, alpha=0.2)
 
 
     # Adjust y axis to be logarithmic if requested
