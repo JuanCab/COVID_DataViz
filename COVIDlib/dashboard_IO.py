@@ -525,6 +525,15 @@ def cleanGOOGdata(goog_dataframe):
     return
 
 
+def cleanRtdata(Rt_dataframe):
+    # This function takes Rt dataframes and adds postal codes for easy cross-identification
+    # on maps.
+
+    Rt_dataframe['postal'] = Rt_dataframe['state'].map(name2code)
+
+    return
+
+
 def html_status(dataframe, fips, hospital_summary_df=None, Rt_df=None, BedsStatus=True, Predictions=True, Display=True):
     ## Print an HTML statement of current status (Confirmed, Deaths, Recovered)
     ## based on Johns Hopkins dataframes (county or State)

@@ -141,7 +141,15 @@ def BuildMapVarDict():
     # Construct this dictionary from the John Hopkins and Mobility Data dictionaries
     JHDict = COVID_Dash.BuildJHVarDict()
     MobileDict = COVID_Dash.BuildMobilityVarDict()
+
+    # Start with JH Dictionary
     var_dict = JHDict.copy()
+    # Append Rt Dictionary
+    Rt_dict = {
+        'Rt_mean': {'descript': 'Estimated R_t', 'valdescript': 'People infected per Infected Person', 'format': '.2f', 'stateonly': True, 'df': 'Rt'},
+        }
+    var_dict.update(Rt_dict)
+    # Start with Append mobile data Dictionary
     var_dict.update(MobileDict)
 
     return var_dict
