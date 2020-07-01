@@ -260,7 +260,7 @@ def derivative1D_ndays(x, y, ndays):
     # Compute the numerator (y[i+ndays] - y[i]) for all rows in the entire array at once
     dy = y[ndays:] - y[0:-ndays]
     # Compute the denominator (x[i+ndays] - x[i]) for all rows in the for entire array at once
-    dx = x[ndays:] - x[0:-ndays]
+    dx = (x[ndays:] - x[0:-ndays])/ndays
     # Compute the derivatives for all points in the array at once
     dydx = dy / dx
     # Get first 7 columns to horizontal stack with numpy array and set them to NaN
@@ -449,6 +449,10 @@ def BuildJHVarDict():
         'dConfirmedRate': {'descript': 'New COVID Infections (#/day per 100,000 people)', 'valdescript': 'New COVID Infections/Day (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
         'd2Confirmed': {'descript': 'Change in New COVID Infections', 'valdescript': 'New COVID Infections/Day vs. Previous', 'format' : '+d', 'stateonly': False, 'df': 'JH'},
         'd2ConfirmedRate': {'descript': 'Change in New COVID Infections (per 100,000 people)', 'valdescript': 'New COVID Infections/Day vs. Previous', 'format' : '+.2f', 'stateonly': False, 'df': 'JH'},
+        'dConfirmedWk': {'descript': 'New COVID Infections (#/week)', 'valdescript': 'New COVID Infections/Week', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
+        'dConfirmedWkRate': {'descript': 'New COVID Infections (#/week per 100,000 people)', 'valdescript': 'New COVID Infections/Week (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
+        'd2ConfirmedWk': {'descript': 'Change in New COVID Infections/week', 'valdescript': 'New COVID Infections/Week vs. Previous', 'format' : '+d', 'stateonly': False, 'df': 'JH'},
+        'd2ConfirmedWkRate': {'descript': 'Change in New COVID Infections/week (per 100,000 people)', 'valdescript': 'New COVID Infections/Week vs. Previous', 'format' : '+.2f', 'stateonly': False, 'df': 'JH'},
         'Deaths': {'descript': 'Total Confirmed and Probable COVID Deaths', 'valdescript': 'COVID Deaths', 'format' : ',d', 'stateonly': False, 'df': 'JH'},
         'DeathRate': {'descript': 'Total Confirmed COVID Deaths (per 100,000 people)', 'valdescript': 'COVID Deaths (per 100,000)', 'format' : '.2f', 'stateonly': False, 'df': 'JH'},
         'dDeaths': {'descript': 'New COVID Deaths (#/day)', 'valdescript': 'New COVID Deaths/Day', 'format' : 'd', 'stateonly': False, 'df': 'JH'},
@@ -521,7 +525,7 @@ def cleanGOOGdata(goog_dataframe):
     return
 
 
-def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Predictions=True, Display=True):
+def html_status(dataframe, fips, hospital_summary_df=None, Rt_df=None, BedsStatus=True, Predictions=True, Display=True):
     ## Print an HTML statement of current status (Confirmed, Deaths, Recovered)
     ## based on Johns Hopkins dataframes (county or State)
 
@@ -591,6 +595,11 @@ def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Pred
         else:
             html_out += f"<b style='color:#ff0000;font-size: {scale_enhance2}'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</b> <b>/</b> <b style='color:rgb(0,128,20);font-size: {scale_enhance2};'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</b> <b>/</b> <b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
 
+        # Add Rt information if passed Rt dataframe
+        if ((FIPS>0)&(FIPS < 100)&(Rt_df is not None)):
+                status = str(html_status_Rt(Rt_df, FIPS, Display=False))
+                html_out += f"<span style='font-size: {scale_enhance2}'>{status}</span>"
+
         # Present last day stats
         html_out += "<b>New Cases [change from previous day]:</b><br/>"
         html_out += f"<li><b>{last_infect_change:,.0f} [{last_infect_change2:+,.0f}] new infections</b> ({last_infect_change_rate:,.2f} [{last_infect_change2_rate:+,.2f}] per 100,000 people).</li>"
@@ -610,6 +619,44 @@ def html_status(dataframe, fips, hospital_summary_df=None, BedsStatus=True, Pred
         return html_out
 
     return
+
+
+def html_status_Rt(dataframe, fips, Display=True):
+    ## Print the current estimate R_t reproduction rate for this state
+
+    ## Check if FIPS input is reasonable
+    if (type(fips) == int):
+        fips = [fips]
+    elif (type(fips) != list):
+        raise ValueError('Input fips must be integer or list of integers')
+
+    # Loop through the FIPS values for states
+    html_out = ""  # Start with blank string for HTML
+
+    # Deal with accidentally passing in US or county FIPS values to list
+    fips = [FIPS for FIPS in fips if (FIPS >0)&(FIPS<100)]
+    for FIPS in fips:
+        # Get state name
+        local_df = COVID_IO.getLocalDataFrame(FIPS, dataframe)
+        namestr = local_df['state'].values[0]
+        last_day = local_df['dates'].to_list()[0][-1].strftime("%B %d, %Y")
+        current_Rt = local_df['Rt_mean'].to_list()[0][-1]
+        current_lower = local_df['Rt_lower_80'].to_list()[0][-1]
+        current_upper = local_df['Rt_upper_80'].to_list()[0][-1]
+
+        # Highligh if R_t above 1
+        if (current_Rt>1):
+            clr = "#ff0000"
+        else:
+            clr = "#000000"
+
+        # Print HTML report
+        html_out += f"<b style='color:{clr};'>R<sub>t</sub>={current_Rt:.2f}</b> (80% chance between {current_lower:.2f} & {current_upper:.2f}) on {last_day}<br/>"
+        if (Display):
+            display(HTML(html_out))
+            return
+        else:
+            return html_out
 
 
 def html_status_beds(dataframe, fips, Display=True):
@@ -1020,6 +1067,13 @@ def creditForGoogMob(Display = True):
 
 def creditForJH(Display = True):
     html_out = f"<a href=\"https://data.humdata.org/dataset/novel-coronavirus-2019-ncov-cases\">Epidemiological data</a> provided by the <a href=\"https://github.com/CSSEGISandData/COVID-19\">COVID-19 Data Repository</a> of the Center for Systems Science and Engineering (CSSE) at Johns Hopkins University.  Population data from <a href=\"https://www.census.gov/topics/population.html\">U.S. Census Bureau, Population Division</a> (Release Date: March 2020)"
+    if(Display):
+        display(HTML("<em style='font-size:8; line-height: 1em; text-align: justify;'>"+html_out+"</em>"))
+    else:
+        return html_out
+
+def creditForRt(Display = True):
+    html_out = f"R<sub>t</sub> model data provided by the <a href=\"http://rt.live/\">R<sub>t</sub> COVID-19</a> Model of Kevin Systrom and Thomas Vladeck."
     if(Display):
         display(HTML("<em style='font-size:8; line-height: 1em; text-align: justify;'>"+html_out+"</em>"))
     else:

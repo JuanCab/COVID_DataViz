@@ -160,7 +160,7 @@ def derivative_ndays(x, y, ndays):
     # Compute the numerator (y[i+ndays] - y[i]) for all rows in the entire array at once
     dy = y[:, ndays:] - y[:, 0:-ndays]
     # Compute the denominator (x[i+ndays] - x[i]) for all rows in the for entire array at once
-    dx = x[:, ndays:] - x[:, 0:-ndays]
+    dx = ( x[:, ndays:] - x[:, 0:-ndays] ) / ndays
     # Compute the derivatives for all points in the array at once
     dydx = dy / dx
     # Get first 7 columns to horizontal stack with numpy array and set them to NaN
