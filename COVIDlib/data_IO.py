@@ -501,3 +501,15 @@ def PtoGOOGMobilityDataFrames(countyFile = 'our_data/goog_mobility_cnty.p', stat
     googMobilityStateFrame.rename(columns=newnames, errors="raise", inplace=True)
 
     return googMobilityCountyFrame, googMobilityStateFrame
+
+
+def PtoRtDataFrames(stateFile = 'our_data/Rt_live.p'):
+    # Retrieves the Rt live data from the pickle files so dataframe shouldn't need fixing.
+    # Initial Author: Juan
+
+    # Import pickle files and convert appropriate columns
+    pickle_file = open(stateFile,'rb')
+    RtLiveDataframe = pickle.load(pickle_file)
+    pickle_file.close()
+
+    return RtLiveDataframe

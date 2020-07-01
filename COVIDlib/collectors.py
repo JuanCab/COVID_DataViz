@@ -14,8 +14,63 @@ from zipfile import ZipFile
 from datetime import date, timedelta, datetime
 
 ##
-## Define various functions we will use below
+## Define various variables and functions we will use below
 ##
+
+# Define the postal codes for states
+code2name = {
+    'AL': 'Alabama',
+    'AK': 'Alaska',
+    'AZ': 'Arizona',
+    'AR': 'Arkansas',
+    'CA': 'California',
+    'CO': 'Colorado',
+    'CT': 'Connecticut',
+    'DE': 'Delaware',
+    'DC': 'District of Columbia',
+    'FL': 'Florida',
+    'GA': 'Georgia',
+    'HI': 'Hawaii',
+    'ID': 'Idaho',
+    'IL': 'Illinois',
+    'IN': 'Indiana',
+    'IA': 'Iowa',
+    'KS': 'Kansas',
+    'KY': 'Kentucky',
+    'LA': 'Louisiana',
+    'ME': 'Maine',
+    'MD': 'Maryland',
+    'MA': 'Massachusetts',
+    'MI': 'Michigan',
+    'MN': 'Minnesota',
+    'MS': 'Mississippi',
+    'MO': 'Missouri',
+    'MT': 'Montana',
+    'NE': 'Nebraska',
+    'NV': 'Nevada',
+    'NH': 'New Hampshire',
+    'NJ': 'New Jersey',
+    'NM': 'New Mexico',
+    'NY': 'New York',
+    'NC': 'North Carolina',
+    'ND': 'North Dakota',
+    'OH': 'Ohio',
+    'OK': 'Oklahoma',
+    'OR': 'Oregon',
+    'PA': 'Pennsylvania',
+    'RI': 'Rhode Island',
+    'SC': 'South Carolina',
+    'SD': 'South Dakota',
+    'TN': 'Tennessee',
+    'TX': 'Texas',
+    'UT': 'Utah',
+    'VT': 'Vermont',
+    'VA': 'Virginia',
+    'WA': 'Washington',
+    'WV': 'West Virginia',
+    'WI': 'Wisconsin',
+    'WY': 'Wyoming'
+}
 
 def csvfiles(path):
     contents = os.listdir(path);
@@ -80,8 +135,7 @@ def derivative(x, y):
 
     The input and must be the same size.
 
-    Note that we copy the first known derivative values into the zeroth column, since
-    the derivatve for the first point is not a known value.
+    Note that we set the first known derivative values into the zeroth column to NaN.
     """
     # Compute the numerator (y[i+1] - y[i]) for all rows in the entire array at once
     dy = y[:, 1:] - y[:, 0:-1]
@@ -91,7 +145,29 @@ def derivative(x, y):
     dydx = dy / dx
     # Get first column to horizontal stack with numpy array
     first_col = dydx[:,0][..., None] # The [..., None] bit keeps (n, 1) shape (a la https://stackoverflow.com/questions/15815854/how-to-add-column-to-numpy-array)
-    return np.hstack((first_col, dydx))
+    dydx = np.hstack((first_col, dydx))
+    dydx[:,0] = np.NaN
+    return dydx
+
+
+def derivative_ndays(x, y, ndays):
+    """
+    Compute forward difference estimate via the same method above, but use a ndays-day baseline 
+    for computing the derivative at any point relative to a point ndays before.
+
+    Note that we set the first ndays of these derivative values to NaN.
+    """
+    # Compute the numerator (y[i+ndays] - y[i]) for all rows in the entire array at once
+    dy = y[:, ndays:] - y[:, 0:-ndays]
+    # Compute the denominator (x[i+ndays] - x[i]) for all rows in the for entire array at once
+    dx = x[:, ndays:] - x[:, 0:-ndays]
+    # Compute the derivatives for all points in the array at once
+    dydx = dy / dx
+    # Get first 7 columns to horizontal stack with numpy array and set them to NaN
+    first_cols = dydx[:,0:ndays]
+    dydx = np.hstack((first_cols, dydx))
+    dydx[:,0:ndays] = np.NaN
+    return dydx
 
 
 def reduce_local_dataframe(raw_df, fips_df):
@@ -238,62 +314,6 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     ClayFIPS = 27027
     MNFIPS = 27
 
-    # Define the postal codes for states
-    code2name = {
-        'AL': 'Alabama',
-        'AK': 'Alaska',
-        'AZ': 'Arizona',
-        'AR': 'Arkansas',
-        'CA': 'California',
-        'CO': 'Colorado',
-        'CT': 'Connecticut',
-        'DE': 'Delaware',
-        'DC': 'District of Columbia',
-        'FL': 'Florida',
-        'GA': 'Georgia',
-        'HI': 'Hawaii',
-        'ID': 'Idaho',
-        'IL': 'Illinois',
-        'IN': 'Indiana',
-        'IA': 'Iowa',
-        'KS': 'Kansas',
-        'KY': 'Kentucky',
-        'LA': 'Louisiana',
-        'ME': 'Maine',
-        'MD': 'Maryland',
-        'MA': 'Massachusetts',
-        'MI': 'Michigan',
-        'MN': 'Minnesota',
-        'MS': 'Mississippi',
-        'MO': 'Missouri',
-        'MT': 'Montana',
-        'NE': 'Nebraska',
-        'NV': 'Nevada',
-        'NH': 'New Hampshire',
-        'NJ': 'New Jersey',
-        'NM': 'New Mexico',
-        'NY': 'New York',
-        'NC': 'North Carolina',
-        'ND': 'North Dakota',
-        'OH': 'Ohio',
-        'OK': 'Oklahoma',
-        'OR': 'Oregon',
-        'PA': 'Pennsylvania',
-        'PR': 'Puerto Rico',
-        'RI': 'Rhode Island',
-        'SC': 'South Carolina',
-        'SD': 'South Dakota',
-        'TN': 'Tennessee',
-        'TX': 'Texas',
-        'UT': 'Utah',
-        'VT': 'Vermont',
-        'VA': 'Virginia',
-        'WA': 'Washington',
-        'WV': 'West Virginia',
-        'WI': 'Wisconsin',
-        'WY': 'Wyoming'
-    }
-
     # Check if the local git repository directory exists, if not, create it and clone the repo to it
     JH_repo = "https://github.com/CSSEGISandData/COVID-19.git"
     if not os.path.exists(JHdata_dir):
@@ -358,7 +378,7 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     FIPSdf = state_data_df[['FIPS','STNAME']].copy()
     FIPSd = FIPSdf.set_index('STNAME').T.to_dict('records')[0]
 
-    # Create blank dataframes to store state-evel time series data for later (most of this will be NaN early on)
+    # Create blank dataframes to store state-level time series data for later (most of this will be NaN early on)
     state_confirmed_df = state_fips_df.copy()
     state_deaths_df = state_fips_df.copy()
     state_recovered_df = state_fips_df.copy()
@@ -567,16 +587,24 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     # Compute the derivatives (using forward derivative approach)
     dconfirmed_arr = derivative(dates_arr, confirmed_arr)
     ddeaths_arr = derivative(dates_arr, deaths_arr)
+    dconfirmed7_arr = derivative_ndays(dates_arr, confirmed_arr, 7)
+    ddeaths7_arr = derivative_ndays(dates_arr, deaths_arr, 7)
 
     # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
     d2confirmed_arr = derivative(dates_arr, dconfirmed_arr)
     d2deaths_arr = derivative(dates_arr, ddeaths_arr)
+    d2confirmed7_arr = derivative_ndays(dates_arr, dconfirmed7_arr, 7)
+    d2deaths7_arr = derivative_ndays(dates_arr, ddeaths7_arr, 7)
 
     # Convert numpy arrays to lists of lists for storage in combined dataframe
     combined_cnty_df['dConfirmed'] = dconfirmed_arr.tolist()
     combined_cnty_df['d2Confirmed'] = d2confirmed_arr.tolist()
     combined_cnty_df['dDeaths'] = ddeaths_arr.tolist()
     combined_cnty_df['d2Deaths'] = d2deaths_arr.tolist()
+    combined_cnty_df['dConfirmedWk'] = dconfirmed7_arr.tolist()
+    combined_cnty_df['d2ConfirmedWk'] = d2confirmed7_arr.tolist()
+    combined_cnty_df['dDeathsWk'] = ddeaths7_arr.tolist()
+    combined_cnty_df['d2DeathsWk'] = d2deaths7_arr.tolist()
 
     # Add population data to same array
     combined_cnty_df = pd.merge(combined_cnty_df,county_data_df[['FIPS','POPESTIMATE2019', 'NPOPCHG_2019']], on='FIPS', how='left', copy=True)
@@ -593,6 +621,7 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     del confirmed_listOlists, deaths_listOlists, recovered_listOlists
     del dates_arr, confirmed_arr, deaths_arr
     del dconfirmed_arr, ddeaths_arr, d2confirmed_arr, d2deaths_arr
+    del dconfirmed7_arr, ddeaths7_arr, d2confirmed7_arr, d2deaths7_arr
 
     ##
     ## Build combined state-level datafiles
@@ -735,16 +764,24 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     # Compute the derivatives (using forward derivative approach)
     dconfirmed_arr = derivative(dates_arr, confirmed_arr)
     ddeaths_arr = derivative(dates_arr, deaths_arr)
+    dconfirmed7_arr = derivative_ndays(dates_arr, confirmed_arr, 7)
+    ddeaths7_arr = derivative_ndays(dates_arr, deaths_arr, 7)
 
     # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
     d2confirmed_arr = derivative(dates_arr, dconfirmed_arr)
     d2deaths_arr = derivative(dates_arr, ddeaths_arr)
+    d2confirmed7_arr = derivative_ndays(dates_arr, dconfirmed7_arr, 7)
+    d2deaths7_arr = derivative_ndays(dates_arr, ddeaths7_arr, 7)
 
     # Convert numpy arrays to lists of lists for storage in combined dataframe
     combined_state_df['dConfirmed'] = dconfirmed_arr.tolist()
     combined_state_df['d2Confirmed'] = d2confirmed_arr.tolist()
     combined_state_df['dDeaths'] = ddeaths_arr.tolist()
     combined_state_df['d2Deaths'] = d2deaths_arr.tolist()
+    combined_state_df['dConfirmedWk'] = dconfirmed7_arr.tolist()
+    combined_state_df['d2ConfirmedWk'] = d2confirmed7_arr.tolist()
+    combined_state_df['dDeathsWk'] = ddeaths7_arr.tolist()
+    combined_state_df['d2DeathsWk'] = d2deaths7_arr.tolist()
 
     # Add population data to same array
     combined_state_df = pd.merge(combined_state_df,state_data_df[['FIPS','POPESTIMATE2019', 'NPOPCHG_2019']], on='FIPS', how='left', copy=True)
@@ -1012,7 +1049,7 @@ def retrieve_goog_mobility_data(county_data_df, state_data_df):
         workplaces_listOlists.append(workplaces_list)
         residential_listOlists.append(residential_list)
 
-    # Results in error ValueError: Length of values does not match length of index
+    # Load data (in form of lists of lists) into pandas dataframe
     goog_mobility_states_reduced['dates'] = dates_listOlists
     goog_mobility_states_reduced['retail_and_recreation_percent_change_from_baseline'] = retail_listOlists
     goog_mobility_states_reduced['grocery_and_pharmacy_percent_change_from_baseline'] = grocery_listOlists
@@ -1606,3 +1643,98 @@ def retrieve_imhe_data(county_data_df, state_data_df):
 
     # Return dataframes
     return(imhe_summary_cleaned, imhe_hospitalizations_reduced)
+
+
+def retrieve_Rt_live_data(state_data_df):
+##  Estimated Effective Reproduction Rate $R_t$
+##
+## Kevin Systrom and Mike Krieger (co-founders of Instagram) and Tom Vladeck
+## (owner of Gradient Metrics) put together a unaffiliated project to tracked
+## modelled $R_t$ values for each state at http://rt.live/
+##
+## "$R_t$ represents the effective reproduction rate of the virus calculated for each
+## locale. It lets us estimate how many secondary infections are likely to occur from
+## a single infection in a specific area. Values over 1.0 mean we should expect more
+## cases in that area, values under 1.0 mean we should expect fewer."
+
+    # Grab the CSV file from rt.live and load into a Pandas Dataframe
+    rt_csv = "https://d14wlfuexuxgcm.cloudfront.net/covid/rt.csv"
+    rt_df = pd.read_csv(rt_csv, encoding='latin-1')
+
+    # Build a state name to FIPS dictionary
+    # Start by converting states dataframe into a dictionary
+    FIPSdf = state_data_df[['FIPS','STNAME']].copy()
+    FIPSd = FIPSdf.set_index('STNAME').T.to_dict('records')[0]
+
+    # Determine range of dates
+    DATEs = [datetime.strptime(x, '%Y-%m-%d').date() for x in rt_df['date'].to_list()]
+    first_day = min(DATEs)
+    last_day = max(DATEs)
+    all_dates_list = list(datetime_range(first_day, last_day))
+    all_dates_str = dates2strings(all_dates_list)
+
+    # Create blank lists of lists
+    FIPS_list = []
+    states_list = []
+    dates_listOlists = []
+    Rt_mean_listOlists = []
+    Rt_median_listOlists = []
+    Rt_lower_80_listOlists = []
+    Rt_upper_80_listOlists = []
+
+    # For each state, extract the necessary data
+    for key in code2name:
+        # Grab the subset of data for this state
+        rtstate_df = rt_df[rt_df['region'] == key][['date', 'mean', 'median', 'lower_80', 'upper_80']]
+
+        # Convert the time series into lists in memory
+        dates_str_list = rtstate_df['date'].to_list()
+
+        # Convert the lists corresponding to each column into dictionaries for indexing
+        Rt_mean_dict = dict(zip(dates_str_list, rtstate_df['mean'].tolist()))
+        Rt_median_dict = dict(zip(dates_str_list, rtstate_df['median'].tolist()))
+        Rt_lower_80_dict = dict(zip(dates_str_list, rtstate_df['lower_80'].tolist()))
+        Rt_upper_80_dict = dict(zip(dates_str_list, rtstate_df['upper_80'].tolist()))
+
+        #
+        # Now brute force through all dates from first to last day and look for matches in each date,
+        # filling the voids with NaN
+        #
+        # Start with blank lists for this State
+        Rt_mean_list = []
+        Rt_median_list = []
+        Rt_lower_80_list = []
+        Rt_upper_80_list = []
+
+        for datekey in all_dates_str:
+            try:
+                Rt_mean_list.append(Rt_mean_dict[datekey])
+                Rt_median_list.append(Rt_median_dict[datekey])
+                Rt_lower_80_list.append(Rt_lower_80_dict[datekey])
+                Rt_upper_80_list.append(Rt_upper_80_dict[datekey])
+            except:
+                Rt_mean_list.append(np.nan)
+                Rt_median_list.append(np.nan)
+                Rt_lower_80_list.append(np.nan)
+                Rt_upper_80_list.append(np.nan)
+
+        # Add variables lists to lists
+        FIPS_list.append(FIPSd[code2name[key]])
+        states_list.append(code2name[key])
+        dates_listOlists.append(all_dates_list) # Add all dates
+        Rt_mean_listOlists.append(Rt_mean_list)
+        Rt_median_listOlists.append(Rt_median_list)
+        Rt_lower_80_listOlists.append(Rt_lower_80_list)
+        Rt_upper_80_listOlists.append(Rt_upper_80_list)
+
+    # Build Pandas Dataframe for reduced data
+    rt_reduced_df = pd.DataFrame()
+    rt_reduced_df['FIPS'] = FIPS_list
+    rt_reduced_df['state'] = states_list
+    rt_reduced_df['dates'] = dates_listOlists
+    rt_reduced_df['Rt_mean'] = Rt_mean_listOlists
+    rt_reduced_df['Rt_median'] = Rt_median_listOlists
+    rt_reduced_df['Rt_lower_80'] = Rt_lower_80_listOlists
+    rt_reduced_df['Rt_upper_80'] = Rt_upper_80_listOlists
+
+    return rt_reduced_df

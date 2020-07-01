@@ -864,3 +864,68 @@ test_imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
 end = time.perf_counter()
 
 print(f"Entire process of executing this script took {end-start:0.2f} sec.")
+
+# %% [markdown]
+# # Generating $R_t$ Live data on Reproduction Rate
+
+# %%
+# Retrieve the Rt Live data
+
+print("\n- Retrieving Rt Live Effective Reproduction Rate Data")
+
+# Retrieve the Rt live dataframe
+Rt_live_df = COVIDdata.retrieve_Rt_live_data(state_pop_df)
+
+# %%
+# Create test subsets containing only local data
+test_Rt_live_df= Rt_live_df[(Rt_live_df['FIPS'] == MNFIPS) | (Rt_live_df['FIPS'] == NDFIPS)].copy()
+test_Rt_live_df
+
+# %%
+# Get indices for MN and ND
+MNidx = test_Rt_live_df.index[test_Rt_live_df['FIPS'] == MNFIPS].tolist()[0]
+NDidx = test_Rt_live_df.index[test_Rt_live_df['FIPS'] == NDFIPS].tolist()[0]
+
+# Fill with bogus data
+dates_len = 100
+dates_list = test_Rt_live_df[(test_Rt_live_df['FIPS'] == MNFIPS)]['dates'].values.tolist()[0]
+dates_list = dates_list[0:dates_len]
+
+# %%
+# Assign bogus MN values
+test_Rt_live_df.at[MNidx, 'dates'] = dates_list
+test_Rt_live_df.at[MNidx, 'Rt_mean'] = [0.9]*dates_len
+test_Rt_live_df.at[MNidx, 'Rt_median'] = [0.9]*dates_len
+test_Rt_live_df.at[MNidx, 'Rt_lower_80'] = [0.75]*dates_len
+test_Rt_live_df.at[MNidx, 'Rt_upper_80'] = [1.05]*dates_len
+
+# Assign bogus ND values
+test_Rt_live_df.at[NDidx, 'dates'] = dates_list
+test_Rt_live_df.at[NDidx, 'Rt_mean'] = [1.0]*dates_len
+test_Rt_live_df.at[NDidx, 'Rt_median'] = [1.0]*dates_len
+test_Rt_live_df.at[NDidx, 'Rt_lower_80'] = [0.85]*dates_len
+test_Rt_live_df.at[NDidx, 'Rt_upper_80'] = [1.15]*dates_len
+
+# %%
+# Export the Rt live data
+print("   - Exporting test Rt live data")
+    
+#
+# Save the data to pickle and CSV files
+#
+
+Rt_live_fname = test_dir + "TEST_Rt_live.p"
+print("   - Rt live data exported to ", Rt_live_fname)
+with open(Rt_live_fname, 'wb') as pickle_file:
+    pickle.dump(test_Rt_live_df, pickle_file)
+    pickle_file.close()
+
+# Convert datetime lists into strings
+test_Rt_live_df['dates'] = test_Rt_live_df['dates'].apply(COVIDdata.dates2strings)
+
+# Write out CSV files to disk
+Rt_live_fname = test_dir + "TEST_Rt_live.csv"
+print("   - Rt live data also exported to ", Rt_live_fname)
+test_Rt_live_df.to_csv(Rt_live_fname, index=False)
+
+# %%

@@ -333,6 +333,43 @@ imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
 #print(imhe_hospitalizations_local)
 
 # %% [markdown]
+# # Estimated Effective Reproduction Rate $R_t$
+#
+# Kevin Systrom and Mike Krieger (co-founders of Instagram) and Tom Vladeck (owner of Gradient Metrics) put together a unaffiliated project to tracked modelled $R_t$ values for each state at http://rt.live/
+#
+# "$R_t$ represents the effective reproduction rate of the virus calculated for each locale. It lets us estimate how many secondary infections are likely to occur from a single infection in a specific area. Values over 1.0 mean we should expect more cases in that area, values under 1.0 mean we should expect fewer."
+
+# %%
+# Retrieve the Rt Live data
+
+print("\n- Retrieving Rt Live Effective Reproduction Rate Data")
+
+# Retrieve the Rt live dataframe
+Rt_live_df = COVIDdata.retrieve_Rt_live_data(state_pop_df)
+
+# %%
+# Export the Rt live data
+print("   - Exporting Rt live data")
+    
+#
+# Save the data to pickle and CSV files
+#
+
+Rt_live_fname = data_dir + "Rt_live.p"
+print("   - Rt live data exported to ", Rt_live_fname)
+with open(Rt_live_fname, 'wb') as pickle_file:
+    pickle.dump(Rt_live_df, pickle_file)
+    pickle_file.close()
+
+# Convert datetime lists into strings
+Rt_live_df['dates'] = Rt_live_df['dates'].apply(COVIDdata.dates2strings)
+
+# Write out CSV files to disk
+Rt_live_fname = data_dir + "Rt_live.csv"
+print("   - Rt live dataalso exported to ", Rt_live_fname)
+Rt_live_df.to_csv(Rt_live_fname, index=False)
+
+# %% [markdown]
 # ## NY Times Data on Probable Deaths/Cases (FIPS Present, NOT CURRENTLY USED FOR PROJECT)
 #
 # The NY Times has assembled data on COVID in a GitHub repository at https://github.com/nytimes/covid-19-data.  I have not examined that data yet, but it may well be interesting.
