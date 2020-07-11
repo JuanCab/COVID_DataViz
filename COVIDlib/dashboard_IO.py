@@ -599,7 +599,7 @@ def html_status(dataframe, fips, hospital_summary_df=None, Rt_df=None, BedsStatu
             last_recovered_tot = 0
 
         # Don't try to print recovered/active stats if they are bogus
-        if ((last_recovered_tot == 0)|(math.isnan(last_recovered_tot))):
+        if ((last_active_tot < 0)|(last_recovered_tot == 0)|(math.isnan(last_recovered_tot))):
             html_out += f"<b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
         else:
             html_out += f"<b style='color:#ff0000;font-size: {scale_enhance2}'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</b> <b>/</b> <b style='color:rgb(0,128,20);font-size: {scale_enhance2};'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</b> <b>/</b> <b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
