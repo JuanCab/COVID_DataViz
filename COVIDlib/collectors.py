@@ -853,6 +853,7 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     # Convert confirmed/deaths/recovered into arrays
     confirmed_arr = np.array(confirmed_listOlists)
     deaths_arr = np.array(deaths_listOlists)
+    tested_arr = np.array(tested_listOlists)
 
     # At this point I have arrays where the rows are individiual FIPS (counties) and the columns are
     # (depending on the array) the days since 1/1/2020, number of confirmed cases, number of deaths,
@@ -861,8 +862,10 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     # Compute the derivatives (using forward derivative approach)
     dconfirmed_arr = derivative(dates_arr, confirmed_arr)
     ddeaths_arr = derivative(dates_arr, deaths_arr)
+    dtested_arr = derivative(dates_arr, tested_arr)
     dconfirmed7_arr = derivative_ndays(dates_arr, confirmed_arr, 7)
     ddeaths7_arr = derivative_ndays(dates_arr, deaths_arr, 7)
+    dtested7_arr = derivative_ndays(dates_arr, tested_arr, 7)
 
     # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
     d2confirmed_arr = derivative(dates_arr, dconfirmed_arr)
@@ -875,10 +878,12 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     combined_state_df['d2Confirmed'] = d2confirmed_arr.tolist()
     combined_state_df['dDeaths'] = ddeaths_arr.tolist()
     combined_state_df['d2Deaths'] = d2deaths_arr.tolist()
+    combined_state_df['dTested'] = dtested_arr.tolist()
     combined_state_df['dConfirmedWk'] = dconfirmed7_arr.tolist()
     combined_state_df['d2ConfirmedWk'] = d2confirmed7_arr.tolist()
     combined_state_df['dDeathsWk'] = ddeaths7_arr.tolist()
     combined_state_df['d2DeathsWk'] = d2deaths7_arr.tolist()
+    combined_state_df['dTestedWk'] = dtested7_arr.tolist()
 
     # Add population data to same array
     combined_state_df = pd.merge(combined_state_df,state_data_df[['FIPS','POPESTIMATE2019', 'NPOPCHG_2019']], on='FIPS', how='left', copy=True)
@@ -917,7 +922,7 @@ def cleanJHdata(JH_dataframe):
     # get totals for the United States
     if (JH_dataframe['FIPS'].max() < 100):
         # Get sums of other columns
-        tested_arr = np.sum(np.array(JH_dataframe['People_Tested'].to_list()), axis=0)
+        tested_us_arr = np.sum(np.array(JH_dataframe['People_Tested'].to_list()), axis=0)
         # using nansum here because it treats NaN as 0
         hospitalized_arr = np.nansum( np.array(JH_dataframe['People_Hospitalized'].to_list()) , axis=0)
 
@@ -932,7 +937,7 @@ def cleanJHdata(JH_dataframe):
         pop_us = JH_dataframe['PopEst2019'].sum() # Get sum as a scalar
         mortality = np.round_((deaths_us_arr/confirmed_us_arr)*100,2).tolist()
         hospitalized_rate_us = np.round_(((hospitalized_arr/pop_us)*100000),2).tolist()
-        testing_rate_us = np.round_(((tested_arr/pop_us)*100000),2).tolist()
+        testing_rate_us = np.round_(((tested_us_arr/pop_us)*100000),2).tolist()
 
         # Compute derivatives for US
         dates_list = []
@@ -943,8 +948,10 @@ def cleanJHdata(JH_dataframe):
         # Compute the derivatives (using forward derivative approach)
         dconfirmed_us_arr = derivative1D(dates_arr, confirmed_us_arr)
         ddeaths_us_arr = derivative1D(dates_arr, deaths_us_arr)
+        dtested_us_arr = derivative1D(dates_arr, tested_us_arr)
         dconfirmed7_us_arr = derivative1D_ndays(dates_arr, confirmed_us_arr, 7)
         ddeaths7_us_arr = derivative1D_ndays(dates_arr, deaths_us_arr, 7)
+        dtested7_us_arr = derivative1D_ndays(dates_arr, tested_us_arr, 7)
         # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
         d2confirmed_us_arr = derivative1D(dates_arr, dconfirmed_us_arr)
         d2deaths_us_arr = derivative1D(dates_arr, ddeaths_us_arr)
@@ -962,7 +969,7 @@ def cleanJHdata(JH_dataframe):
                               'Deaths' : [deaths_us_arr.tolist()],
                               'Recovered' : [recovered_us_arr.tolist()],
                               'Incident_Rate' : [[]],  # No data provided by John Hopkins
-                              'People_Tested' : [tested_arr.tolist()],
+                              'People_Tested' : [tested_us_arr.tolist()],
                               'People_Hospitalized' : [hospitalized_arr.tolist()],
                               'Mortality_Rate' : [mortality],
                               'Testing_Rate' : [testing_rate_us],
@@ -975,6 +982,8 @@ def cleanJHdata(JH_dataframe):
                               'd2ConfirmedWk': [d2confirmed7_us_arr.tolist()],
                               'dDeathsWk' : [ddeaths7_us_arr.tolist()],
                               'd2DeathsWk' : [d2deaths7_us_arr.tolist()],
+                              'dTested' : [dtested_us_arr.tolist()],
+                              'dTestedWk' : [dtested7_us_arr.tolist()],
                               'PopEst2019' : pop_us,
                               'PopChg2019' : JH_dataframe['PopChg2019'].sum() })
 

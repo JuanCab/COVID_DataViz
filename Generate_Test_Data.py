@@ -159,16 +159,24 @@ deaths_arr = np.array(test_combined_cnty_df['Deaths'].values.tolist())
 # Compute the derivatives (using forward derivative approach)
 dconfirmed_arr = COVIDdata.derivative(dates_arr, confirmed_arr)
 ddeaths_arr = COVIDdata.derivative(dates_arr, deaths_arr)
-
+dconfirmed7_arr = COVIDdata.derivative_ndays(dates_arr, confirmed_arr, 7)
+ddeaths7_arr = COVIDdata.derivative_ndays(dates_arr, deaths_arr, 7)
+    
 # Compute the second derivatives (a bit hinky to use forward derivative again, but...)
 d2confirmed_arr = COVIDdata.derivative(dates_arr, dconfirmed_arr)
 d2deaths_arr = COVIDdata.derivative(dates_arr, ddeaths_arr)
-
+d2confirmed7_arr = COVIDdata.derivative_ndays(dates_arr, dconfirmed7_arr, 7)
+d2deaths7_arr = COVIDdata.derivative_ndays(dates_arr, ddeaths7_arr, 7)
+    
 # Convert numpy arrays to lists of lists for storage in combined dataframe
 test_combined_cnty_df['dConfirmed'] = dconfirmed_arr.tolist()
 test_combined_cnty_df['d2Confirmed'] = d2confirmed_arr.tolist()
 test_combined_cnty_df['dDeaths'] = ddeaths_arr.tolist()
 test_combined_cnty_df['d2Deaths'] = d2deaths_arr.tolist()
+test_combined_cnty_df['dConfirmedWk'] = dconfirmed7_arr.tolist()
+test_combined_cnty_df['d2ConfirmedWk'] = d2confirmed7_arr.tolist()
+test_combined_cnty_df['dDeathsWk'] = ddeaths7_arr.tolist()
+test_combined_cnty_df['d2DeathsWk'] = d2deaths7_arr.tolist()
 
 # %%
 ##
@@ -228,24 +236,6 @@ for dat in dates:
     dates_list.append( COVIDdata.days_since(dat) )
 dates_arr = np.array([dates_list]*len(test_combined_states_df))
 
-# Convert confirmed/deaths/recovered into arrays
-confirmed_arr = np.array(test_combined_states_df['Confirmed'].values.tolist())
-deaths_arr = np.array(test_combined_states_df['Deaths'].values.tolist())
-
-# Compute the derivatives (using forward derivative approach)
-dconfirmed_arr = COVIDdata.derivative(dates_arr, confirmed_arr)
-ddeaths_arr = COVIDdata.derivative(dates_arr, deaths_arr)
-
-# Compute the second derivatives (a bit hinky to use forward derivative again, but...)
-d2confirmed_arr = COVIDdata.derivative(dates_arr, dconfirmed_arr)
-d2deaths_arr = COVIDdata.derivative(dates_arr, ddeaths_arr)
-
-# Convert numpy arrays to lists of lists for storage in combined dataframe
-test_combined_states_df['dConfirmed'] = dconfirmed_arr.tolist()
-test_combined_states_df['d2Confirmed'] = d2confirmed_arr.tolist()
-test_combined_states_df['dDeaths'] = ddeaths_arr.tolist()
-test_combined_states_df['d2Deaths'] = d2deaths_arr.tolist()
-
 # Generate incident rates and death rates per 100000
 pop_arr = np.array(test_combined_states_df['PopEst2019'].values.tolist())
 test_combined_states_df['Incident_Rate'] = np.around(100000*(confirmed_arr/pop_arr[:, np.newaxis]), decimals=3).tolist()
@@ -269,6 +259,37 @@ cumilative_tested_arr = np.cumsum(tested_arr)  # Cumilative number of tests
 cumilative_tested_list = cumilative_tested_arr.tolist()
 test_combined_states_df['People_Tested'] = 2*[cumilative_tested_list]
 test_combined_states_df['Testing_Rate'] = np.around(100000*(cumilative_tested_arr/pop_arr[:, np.newaxis]), decimals=3).tolist()
+
+# Convert confirmed/deaths/recovered into arrays
+confirmed_arr = np.array(test_combined_states_df['Confirmed'].values.tolist())
+deaths_arr = np.array(test_combined_states_df['Deaths'].values.tolist())
+tested_arr = np.array(test_combined_states_df['People_Tested'].values.tolist())
+
+# Compute the derivatives (using forward derivative approach)
+dconfirmed_arr = COVIDdata.derivative(dates_arr, confirmed_arr)
+ddeaths_arr = COVIDdata.derivative(dates_arr, deaths_arr)
+dtested_arr = COVIDdata.derivative(dates_arr, tested_arr)
+dconfirmed7_arr = COVIDdata.derivative_ndays(dates_arr, confirmed_arr, 7)
+ddeaths7_arr = COVIDdata.derivative_ndays(dates_arr, deaths_arr, 7)
+dtested7_arr = COVIDdata.derivative_ndays(dates_arr, tested_arr, 7)
+    
+# Compute the second derivatives (a bit hinky to use forward derivative again, but...)
+d2confirmed_arr = COVIDdata.derivative(dates_arr, dconfirmed_arr)
+d2deaths_arr = COVIDdata.derivative(dates_arr, ddeaths_arr)
+d2confirmed7_arr = COVIDdata.derivative_ndays(dates_arr, dconfirmed7_arr, 7)
+d2deaths7_arr = COVIDdata.derivative_ndays(dates_arr, ddeaths7_arr, 7)
+    
+# Convert numpy arrays to lists of lists for storage in combined dataframe
+test_combined_states_df['dConfirmed'] = dconfirmed_arr.tolist()
+test_combined_states_df['d2Confirmed'] = d2confirmed_arr.tolist()
+test_combined_states_df['dDeaths'] = ddeaths_arr.tolist()
+test_combined_states_df['d2Deaths'] = d2deaths_arr.tolist()
+test_combined_states_df['dTested'] = dtested_arr.tolist()
+test_combined_states_df['dConfirmedWk'] = dconfirmed7_arr.tolist()
+test_combined_states_df['d2ConfirmedWk'] = d2confirmed7_arr.tolist()
+test_combined_states_df['dDeathsWk'] = ddeaths7_arr.tolist()
+test_combined_states_df['d2DeathsWk'] = d2deaths7_arr.tolist()
+test_combined_states_df['dTestedWk'] = dtested7_arr.tolist()
 
 
 # %%
