@@ -95,6 +95,10 @@ print("\n- Retrieving US Census and John Hopkins Data")
 # Retrieve John Hopkins data
 (ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVIDdata.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
 
+# Do additional post-processing on John Hopkins data (adding US level data, additional variables, etc.)
+combined_state_df = COVIDdata.cleanJHdata(combined_state_df)
+combined_cnty_df = COVIDdata.cleanJHdata(combined_cnty_df)
+
 #
 # Save the county and state-level processed daily dataframes into CSV files
 #
@@ -116,8 +120,8 @@ with open(combined_datafile, 'wb') as pickle_file:
 
 # %%
 # Convert datetime lists into strings
-combined_cnty_df['Dates'] = combined_cnty_df['Dates'].apply(COVIDdata.dates2strings)
-combined_state_df['Dates'] = combined_state_df['Dates'].apply(COVIDdata.dates2strings)
+combined_cnty_df['dates'] = combined_cnty_df['dates'].apply(COVIDdata.dates2strings)
+combined_state_df['dates'] = combined_state_df['dates'].apply(COVIDdata.dates2strings)
 
 combined_datafile = data_dir + "countylevel_combinedCDR.csv"
 print("   - JH county data also exported to ", combined_datafile)
@@ -159,6 +163,10 @@ print("\n- Retrieving Google Mobility Data")
 with warnings.catch_warnings():
     warnings.simplefilter(action='ignore', category=FutureWarning)
     (goog_mobility_cnty_df, goog_mobility_states_df) = COVIDdata.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
+
+# Post-process Google Mobility Data to add postal codes
+COVIDdata.cleanGOOGdata(goog_mobility_cnty_df)
+COVIDdata.cleanGOOGdata(goog_mobility_states_df)
 
 #
 # Save the same data to pickle files
@@ -209,6 +217,10 @@ print("\n- Retrieving Apple Mobility Data")
 
 # Retrieve the Apple Mobility dataframes
 (aapl_mobility_cnty_df, aapl_mobility_states_df) = COVIDdata.retrieve_aapl_mobility_data(cnty_pop_df, state_pop_df)
+
+# Post-process Apple Mobility dataframes to add postal codes
+COVIDdata.cleanAAPLdata(aapl_mobility_cnty_df)
+COVIDdata.cleanAAPLdata(aapl_mobility_states_df)
 
 ## Notice only driving information is available at the county level here
 #print("APPLE MOBILITY DATA IN aapl_mobility_cnty_df() FOR CLAY COUNTY")
@@ -346,6 +358,9 @@ print("\n- Retrieving Rt Live Effective Reproduction Rate Data")
 
 # Retrieve the Rt live dataframe
 Rt_live_df = COVIDdata.retrieve_Rt_live_data(state_pop_df)
+
+# Post-process the Rt data to add postal codes
+COVIDdata.cleanRtdata(Rt_live_df)
 
 # %%
 # Export the Rt live data

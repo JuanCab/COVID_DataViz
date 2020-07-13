@@ -2,8 +2,6 @@
 ## This is a set of functions for presenting COVID data to the user as a Map
 ##
 
-import os
-import pandas as pd
 import numpy as np
 import ipywidgets as widgets
 
@@ -146,7 +144,7 @@ def BuildMapVarDict():
     var_dict = JHDict.copy()
     # Append Rt Dictionary
     Rt_dict = {
-        'Rt_mean': {'descript': 'Estimated R_t', 'valdescript': 'People infected per Infected Person', 'format': '.2f', 'stateonly': True, 'df': 'Rt'},
+        'Rt_mean': {'descript': 'Estimated R_t [State only]', 'valdescript': 'People infected per Infected Person [State only]', 'format': '.2f', 'stateonly': True, 'df': 'Rt'},
         }
     var_dict.update(Rt_dict)
     # Start with Append mobile data Dictionary

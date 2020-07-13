@@ -90,6 +90,10 @@ def daterange(date1, date2):
 # Retrieve John Hopkins data
 (ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVIDdata.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
 
+# Do additional post-processing on John Hopkins data (adding US level data, additional variables, etc.)
+combined_state_df = COVIDdata.cleanJHdata(combined_state_df)
+combined_cnty_df = COVIDdata.cleanJHdata(combined_cnty_df)
+
 
 # %%
 ##
@@ -132,7 +136,7 @@ deaths_CASS =  twowks_CASS - recovered_CASS
 deaths_CASS_list = deaths_CASS.tolist()
 
 # Save Dates, Confirmed, Deaths, Recovered numbers
-test_combined_cnty_df['Dates'] = 2*[dates]
+test_combined_cnty_df['dates'] = 2*[dates]
 test_combined_cnty_df['Confirmed'] = [cumilative_CLAY_list, cumilative_CASS_list ]
 test_combined_cnty_df['Deaths'] = [deaths_CLAY_list, deaths_CASS_list ]
 test_combined_cnty_df['Recovered'] = [recovered_CLAY_list, recovered_CASS_list ]
@@ -142,7 +146,7 @@ test_combined_cnty_df['Recovered'] = [recovered_CLAY_list, recovered_CASS_list ]
 ##
 
 # Convert the list of dates into numpy array of days since Jan. 1, 2020 for each observation
-dates = test_combined_cnty_df[test_combined_cnty_df['FIPS'] == ClayFIPS]['Dates'].tolist()[0]
+dates = test_combined_cnty_df[test_combined_cnty_df['FIPS'] == ClayFIPS]['dates'].tolist()[0]
 dates_list = []
 for dat in dates:
     dates_list.append( COVIDdata.days_since(dat) )
@@ -208,7 +212,7 @@ deaths_ND =  twowks_ND - recovered_ND
 deaths_ND_list = deaths_ND.tolist()
 
 # Save Dates, Confirmed, Deaths, Recovered numbers
-test_combined_states_df['Dates'] = 2*[dates]
+test_combined_states_df['dates'] = 2*[dates]
 test_combined_states_df['Confirmed'] = [cumilative_MN_list, cumilative_ND_list ]
 test_combined_states_df['Deaths'] = [deaths_MN_list, deaths_ND_list ]
 test_combined_states_df['Recovered'] = [recovered_MN_list, recovered_ND_list ]
@@ -218,7 +222,7 @@ test_combined_states_df['Recovered'] = [recovered_MN_list, recovered_ND_list ]
 ##
 
 # Convert the list of dates into numpy array of days since Jan. 1, 2020 for each observation
-dates = test_combined_states_df[test_combined_states_df['FIPS'] == MNFIPS]['Dates'].tolist()[0]
+dates = test_combined_states_df[test_combined_states_df['FIPS'] == MNFIPS]['dates'].tolist()[0]
 dates_list = []
 for dat in dates:
     dates_list.append( COVIDdata.days_since(dat) )
@@ -291,8 +295,8 @@ test_combined_cnty_df.reset_index(drop=True)
 
 # %%
 # Convert datetime lists into strings
-test_combined_cnty_df['Dates'] = test_combined_cnty_df['Dates'].apply(COVIDdata.dates2strings)
-test_combined_states_df['Dates'] = test_combined_states_df['Dates'].apply(COVIDdata.dates2strings)
+test_combined_cnty_df['dates'] = test_combined_cnty_df['dates'].apply(COVIDdata.dates2strings)
+test_combined_states_df['dates'] = test_combined_states_df['dates'].apply(COVIDdata.dates2strings)
 
 #
 # Save the county and state-level test dataframes into CSV files
@@ -315,7 +319,7 @@ combined_state_df = test_combined_states_df.copy()
 #
 
 # County-level data for plotting
-dates_cty = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+dates_cty = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['dates'].to_list()[0], dtype='datetime64')
 clay_deaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['Deaths'].to_list()[0],dtype='int')
 clay_death_rate = (clay_deaths/combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['PopEst2019'].values)*100000
 cass_deaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['Deaths'].to_list()[0],dtype='int')
@@ -368,7 +372,7 @@ title = this_axs.set_title("COVID Confirmed Infections per 100,000 people")
 #
 
 # State-level data for plotting
-dates_state = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+dates_state = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['dates'].to_list()[0], dtype='datetime64')
 MN_deaths = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['Deaths'].to_list()[0],dtype='int')
 MN_death_rate = (MN_deaths/combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['PopEst2019'].values)*100000
 ND_deaths = np.array(combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['Deaths'].to_list()[0],dtype='int')
@@ -423,14 +427,14 @@ title = this_axs.set_title("COVID Confirmed Infections per 100,000 people")
 #
 
 # County-level data for plotting
-dates_cty = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+dates_cty = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['dates'].to_list()[0], dtype='datetime64')
 clay_ddeaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['dDeaths'].to_list()[0])
 cass_ddeaths = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['dDeaths'].to_list()[0])
 clay_dconfirmed = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == ClayFIPS)]['dConfirmed'].to_list()[0])
 cass_dconfirmed = np.array(combined_cnty_df[(combined_cnty_df['FIPS'] == CassFIPS)]['dConfirmed'].to_list()[0])
 
 # State-level data for plotting
-dates_state = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['Dates'].to_list()[0], dtype='datetime64')
+dates_state = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['dates'].to_list()[0], dtype='datetime64')
 MN_ddeaths = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['dDeaths'].to_list()[0])
 ND_ddeaths = np.array(combined_state_df[(combined_state_df['FIPS'] == NDFIPS)]['dDeaths'].to_list()[0])
 MN_dconfirmed = np.array(combined_state_df[(combined_state_df['FIPS'] == MNFIPS)]['dConfirmed'].to_list()[0])
@@ -479,6 +483,10 @@ title = this_axs.set_title("COVID Death Rate")
 # %%
 # Retrieve the Google Mobility dataframes
 (goog_mobility_cnty_df, goog_mobility_states_df) = COVIDdata.retrieve_goog_mobility_data(cnty_pop_df, state_pop_df)
+
+# Post-process Google Mobility Data to add postal codes
+COVIDdata.cleanGOOGdata(goog_mobility_cnty_df)
+COVIDdata.cleanGOOGdata(goog_mobility_states_df)
 
 # %%
 # Create test subsets containing only local data
@@ -596,6 +604,10 @@ test_goog_mobility_states_df.to_csv(goog_mobility_states_fname, index=False)
 # %%
 # Retrieve the Apple Mobility dataframes
 (aapl_mobility_cnty_df, aapl_mobility_states_df) = COVIDdata.retrieve_aapl_mobility_data(cnty_pop_df, state_pop_df)
+
+# Post-process Apple Mobility dataframes to add postal codes
+COVIDdata.cleanAAPLdata(aapl_mobility_cnty_df)
+COVIDdata.cleanAAPLdata(aapl_mobility_states_df)
 
 
 # %%
@@ -875,6 +887,9 @@ print("\n- Retrieving Rt Live Effective Reproduction Rate Data")
 
 # Retrieve the Rt live dataframe
 Rt_live_df = COVIDdata.retrieve_Rt_live_data(state_pop_df)
+
+# Post-process the Rt data to add postal codes
+COVIDdata.cleanRtdata(Rt_live_df)
 
 # %%
 # Create test subsets containing only local data
