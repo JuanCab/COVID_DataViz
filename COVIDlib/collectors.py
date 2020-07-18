@@ -267,6 +267,7 @@ def derivative1D_ndays(x, y, ndays):
     dydx[0:ndays] = np.NaN
     return dydx
 
+
 def reduce_local_dataframe(raw_df, fips_df):
     # Reduce the raw dataframe of all COVID data to just the relevant entries for the US
     # Match to the list of known FIPS values from Census data
