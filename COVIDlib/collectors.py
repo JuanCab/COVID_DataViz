@@ -1455,7 +1455,7 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
         # I need to deal with the additional transportation types, otherwise it craps out below when processing
         # column names into dates (because 'transportation_type', 'alternative_name' columns survive and they
         # are not dates!)
-        print("  - State level transportation types: "+",".join(state_transport)+"\n" )
+        print("  - State level transportation types: "+",".join(state_transport) )
         print("    - Purging non-driving mobility types.")
         aapl_mobility_states = aapl_mobility_states[ aapl_mobility_states['transportation_type'] == 'driving']
         aapl_mobility_states.drop(columns=['transportation_type', 'alternative_name'], inplace=True)
@@ -1478,7 +1478,7 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
         # I need to deal with the additional transportation types, otherwise it craps out below when processing
         # column names into dates (because 'transportation_type', 'alternative_name' columns survive and they
         # are not dates!)
-        print("  - County level transportation types: "+",".join(cnty_transport)+"\n" )
+        print("  - County level transportation types: "+",".join(cnty_transport))
         print("    - Purging non-driving mobility types.")
         aapl_mobility_cnty = aapl_mobility_cnty[ aapl_mobility_cnty['transportation_type'] == 'driving']
         aapl_mobility_cnty.drop(columns=['transportation_type', 'alternative_name'], inplace=True)
