@@ -1427,6 +1427,7 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
         # Apple Mobility Data URL
         jsondata = result.json()
         aapl_mobility_csv_url = aapl_server+jsondata['basePath']+jsondata['regions']['en-us']['csvPath']
+        # print(f"Apple Mobility Data CSV file retrieved: {aapl_mobility_csv_url}\n")
         aapl_mobility_df=pd.read_csv(aapl_mobility_csv_url, low_memory=False)
 
     # There are four 'geo_types' (aapl_mobility_df['geo_type' == ].unique() returns ['country/region', 'city', 'sub-region', 'county'])
@@ -1447,10 +1448,18 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
     aapl_mobility_states.drop(columns=['country', 'geo_type', 'sub-region'], inplace=True)
     aapl_mobility_states.rename(columns={ 'region': 'state'}, inplace = True)
     state_transport = aapl_mobility_states['transportation_type'].unique().tolist()
-    #print("Apple mobility data at state level transportation types: "+",".join(state_transport)+"\n" )
     # Assuming there is still only a 'driving' transportation type, drop those redundant columns
     if (len(state_transport) == 1):
         aapl_mobility_states.drop(columns=['transportation_type', 'alternative_name'], inplace=True)
+    else:
+        # I need to deal with the additional transportation types, otherwise it craps out below when processing
+        # column names into dates (because 'transportation_type', 'alternative_name' columns survive and they
+        # are not dates!)
+        print("  - State level transportation types: "+",".join(state_transport)+"\n" )
+        print("    - Purging non-driving mobility types.")
+        aapl_mobility_states = aapl_mobility_states[ aapl_mobility_states['transportation_type'] == 'driving']
+        aapl_mobility_states.drop(columns=['transportation_type', 'alternative_name'], inplace=True)
+
     # Purge territories
     aapl_mobility_states = aapl_mobility_states[aapl_mobility_states.state != 'Guam'].copy()
     aapl_mobility_states = aapl_mobility_states[aapl_mobility_states.state != 'Puerto Rico'].copy()
@@ -1464,6 +1473,14 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
     #print("Apple mobility data at county level transportation types: "+",".join(state_transport)+"\n" )
     # Assuming there is still only a 'driving' transportation type, drop those redundant columns
     if (len(cnty_transport) == 1):
+        aapl_mobility_cnty.drop(columns=['transportation_type', 'alternative_name'], inplace=True)
+    else:
+        # I need to deal with the additional transportation types, otherwise it craps out below when processing
+        # column names into dates (because 'transportation_type', 'alternative_name' columns survive and they
+        # are not dates!)
+        print("  - County level transportation types: "+",".join(cnty_transport)+"\n" )
+        print("    - Purging non-driving mobility types.")
+        aapl_mobility_cnty = aapl_mobility_cnty[ aapl_mobility_cnty['transportation_type'] == 'driving']
         aapl_mobility_cnty.drop(columns=['transportation_type', 'alternative_name'], inplace=True)
 
     # Purge complete Apple mobility dataframe once subsets built
@@ -1484,7 +1501,7 @@ def retrieve_aapl_mobility_data(county_data_df, state_data_df):
     ##
     aapl_mobility_states_cleaned = pd.merge(state_fips_df,aapl_mobility_states,left_on='STNAME', right_on='state', how='left', copy=True)
     aapl_mobility_states_cleaned.drop(columns=['STNAME'], inplace=True)
-
+    
     # Convert all the mobility data into one massive list of lists (and columns into dates list), this will allow collapsing multiple columns into lists
     dates_str_list = aapl_mobility_states_cleaned[ aapl_mobility_states_cleaned.columns[(aapl_mobility_states_cleaned.columns!='FIPS') & (aapl_mobility_states_cleaned.columns!='state')] ].columns.tolist()
     dates_list = [datetime.fromisoformat(day).date() for day in dates_str_list]
