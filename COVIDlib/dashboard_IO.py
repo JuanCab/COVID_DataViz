@@ -702,7 +702,7 @@ def ts_plot_Hos(dataframe, colname, fips, sum_dataframe=None, connectdots=False,
     if (ylog):
         ax.set_yscale('log')
 
-    # Adjust the x-axis limits to only cover last 90 days
+    # Adjust the x-axis limits to only cover last 180 days of model
     if (last180):
         xlims = ax.get_xlim()
         ax.set_xlim(xlims[1]-180,xlims[1])
