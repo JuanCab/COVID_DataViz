@@ -566,7 +566,7 @@ def running_average(ts_array, n_days):
     return running_avg_raw[0:npts]
 
 
-def ts_plot(dataframe, colname, fips, connectdots=False, ylog=False, running_avg=0, fig=None, ax=None):
+def ts_plot(dataframe, colname, fips, connectdots=False, ylog=False, running_avg=0, last90=False, fig=None, ax=None):
     ## Plot up a time series of colname data from dataframe, plotting each fips provided in the list.
 
     ## Start by defaulting to a single figure and plotting it if no fig, ax values
@@ -622,11 +622,16 @@ def ts_plot(dataframe, colname, fips, connectdots=False, ylog=False, running_avg
     if (ylog):
         ax.set_yscale('log')
 
+    # Adjust the x-axis limits to only cover last 90 days
+    if (last90):
+        xlims = ax.get_xlim()
+        ax.set_xlim(xlims[1]-90,xlims[1])
+
     # Add legend
     legend = ax.legend(prop={'size': legendsize})
 
 
-def ts_plot_Hos(dataframe, colname, fips, sum_dataframe=None, connectdots=False, ylog=False, fig=None, ax=None):
+def ts_plot_Hos(dataframe, colname, fips, sum_dataframe=None, connectdots=False, ylog=False, last180=False, fig=None, ax=None):
     ## Plot up a time series of colname data from dataframe, plotting each fips provided in the list.
 
     # Started off as a copy of ts_plot that Juan wrote it just has different variables for y label & description
@@ -697,11 +702,16 @@ def ts_plot_Hos(dataframe, colname, fips, sum_dataframe=None, connectdots=False,
     if (ylog):
         ax.set_yscale('log')
 
+    # Adjust the x-axis limits to only cover last 90 days
+    if (last180):
+        xlims = ax.get_xlim()
+        ax.set_xlim(xlims[1]-180,xlims[1])
+
     # Add legend
     legend = ax.legend(prop={'size': legendsize})
 
 
-def ts_plot_Rt(dataframe, fips, sum_dataframe=None, connectdots=False, ylog=False, fig=None, ax=None):
+def ts_plot_Rt(dataframe, fips, sum_dataframe=None, connectdots=False, ylog=False, last90=False, fig=None, ax=None):
     ## Plot up a time series of Rt from dataframe, plotting each fips provided in the list.
 
     ## Start by defaulting to a single figure and plotting it if no fig, ax values
@@ -757,6 +767,11 @@ def ts_plot_Rt(dataframe, fips, sum_dataframe=None, connectdots=False, ylog=Fals
     # Adjust y axis to be logarithmic if requested
     if (ylog):
         ax.set_yscale('log')
+
+    # Adjust the x-axis limits to only cover last 90 days
+    if (last90):
+        xlims = ax.get_xlim()
+        ax.set_xlim(xlims[1]-90,xlims[1])
 
     # Add legend
     legend = ax.legend(prop={'size': legendsize})
