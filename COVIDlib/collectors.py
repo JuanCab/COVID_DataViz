@@ -387,8 +387,9 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
     # - County level daily confirmed/deaths/recovered data files changes format
     #   several times before April 23, 2020, so I didn't include that data.
     # - State level daily data files contain some additional data that county level
-    #   files do not contain, notably Incident_Rate, People_Tested,
-    #   People_Hospitalized, Mortality_Rate, Testing_Rate, and Hospitalization_Rate.
+    #   files do not contain, notably Incident_Rate, People_Tested (aka Total_Test_Results),
+    #   People_Hospitalized, Mortality_Rate (aka Case_Fatality_Ratio), Testing_Rate,
+    #   and Hospitalization_Rate.
     #   However, it only exists starting April 12, 2020.
     # - Time-series data files contain more limited data (only confirmed cases and
     #   deaths) and are essentially redundant data compared to the daily files, so
@@ -791,16 +792,26 @@ def retrieve_John_Hopkins_data(county_data_df, state_data_df, JHdata_dir = "JH_D
         incident_rate_df.rename(columns={'Incident_Rate': this_col}, errors="raise", inplace=True)
 
         # Store People Testing by merging reduced list and renaming column
-        tested_df = pd.merge(tested_df,reduced_df[['FIPS','People_Tested']],on='FIPS', how='left', copy=True)
-        tested_df.rename(columns={'People_Tested': this_col}, errors="raise", inplace=True)
+        # Column was renamed from "People_Tested" to "Total_Test_Results" starting with Nov. 9, 2020 data
+        try:
+            tested_df = pd.merge(tested_df,reduced_df[['FIPS','People_Tested']],on='FIPS', how='left', copy=True)
+            tested_df.rename(columns={'People_Tested': this_col}, errors="raise", inplace=True)
+        except KeyError:
+            tested_df = pd.merge(tested_df,reduced_df[['FIPS','Total_Test_Results']],on='FIPS', how='left', copy=True)
+            tested_df.rename(columns={'Total_Test_Results': this_col}, errors="raise", inplace=True)
 
         # Store People Hospitalized by merging reduced list and renaming column
         hospitalized_df = pd.merge(hospitalized_df,reduced_df[['FIPS','People_Hospitalized']],on='FIPS', how='left', copy=True)
         hospitalized_df.rename(columns={'People_Hospitalized': this_col}, errors="raise", inplace=True)
 
         # Store Mortality Rate by merging reduced list and renaming column
-        mortality_df = pd.merge(mortality_df,reduced_df[['FIPS','Mortality_Rate']],on='FIPS', how='left', copy=True)
-        mortality_df.rename(columns={'Mortality_Rate': this_col}, errors="raise", inplace=True)
+        # Column was renamed from "Mortality_Rate" to "Case_Fatality_Ratio" starting with Nov. 9, 2020 data
+        try:
+            mortality_df = pd.merge(mortality_df,reduced_df[['FIPS','Mortality_Rate']],on='FIPS', how='left', copy=True)
+            mortality_df.rename(columns={'Mortality_Rate': this_col}, errors="raise", inplace=True)
+        except KeyError:
+            mortality_df = pd.merge(mortality_df,reduced_df[['FIPS','Case_Fatality_Ratio']],on='FIPS', how='left', copy=True)
+            mortality_df.rename(columns={'Case_Fatality_Ratio': this_col}, errors="raise", inplace=True)
 
         # Store Testing Rate by merging reduced list and renaming column
         testing_rate_df = pd.merge(testing_rate_df,reduced_df[['FIPS','Testing_Rate']],on='FIPS', how='left', copy=True)

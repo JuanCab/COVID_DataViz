@@ -257,7 +257,7 @@ def BuildJHVarDict():
         'Active': {'descript': 'Total Confirmed and Probable Active COVID Cases [State only]', 'valdescript': 'Active COVID Cases', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'dTested': {'descript': 'New Tests Administered (#/day) [State only]', 'valdescript': 'People tested/Day', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'dTestedWk': {'descript': 'New Tests Administered (#/week) [State only]', 'valdescript': 'People tested/Week', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
-        'People_Tested': {'descript': 'Total People tested for COVID [State only]', 'valdescript': 'People tested for COVID', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
+        'People_Tested': {'descript': 'Total Number of COVID Test [State only]', 'valdescript': 'Number of COVID Tests', 'format' : ',d', 'stateonly': True, 'df': 'JH'},
         'Testing_Rate': {'descript': 'Total Tested for COVID (per 100,000 persons) [State only]', 'valdescript': 'People tested for COVID (per 100,000)', 'format' : 'd', 'stateonly': True, 'df': 'JH'},
         'Mortality_Rate': {'descript': 'Mortality Rate [State only]', 'valdescript': '% Deaths per Confirmed Infection', 'format' : '.1f', 'stateonly': True, 'df': 'JH'},
         'People_Hospitalized': {'descript': 'Total People Hospitalized for COVID [State only]', 'valdescript': 'People Hospitalized', 'format' : ',d', 'stateonly': True, 'df': 'JH'},

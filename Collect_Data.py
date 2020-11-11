@@ -7,7 +7,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.5.0
+#       jupytext_version: 1.6.0
 #   kernelspec:
 #     display_name: Python 3
 #     language: python
@@ -91,9 +91,11 @@ if not os.path.exists(data_dir):
 # Retrieve needed Census Bureau data first
 print("\n- Retrieving US Census and John Hopkins Data")
 (cnty_pop_df, state_pop_df) = COVIDdata.retrieve_census_population_data()
+print("   - Census Data Retrieved")
 
 # Retrieve John Hopkins data
 (ts_us_confirmed_df, ts_us_dead_df, combined_cnty_df, combined_state_df) = COVIDdata.retrieve_John_Hopkins_data(cnty_pop_df, state_pop_df)
+print("   - John Hopkins Data Retrieved")
 
 # Do additional post-processing on John Hopkins data (adding US level data, additional variables, etc.)
 combined_state_df = COVIDdata.cleanJHdata(combined_state_df)
