@@ -275,68 +275,68 @@ aapl_mobility_states_df.to_csv(aapl_mobility_states_fname, index=False)
 # Retrieve IMHE data
 print("\n- Retrieving IMHE Data")
 
-#try:
-(imhe_summary, imhe_hospitalizations) = COVIDdata.retrieve_imhe_data(cnty_pop_df, state_pop_df)
+try:
+    (imhe_summary, imhe_hospitalizations) = COVIDdata.retrieve_imhe_data(cnty_pop_df, state_pop_df)
 
-## Summary data includes numbers or dates for the following for each state
-#             'peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper': Mean/Lower/Upper Uncertainty peak bed use date
-# 'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper': Mean/Lower/Upper Uncertainty ICU bed use date
-#          'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper': Mean/Lower/Upper Uncertainty Ventilator use date
-#    'all_bed_capacity', 'icu_bed_capacity', 'all_bed_usage', 'icu_bed_usage': Number of beds/ICU beds/avg beds used/avg ICU beds used
-#                          'travel_limit_start_date', 'travel_limit_end_date': Severe travel restrictions start/end dates
-#                                'stay_home_start_date', 'stay_home_end_date': Stay at home order start/end dates
-#                    'educational_fac_start_date', 'educational_fac_end_date': Educational facilities closure start/end dates
-#      'any_gathering_restrict_start_date', 'any_gathering_restrict_end_date': Any gathering restrictions start/end dates
-#                          'any_business_start_date', 'any_business_end_date': Any business closures start/end dates
-#          'all_non-ess_business_start_date', 'all_non-ess_business_end_date': Non-essential businesses ordered to close start/end dates
-#
-# 'NaN' present for dates means it isn't known.
+    ## Summary data includes numbers or dates for the following for each state
+    #             'peak_bed_day_mean', 'peak_bed_day_lower', 'peak_bed_day_upper': Mean/Lower/Upper Uncertainty peak bed use date
+    # 'peak_icu_bed_day_mean', 'peak_icu_bed_day_lower', 'peak_icu_bed_day_upper': Mean/Lower/Upper Uncertainty ICU bed use date
+    #          'peak_vent_day_mean', 'peak_vent_day_lower', 'peak_vent_day_upper': Mean/Lower/Upper Uncertainty Ventilator use date
+    #    'all_bed_capacity', 'icu_bed_capacity', 'all_bed_usage', 'icu_bed_usage': Number of beds/ICU beds/avg beds used/avg ICU beds used
+    #                          'travel_limit_start_date', 'travel_limit_end_date': Severe travel restrictions start/end dates
+    #                                'stay_home_start_date', 'stay_home_end_date': Stay at home order start/end dates
+    #                    'educational_fac_start_date', 'educational_fac_end_date': Educational facilities closure start/end dates
+    #      'any_gathering_restrict_start_date', 'any_gathering_restrict_end_date': Any gathering restrictions start/end dates
+    #                          'any_business_start_date', 'any_business_end_date': Any business closures start/end dates
+    #          'all_non-ess_business_start_date', 'all_non-ess_business_end_date': Non-essential businesses ordered to close start/end dates
+    #
+    # 'NaN' present for dates means it isn't known.
 
-## Hospitalization data is time series date for the following projections by the IMHE:
-#                             'allbed_mean', 'allbed_lower','allbed_upper': Predicted COVID beds needed with upper/lower bounds
-#                            'ICUbed_mean', 'ICUbed_lower', 'ICUbed_upper': Predicted COVID ICU beds needed with upper/lower bounds
-#                            'InvVen_mean', 'InvVen_lower', 'InvVen_upper': Predicted COVID ventilators needed with upper/lower bounds
-#                            'deaths_mean', 'deaths_lower', 'deaths_upper': Predicted COVID daily deaths with upper/lower bounds
-#                               'admis_mean', 'admis_lower', 'admis_upper': Predicted hospital admissions with upper/lower bounds
-#                            'newICU_mean', 'newICU_lower', 'newICU_upper': Predicted new ICU admissions per day with upper/lower bounds
-#                            'totdea_mean', 'totdea_lower', 'totdea_upper': Predicted COVID cumilative deaths with upper/lower bounds
-# 'deaths_mean_smoothed', 'deaths_lower_smoothed', 'deaths_upper_smoothed': Smoothed version of predicted COVID daily deaths
-# 'totdea_mean_smoothed', 'totdea_lower_smoothed', 'totdea_upper_smoothed': Smoothed version of cumilative COVID deaths
-#                                   'total_tests_data_type', 'total_tests': observed/predicted tests and total number of tests
-#                                                   'confirmed_infections': Observed confirmed infections only
-#    'est_infections_mean', 'est_infections_lower', 'est_infections_upper': Predicted estimated infections with upper/lower bounds
-#
-# 'NaN' present for dates means it isn't known.
+    ## Hospitalization data is time series date for the following projections by the IMHE:
+    #                             'allbed_mean', 'allbed_lower','allbed_upper': Predicted COVID beds needed with upper/lower bounds
+    #                            'ICUbed_mean', 'ICUbed_lower', 'ICUbed_upper': Predicted COVID ICU beds needed with upper/lower bounds
+    #                            'InvVen_mean', 'InvVen_lower', 'InvVen_upper': Predicted COVID ventilators needed with upper/lower bounds
+    #                            'deaths_mean', 'deaths_lower', 'deaths_upper': Predicted COVID daily deaths with upper/lower bounds
+    #                               'admis_mean', 'admis_lower', 'admis_upper': Predicted hospital admissions with upper/lower bounds
+    #                            'newICU_mean', 'newICU_lower', 'newICU_upper': Predicted new ICU admissions per day with upper/lower bounds
+    #                            'totdea_mean', 'totdea_lower', 'totdea_upper': Predicted COVID cumilative deaths with upper/lower bounds
+    # 'deaths_mean_smoothed', 'deaths_lower_smoothed', 'deaths_upper_smoothed': Smoothed version of predicted COVID daily deaths
+    # 'totdea_mean_smoothed', 'totdea_lower_smoothed', 'totdea_upper_smoothed': Smoothed version of cumilative COVID deaths
+    #                                   'total_tests_data_type', 'total_tests': observed/predicted tests and total number of tests
+    #                                                   'confirmed_infections': Observed confirmed infections only
+    #    'est_infections_mean', 'est_infections_lower', 'est_infections_upper': Predicted estimated infections with upper/lower bounds
+    #
+    # 'NaN' present for dates means it isn't known.
 
-#
-# Save the same data to pickle files
-#
-imhe_summary_fname = data_dir + "imhe_summary.p"
-print("   - IMHE summary data exported to ", imhe_summary_fname)
-with open(imhe_summary_fname, 'wb') as pickle_file:
-    pickle.dump(imhe_summary, pickle_file)
-    pickle_file.close()
+    #
+    # Save the same data to pickle files
+    #
+    imhe_summary_fname = data_dir + "imhe_summary.p"
+    print("   - IMHE summary data exported to ", imhe_summary_fname)
+    with open(imhe_summary_fname, 'wb') as pickle_file:
+        pickle.dump(imhe_summary, pickle_file)
+        pickle_file.close()
 
-imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.p"
-print("   - IMHE hospitalization data exported to ", imhe_summary_fname)
-with open(imhe_hospitalizations_fname, 'wb') as pickle_file:
-    pickle.dump(imhe_hospitalizations, pickle_file)
-    pickle_file.close()
+    imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.p"
+    print("   - IMHE hospitalization data exported to ", imhe_summary_fname)
+    with open(imhe_hospitalizations_fname, 'wb') as pickle_file:
+        pickle.dump(imhe_hospitalizations, pickle_file)
+        pickle_file.close()
 
-# Convert datetime lists into strings
-imhe_hospitalizations['dates'] = imhe_hospitalizations['dates'].apply(COVIDdata.dates2strings)
+    # Convert datetime lists into strings
+    imhe_hospitalizations['dates'] = imhe_hospitalizations['dates'].apply(COVIDdata.dates2strings)
 
-# Write out CSV files to disk
-imhe_summary_fname = data_dir + "imhe_summary.csv"
-print("   - IMHE summary data also exported to ", imhe_summary_fname)
-imhe_summary.to_csv(imhe_summary_fname, index=False)
+    # Write out CSV files to disk
+    imhe_summary_fname = data_dir + "imhe_summary.csv"
+    print("   - IMHE summary data also exported to ", imhe_summary_fname)
+    imhe_summary.to_csv(imhe_summary_fname, index=False)
 
-imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.csv"
-print("   - IMHE hospitalization data also exported to ", imhe_summary_fname)
-imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
-# except:
-#     # Added this warning after IMHE temporarily dropped New Hampshire from their summary files, causing NaN for all that data
-#     print("  - WARNING: Failed to process IMHE Data (possibly corrupted?) ... skipping and leaving current data intact.")
+    imhe_hospitalizations_fname = data_dir + "imhe_hospitalizations.csv"
+    print("   - IMHE hospitalization data also exported to ", imhe_summary_fname)
+    imhe_hospitalizations.to_csv(imhe_hospitalizations_fname, index=False)
+except:
+    # Added this warning after IMHE temporarily dropped New Hampshire from their summary files, causing NaN for all that data
+    print("  - WARNING: Failed to process IMHE Data (possibly corrupted?) ... skipping and leaving current data intact.")
 
 # %%
 # Present summary data for local area
