@@ -7,9 +7,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.6.0
+#       jupytext_version: 1.11.5
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -22,8 +22,8 @@
 # Finally, all the data has been cross-identified with FIPS codes (a standard, although deprecated, geographic identifier) for the state or countys, which should made cross-matching data from multiple sources much easier later.
 
 # %%
-# This forces a reload of any external library file if it changes.  
-# Useful when developing external libraries since otherwise Jupyter 
+# This forces a reload of any external library file if it changes.
+# Useful when developing external libraries since otherwise Jupyter
 # will not re-import any library without restarting the python kernel.
 
 # %load_ext autoreload
@@ -224,14 +224,8 @@ print("\n- Retrieving Apple Mobility Data")
 COVIDdata.cleanAAPLdata(aapl_mobility_cnty_df)
 COVIDdata.cleanAAPLdata(aapl_mobility_states_df)
 
-## Notice only driving information is available at the county level here
-#print("APPLE MOBILITY DATA IN aapl_mobility_cnty_df() FOR CLAY COUNTY")
-#aapl_mobility_clay = aapl_mobility_cnty_df[(aapl_mobility_cnty_df['county'] == 'Clay County') & (aapl_mobility_cnty_df['state'] == 'Minnesota')]
-#print(aapl_mobility_clay)
-    
 # Export the Apple mobility data to CSV files
 print("   - Exporting Apple mobility data")
-    
 
 #
 # Save the same data to pickle files
@@ -350,44 +344,44 @@ except:
 #print(imhe_hospitalizations_local)
 
 # %% [markdown]
-# # Estimated Effective Reproduction Rate $R_t$
+# # Estimated Effective Reproduction Rate $R_t$ (DISABLED AS PROJECT SHUT DOWN)
 #
 # Kevin Systrom and Mike Krieger (co-founders of Instagram) and Tom Vladeck (owner of Gradient Metrics) put together a unaffiliated project to tracked modelled $R_t$ values for each state at http://rt.live/
 #
 # "$R_t$ represents the effective reproduction rate of the virus calculated for each locale. It lets us estimate how many secondary infections are likely to occur from a single infection in a specific area. Values over 1.0 mean we should expect more cases in that area, values under 1.0 mean we should expect fewer."
 
 # %%
-# Retrieve the Rt Live data
+# # Retrieve the Rt Live data
 
-print("\n- Retrieving Rt Live Effective Reproduction Rate Data")
+# print("\n- Retrieving Rt Live Effective Reproduction Rate Data")
 
-# Retrieve the Rt live dataframe
-Rt_live_df = COVIDdata.retrieve_Rt_live_data(state_pop_df)
+# # Retrieve the Rt live dataframe
+# Rt_live_df = COVIDdata.retrieve_Rt_live_data(state_pop_df)
 
-# Post-process the Rt data to add postal codes
-COVIDdata.cleanRtdata(Rt_live_df)
+# # Post-process the Rt data to add postal codes
+# COVIDdata.cleanRtdata(Rt_live_df)
 
 # %%
-# Export the Rt live data
-print("   - Exporting Rt live data")
+# # Export the Rt live data
+# print("   - Exporting Rt live data")
     
-#
-# Save the data to pickle and CSV files
-#
+# #
+# # Save the data to pickle and CSV files
+# #
 
-Rt_live_fname = data_dir + "Rt_live.p"
-print("   - Rt live data exported to ", Rt_live_fname)
-with open(Rt_live_fname, 'wb') as pickle_file:
-    pickle.dump(Rt_live_df, pickle_file)
-    pickle_file.close()
+# Rt_live_fname = data_dir + "Rt_live.p"
+# print("   - Rt live data exported to ", Rt_live_fname)
+# with open(Rt_live_fname, 'wb') as pickle_file:
+#     pickle.dump(Rt_live_df, pickle_file)
+#     pickle_file.close()
 
-# Convert datetime lists into strings
-Rt_live_df['dates'] = Rt_live_df['dates'].apply(COVIDdata.dates2strings)
+# # Convert datetime lists into strings
+# Rt_live_df['dates'] = Rt_live_df['dates'].apply(COVIDdata.dates2strings)
 
-# Write out CSV files to disk
-Rt_live_fname = data_dir + "Rt_live.csv"
-print("   - Rt live dataalso exported to ", Rt_live_fname)
-Rt_live_df.to_csv(Rt_live_fname, index=False)
+# # Write out CSV files to disk
+# Rt_live_fname = data_dir + "Rt_live.csv"
+# print("   - Rt live dataalso exported to ", Rt_live_fname)
+# Rt_live_df.to_csv(Rt_live_fname, index=False)
 
 # %% [markdown]
 # ## NY Times Data on Probable Deaths/Cases (FIPS Present, NOT CURRENTLY USED FOR PROJECT)

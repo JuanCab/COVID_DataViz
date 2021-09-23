@@ -142,11 +142,11 @@ def BuildMapVarDict():
 
     # Start with JH Dictionary
     var_dict = JHDict.copy()
-    # Append Rt Dictionary
-    Rt_dict = {
-        'Rt_mean': {'descript': 'Estimated R_t [State only]', 'valdescript': 'People infected per Infected Person [State only]', 'format': '.2f', 'stateonly': True, 'df': 'Rt'},
-        }
-    var_dict.update(Rt_dict)
+    # # Append Rt Dictionary (DISABLED as Rt website went away)
+    # Rt_dict = {
+    #     'Rt_mean': {'descript': 'Estimated R_t [State only]', 'valdescript': 'People infected per Infected Person [State only]', 'format': '.2f', 'stateonly': True, 'df': 'Rt'},
+    #     }
+    # var_dict.update(Rt_dict)
     # Start with Append mobile data Dictionary
     var_dict.update(MobileDict)
 

@@ -368,10 +368,10 @@ def html_status(dataframe, fips, hospital_summary_df=None, Rt_df=None, BedsStatu
         else:
             html_out += f"<b style='color:#ff0000;font-size: {scale_enhance2}'>{last_active_tot:,.0f} Active ({active_percent:.1f}%)</b> <b>/</b> <b style='color:rgb(0,128,20);font-size: {scale_enhance2};'>{last_recovered_tot:,.0f} Recovered ({recovered_percent:.1f}%)</b> <b>/</b> <b style='font-size: {scale_enhance2};'>{last_death_tot:,.0f} Dead ({dead_percent:.1f}%)</b><br/>"
 
-        # Add Rt information if passed Rt dataframe
-        if ((FIPS>0)&(FIPS < 100)&(Rt_df is not None)):
-                status = str(html_status_Rt(Rt_df, FIPS, Display=False))
-                html_out += f"<span style='font-size: {scale_enhance2}'>{status}</span>"
+        # # Add Rt information if passed Rt dataframe
+        # if ((FIPS>0)&(FIPS < 100)&(Rt_df is not None)):
+        #         status = str(html_status_Rt(Rt_df, FIPS, Display=False))
+        #         html_out += f"<span style='font-size: {scale_enhance2}'>{status}</span>"
 
         # Present last day stats
         html_out += "<b>New Cases [change from previous day]:</b><br/>"
@@ -394,42 +394,42 @@ def html_status(dataframe, fips, hospital_summary_df=None, Rt_df=None, BedsStatu
     return
 
 
-def html_status_Rt(dataframe, fips, Display=True):
-    ## Print the current estimate R_t reproduction rate for this state
+# def html_status_Rt(dataframe, fips, Display=True):
+#     ## Print the current estimate R_t reproduction rate for this state
 
-    ## Check if FIPS input is reasonable
-    if (type(fips) == int):
-        fips = [fips]
-    elif (type(fips) != list):
-        raise ValueError('Input fips must be integer or list of integers')
+#     ## Check if FIPS input is reasonable
+#     if (type(fips) == int):
+#         fips = [fips]
+#     elif (type(fips) != list):
+#         raise ValueError('Input fips must be integer or list of integers')
 
-    # Loop through the FIPS values for states
-    html_out = ""  # Start with blank string for HTML
+#     # Loop through the FIPS values for states
+#     html_out = ""  # Start with blank string for HTML
 
-    # Deal with accidentally passing in US or county FIPS values to list
-    fips = [FIPS for FIPS in fips if (FIPS >0)&(FIPS<100)]
-    for FIPS in fips:
-        # Get state name
-        local_df = COVID_IO.getLocalDataFrame(FIPS, dataframe)
-        namestr = local_df['state'].values[0]
-        last_day = local_df['dates'].to_list()[0][-1].strftime("%B %d, %Y")
-        current_Rt = local_df['Rt_mean'].to_list()[0][-1]
-        current_lower = local_df['Rt_lower_80'].to_list()[0][-1]
-        current_upper = local_df['Rt_upper_80'].to_list()[0][-1]
+#     # Deal with accidentally passing in US or county FIPS values to list
+#     fips = [FIPS for FIPS in fips if (FIPS >0)&(FIPS<100)]
+#     for FIPS in fips:
+#         # Get state name
+#         local_df = COVID_IO.getLocalDataFrame(FIPS, dataframe)
+#         namestr = local_df['state'].values[0]
+#         last_day = local_df['dates'].to_list()[0][-1].strftime("%B %d, %Y")
+#         # current_Rt = local_df['Rt_mean'].to_list()[0][-1]
+#         # current_lower = local_df['Rt_lower_80'].to_list()[0][-1]
+#         # current_upper = local_df['Rt_upper_80'].to_list()[0][-1]
 
-        # Highligh if R_t above 1
-        if (current_Rt>1):
-            clr = "#ff0000"
-        else:
-            clr = "#000000"
+#         # Highligh if R_t above 1
+#         if (current_Rt>1):
+#             clr = "#ff0000"
+#         else:
+#             clr = "#000000"
 
-        # Print HTML report
-        html_out += f"<b style='color:{clr};'>R<sub>t</sub>={current_Rt:.2f}</b> (80% chance between {current_lower:.2f} & {current_upper:.2f}) on {last_day}<br/>"
-        if (Display):
-            display(HTML(html_out))
-            return
-        else:
-            return html_out
+#         # Print HTML report
+#         html_out += f"<b style='color:{clr};'>R<sub>t</sub>={current_Rt:.2f}</b> (80% chance between {current_lower:.2f} & {current_upper:.2f}) on {last_day}<br/>"
+#         if (Display):
+#             display(HTML(html_out))
+#             return
+#         else:
+#             return html_out
 
 
 def html_status_beds(dataframe, fips, Display=True):
@@ -711,70 +711,70 @@ def ts_plot_Hos(dataframe, colname, fips, sum_dataframe=None, connectdots=False,
     legend = ax.legend(prop={'size': legendsize})
 
 
-def ts_plot_Rt(dataframe, fips, sum_dataframe=None, connectdots=False, ylog=False, last90=False, fig=None, ax=None):
-    ## Plot up a time series of Rt from dataframe, plotting each fips provided in the list.
+# def ts_plot_Rt(dataframe, fips, sum_dataframe=None, connectdots=False, ylog=False, last90=False, fig=None, ax=None):
+#     ## Plot up a time series of Rt from dataframe, plotting each fips provided in the list.
 
-    ## Start by defaulting to a single figure and plotting it if no fig, ax values
-    ## are provided
-    if (fig is None and ax is not None) or (fig is not None and ax is None):
-        raise ValueError('Must provide both "fig" and "ax" if you provide one of them')
-    elif fig is None and ax is None:
-        fig, ax = plt.subplots(1, 1)
+#     ## Start by defaulting to a single figure and plotting it if no fig, ax values
+#     ## are provided
+#     if (fig is None and ax is not None) or (fig is not None and ax is None):
+#         raise ValueError('Must provide both "fig" and "ax" if you provide one of them')
+#     elif fig is None and ax is None:
+#         fig, ax = plt.subplots(1, 1)
 
-    ## Check if FIPS input is reasonable
-    if (type(fips) == int):
-        fips = [fips]
-    elif (type(fips) != list):
-        raise ValueError('Input fips must be integer or list of integers')
+#     ## Check if FIPS input is reasonable
+#     if (type(fips) == int):
+#         fips = [fips]
+#     elif (type(fips) != list):
+#         raise ValueError('Input fips must be integer or list of integers')
 
-    # Label the plot
-    ax.tick_params(axis='x', rotation=30) # Rotate date labels
-    xlabel = ax.set_xlabel("Date")
-    ylabel = ax.set_ylabel("$R_t$")
-    title = ax.set_title("Effective Reproduction Rate")
+#     # Label the plot
+#     ax.tick_params(axis='x', rotation=30) # Rotate date labels
+#     xlabel = ax.set_xlabel("Date")
+#     ylabel = ax.set_ylabel("$R_t$")
+#     title = ax.set_title("Effective Reproduction Rate")
 
-    # Loop through the FIPS values
-    for FIPS in fips:
-        # Get dataframe
-        this_frame = COVID_IO.getLocalDataFrame(FIPS, dataframe)
+#     # Loop through the FIPS values
+#     for FIPS in fips:
+#         # Get dataframe
+#         this_frame = COVID_IO.getLocalDataFrame(FIPS, dataframe)
 
-        # Determine legend label to use (add bed numbers if appropriate and summary_df available)
-        labelstr = this_frame['state'].values[0]
+#         # Determine legend label to use (add bed numbers if appropriate and summary_df available)
+#         labelstr = this_frame['state'].values[0]
 
-        # retrieve the data (nan values are automatically excluded)
-        dates = np.array(this_frame['dates'].to_list()[0])
-        var = np.array(this_frame['Rt_mean'].to_list()[0])
+#         # retrieve the data (nan values are automatically excluded)
+#         dates = np.array(this_frame['dates'].to_list()[0])
+#         var = np.array(this_frame['Rt_mean'].to_list()[0])
 
-        if (connectdots):
-            ls='-'
-        else:
-            ls ='None'
+#         if (connectdots):
+#             ls='-'
+#         else:
+#             ls ='None'
 
-        # Plot the data for this FIPS record
-        p = ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
+#         # Plot the data for this FIPS record
+#         p = ax.plot(dates, var, marker='o', markersize=3, linestyle=ls, label=labelstr)
 
-        # Track the color just used so error range matches
-        colour = p[0].get_color()
+#         # Track the color just used so error range matches
+#         colour = p[0].get_color()
 
-        # Add error bars (in continuous form)
-        lower_colname = "Rt_lower_80"
-        upper_colname = "Rt_upper_80"
-        var_lower = np.array(this_frame[lower_colname].to_list()[0])
-        var_upper = np.array(this_frame[upper_colname].to_list()[0])
-        prange = ax.fill_between(dates, var_lower, var_upper, color=colour, alpha=0.2)
+#         # Add error bars (in continuous form)
+#         lower_colname = "Rt_lower_80"
+#         upper_colname = "Rt_upper_80"
+#         var_lower = np.array(this_frame[lower_colname].to_list()[0])
+#         var_upper = np.array(this_frame[upper_colname].to_list()[0])
+#         prange = ax.fill_between(dates, var_lower, var_upper, color=colour, alpha=0.2)
 
 
-    # Adjust y axis to be logarithmic if requested
-    if (ylog):
-        ax.set_yscale('log')
+#     # Adjust y axis to be logarithmic if requested
+#     if (ylog):
+#         ax.set_yscale('log')
 
-    # Adjust the x-axis limits to only cover last 90 days
-    if (last90):
-        xlims = ax.get_xlim()
-        ax.set_xlim(xlims[1]-90,xlims[1])
+#     # Adjust the x-axis limits to only cover last 90 days
+#     if (last90):
+#         xlims = ax.get_xlim()
+#         ax.set_xlim(xlims[1]-90,xlims[1])
 
-    # Add legend
-    legend = ax.legend(prop={'size': legendsize})
+#     # Add legend
+#     legend = ax.legend(prop={'size': legendsize})
 
 
 def ts_barplot(dataframe, colname, fips, ylog=False, running_avg=0, fig=None, ax=None):
